@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>むぅ v0.3</title>
+<title>MUU v0.4.3</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;cursor:none;user-select:none;touch-action:none}
@@ -24,7 +24,7 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 #diary-body{font-size:14px;color:#5c5650;line-height:2.15;font-weight:300;white-space:pre-line}
 #live-btn{position:fixed;bottom:26px;left:26px;font-size:9px;color:#d5ccc6;letter-spacing:.14em;cursor:none;z-index:10;transition:color .3s}
 #live-btn:hover{color:#a89f99}
-#food-btn{position:fixed;right:24px;bottom:20px;width:28px;height:24px;cursor:none;z-index:12;display:flex;align-items:flex-end;justify-content:center;transition:transform .25s,opacity .25s;opacity:.9}
+#food-btn{position:fixed;right:22px;bottom:18px;width:28px;height:24px;cursor:none;z-index:12;display:flex;align-items:flex-end;justify-content:center;transition:transform .25s,opacity .25s;opacity:.9}
 #food-btn:hover{transform:translateY(-1px) scale(1.08);opacity:1}
 #food-btn:active{transform:scale(.96)}
 #food-btn .bowl{position:relative;display:block;width:22px;height:10px;border:2px solid #d7c7bb;border-top:none;border-radius:0 0 12px 12px}
@@ -43,6 +43,14 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 <div id="diary-dot"></div>
 <div id="diary"><div id="diary-close">×</div><div id="diary-inner"><div id="diary-date"></div><div id="diary-body"></div></div></div>
 <div id="live-btn">一緒に暮らす</div>
+
+<div id="food-menu" aria-label="food choices">
+  <button class="food-choice" data-food="normal" data-shape="round" style="--c:#c9ad8d" title="ふつう"></button>
+  <button class="food-choice" data-food="warm" data-shape="drop" style="--c:#d8a981" title="あたたかい"></button>
+  <button class="food-choice" data-food="sweet" data-shape="blob" style="--c:#d8b7b3" title="あまい"></button>
+  <button class="food-choice" data-food="seed" data-shape="seed" style="--c:#a77c54" title="きのみ"></button>
+  <button class="food-choice" data-food="dry" data-shape="tri" style="--c:#b69468" title="かわいた"></button>
+</div>
 <div id="food-btn" aria-label="ごはん" title="ごはん"><span class="bowl"></span></div>
 <script>
 /**
@@ -49667,7 +49675,7 @@ const THREE = window.THREE;
 const STORAGE_KEY='muu_v03_memory';
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function daysBetween(a,b){if(!a||!b)return 0;return Math.floor((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);}
-function blankDay(){return{opens:0,touches:0,taps:0,pets:0,tired:false,slept:false,movedIn:false,returnedAfterDays:0,foodPlaced:0,foodEaten:0,foodIgnored:0,lastInteractionAt:null};}
+function blankDay(){return{opens:0,touches:0,taps:0,pets:0,tired:false,slept:false,movedIn:false,returnedAfterDays:0,foodPlaced:0,foodEaten:0,foodIgnored:0,foodRush:0,lastInteractionAt:null};}
 function loadMemory(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch{return null}}
 let memory=loadMemory()||{living:false,livingSince:null,lastVisitDay:null,days:{}};
 const TODAY=todayKey();
@@ -49720,11 +49728,34 @@ for(let i=0;i<TAIL_COUNT-1;i++){const seg=new THREE.Mesh(tailSegmentGeo,MAT.tail
 function cubicPoint(u,p0,p1,p2,p3,out){const a=1-u,a2=a*a,u2=u*u; out.set(a2*a*p0.x+3*a2*u*p1.x+3*a*u2*p2.x+u2*u*p3.x,a2*a*p0.y+3*a2*u*p1.y+3*a*u2*p2.y+u2*u*p3.y,a2*a*p0.z+3*a2*u*p1.z+3*a*u2*p2.z+u2*u*p3.z);}
 function updateTail(){const sw=Math.sin(SM.tailPhase)*SM.tailAmp, sw2=Math.sin(SM.tailPhase*1.35+.5)*SM.tailAmp*.42, lift=SM.tailLift; const p0={x:0,y:0,z:0}, p1={x:.47+sw,y:.27+lift+sw2,z:0}, p2={x:.74+sw*.55,y:.52+lift,z:0}, p3={x:.55+sw*.3,y:.72+lift*1.15,z:0}; for(let i=0;i<TAIL_COUNT;i++){const u=i/(TAIL_COUNT-1); cubicPoint(u,p0,p1,p2,p3,tailPoints[i]); const taper=lerp(1,.62,u); tailJoints[i].position.copy(tailPoints[i]); tailJoints[i].scale.setScalar(taper);} for(let i=0;i<TAIL_COUNT-1;i++){const a=tailPoints[i], b=tailPoints[i+1], mid=a.clone().add(b).multiplyScalar(.5), dir=b.clone().sub(a), len=dir.length(); if(len<.0001) continue; dir.normalize(); const seg=tailSegments[i], taper=lerp(1,.65,i/(TAIL_COUNT-1)); seg.position.copy(mid); seg.quaternion.setFromUnitVectors(Y_AXIS,dir); seg.scale.set(taper,len,taper);} }
 function makeLeg(side){const g=new THREE.Group(); const upper=new THREE.Mesh(new THREE.CylinderGeometry(.13,.12,.35,12),MAT.body); upper.position.y=-.17; g.add(upper); const foot=new THREE.Mesh(new THREE.SphereGeometry(.16,12,8),MAT.body); foot.scale.set(1.1,.7,1.3); foot.position.y=-.37; foot.castShadow=true; g.add(foot); g.position.set(side*.32,.3,0); muu.add(g); return g;}
-const legL=makeLeg(-1), legR=makeLeg(1);
+const legL=makeLeg(-1), legR=makeLeg(1); legL.visible=false; legR.visible=false;
 const shadowBlob=new THREE.Mesh(new THREE.CircleGeometry(.62,24), new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.085})); shadowBlob.rotation.x=-Math.PI/2; shadowBlob.position.y=.01; scene.add(shadowBlob);
 
-const foodGroup=new THREE.Group(); foodGroup.visible=false; scene.add(foodGroup); const bowl=new THREE.Mesh(new THREE.CylinderGeometry(.22,.15,.08,22),MAT.bowl); bowl.castShadow=true; bowl.receiveShadow=true; bowl.position.y=.04; foodGroup.add(bowl); const bowlInner=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,.03,20), new THREE.MeshLambertMaterial({color:0xebe1d6})); bowlInner.position.y=.075; foodGroup.add(bowlInner); const kibbles=[]; for(let i=0;i<7;i++){const k=new THREE.Mesh(new THREE.SphereGeometry(.03,8,6),MAT.kibble); k.position.set((Math.random()-.5)*.14,.095,(Math.random()-.5)*.14); foodGroup.add(k); kibbles.push(k);} foodGroup.position.set(1.15,0,.65);
-const food={exists:false,eaten:false,noticed:false,placedAt:0,target:new THREE.Vector3(1.15,0,.65),lastServedDay:null};
+
+const FOOD_OPTIONS={
+  normal:{color:0xc9ad8d, hunger:0.00},
+  warm:{color:0xd8a981, hunger:0.04},
+  sweet:{color:0xd8b7b3, hunger:0.02},
+  seed:{color:0xa77c54, hunger:0.01},
+  dry:{color:0xb69468, hunger:-0.01}
+};
+let muuState={hunger:.62, appetite:.58, trust:.52, sleepiness:.24};
+function clamp(v,min=0,max=1){return Math.max(min,Math.min(max,v));}
+function computeFoodReaction(type){
+  const pref={normal:.55,warm:.62,sweet:.50,seed:.56,dry:.45}[type]||.5;
+  const urge=muuState.hunger*.42+muuState.appetite*.22+pref*.18+muuState.trust*.08-muuState.sleepiness*.12;
+  if(urge>.72)return 'rush';
+  if(urge>.52)return 'approach';
+  if(urge>.34)return 'wait';
+  return 'ignore';
+}
+function setFoodType(type){
+  const opt=FOOD_OPTIONS[type]||FOOD_OPTIONS.normal;
+  MAT.kibble.color.setHex(opt.color);
+}
+
+const foodGroup=new THREE.Group(); foodGroup.visible=false; scene.add(foodGroup); const bowl=new THREE.Mesh(new THREE.CylinderGeometry(.38,.26,.12,32),MAT.bowl); bowl.castShadow=true; bowl.receiveShadow=true; bowl.position.y=.04; foodGroup.add(bowl); const bowlInner=new THREE.Mesh(new THREE.CylinderGeometry(.27,.27,.045,28), new THREE.MeshLambertMaterial({color:0xebe1d6})); bowlInner.position.y=.075; foodGroup.add(bowlInner); const kibbles=[]; for(let i=0;i<7;i++){const k=new THREE.Mesh(new THREE.SphereGeometry(.07,12,10),MAT.kibble); k.position.set((Math.random()-.5)*.20,.13,(Math.random()-.5)*.20); foodGroup.add(k); kibbles.push(k);} foodGroup.position.set(0,0,1.75);
+const food={exists:false,eaten:false,noticed:false,placedAt:0,target:new THREE.Vector3(0,0,1.12),lastServedDay:null};
 
 const STATES={IDLE:'idle',WALK:'walk',SLEEP:'sleep',HAPPY:'happy',SHY:'shy',TIRED:'tired',CURIOUS:'curious',TO_FOOD:'to_food',EAT:'eat'};
 const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,lastTouch:Date.now(),touchTimes:[],breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
@@ -49739,7 +49770,7 @@ function pickWalkTarget(){const angle=Math.random()*Math.PI*2, dist=.8+Math.rand
 const speechEl=document.getElementById('speech'); let speechTimer=null; function say(text,dur=1500){speechEl.textContent=text; speechEl.classList.add('show'); clearTimeout(speechTimer); speechTimer=setTimeout(()=>speechEl.classList.remove('show'),dur);} function smallVoice(){const r=Math.random(); if(r<.55) return 'むぅ'; if(r<.85) return '……'; return 'む';}
 
 const cursor=document.getElementById('cursor'); const raycaster=new THREE.Raycaster(); const mouse2=new THREE.Vector2(); const interactables=[headMesh,body,belly];
-function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#live-btn,#food-btn'));}
+function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#live-btn,#food-btn,#food-menu,.food-choice'));}
 function updatePointer(e){SM.hasPointer=true; SM.pointerType=e.pointerType||'mouse'; SM.mx=e.clientX; SM.my=e.clientY; mouse2.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1); if(SM.pointerType==='touch'){cursor.style.opacity='0'}else{cursor.style.opacity='1'; cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px';}}
 function checkHit(){if(!SM.hasPointer) return false; raycaster.setFromCamera(mouse2,camera); const hits=raycaster.intersectObjects(interactables,false); SM.nearMuu=hits.length>0; return SM.nearMuu;}
 addEventListener('pointermove',e=>{updatePointer(e); if(!isUiTarget(e)) checkHit();});
@@ -49748,14 +49779,48 @@ addEventListener('pointerup',e=>{if(!SM.petting) return; e.preventDefault(); con
 function recordTouch(kind){const d=todayData(); d.touches++; d.lastInteractionAt=new Date().toISOString(); if(kind==='tap') d.taps++; if(kind==='pet') d.pets++; saveMemory(); const now=Date.now(); SM.touchTimes.push(now); SM.touchTimes=SM.touchTimes.filter(t=>now-t<15000); return SM.touchTimes.length;}
 function onMuuTouched(duration){const kind=duration<260?'tap':'pet'; const recent=recordTouch(kind); if(SM.current===STATES.TIRED){say('……'); return;} if(SM.current===STATES.SLEEP){setState(STATES.CURIOUS); say('むぅ'); return;} if(recent>=8){setState(STATES.TIRED); say('……'); return;} if(kind==='pet'){setState(STATES.HAPPY); say('……'); return;} if(recent>=5){setState(STATES.SHY); say('……'); return;} setState(STATES.HAPPY); say(smallVoice());}
 
-function placeFood(){if(food.exists) return; food.exists=true; food.eaten=false; food.noticed=false; food.placedAt=Date.now(); foodGroup.visible=true; for(const k of kibbles) k.visible=true; todayData().foodPlaced++; saveMemory(); document.getElementById('food-btn').classList.add('placed'); if(SM.current!==STATES.SLEEP && SM.current!==STATES.TIRED){setTimeout(()=>{if(food.exists && !food.eaten && (SM.current===STATES.IDLE || SM.current===STATES.CURIOUS)){setState(STATES.CURIOUS); say('……',1200);}},700+Math.random()*900);}}
-function clearFood(){food.exists=false; food.eaten=false; food.noticed=false; foodGroup.visible=false; document.getElementById('food-btn').classList.remove('placed');}
+function placeFood(type='normal'){if(food.exists) return; setFoodType(type); food.type=type; food.reaction='wait'; food.exists=true; food.eaten=false; food.noticed=false; food.placedAt=Date.now(); foodGroup.position.set(0,0,1.75); foodGroup.visible=true; foodGroup.position.set(0,0,1.75); for(const k of kibbles) k.visible=true; say('……',700); todayData().foodPlaced++; if(food.reaction==='rush')todayData().foodRush++; saveMemory(); closeFoodMenu(); document.getElementById('food-btn').classList.add('placed'); if(food.reaction==='rush'){setTimeout(()=>{if(food.exists&&!food.eaten){food.noticed=true; setState(STATES.TO_FOOD);}},240);} else if(food.reaction==='approach'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){food.noticed=true; setState(STATES.TO_FOOD);}},1200+Math.random()*1300);} else if(food.reaction==='wait'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){setState(STATES.CURIOUS); say('……',1200);}},1500+Math.random()*1600); setTimeout(()=>{if(food.exists&&!food.eaten&&Math.random()<.65){food.noticed=true; setState(STATES.TO_FOOD);}},7000+Math.random()*4000);} }
+function clearFood(){food.exists=false; food.eaten=false; food.noticed=false; foodGroup.visible=false; document.getElementById('food-btn').classList.remove('placed'); closeFoodMenu && closeFoodMenu();}
 function eatFood(){if(!food.exists || food.eaten) return; food.eaten=true; for(const k of kibbles) k.visible=false; todayData().foodEaten++; saveMemory(); setTimeout(()=>clearFood(),1600);} 
 
-document.getElementById('food-btn').addEventListener('click',()=>placeFood());
+
+
+
+const foodBtn=document.getElementById('food-btn');
+const foodMenu=document.getElementById('food-menu');
+
+function openFoodMenu(){}
+function closeFoodMenu(){
+  if(foodMenu) foodMenu.classList.remove('open');
+  if(foodBtn) foodBtn.classList.remove('open');
+}
+
+// v0.4.3 stability rule:
+// one tap on the bowl places food immediately.
+// Food choice UI will be reintroduced after this core behavior is stable.
+function handleFoodButton(e){
+  if(e){
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  if(food.exists) return;
+  placeFood('normal');
+}
+
+foodBtn.addEventListener('pointerdown', handleFoodButton);
+foodBtn.addEventListener('click', handleFoodButton);
+
+// no-op choices for now
+for(const node of document.querySelectorAll('.food-choice')){
+  node.addEventListener('pointerdown',(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(!food.exists) placeFood(node.dataset.food||'normal');
+  });
+}
 
 function tickStateMachine(dt){SM.t+=dt; SM.globalT+=dt; const idleSec=(Date.now()-SM.lastTouch)/1000;
-  if(food.exists && !food.eaten && !food.noticed){ const waitSec=(Date.now()-food.placedAt)/1000; if(waitSec>2.2 && [STATES.IDLE,STATES.CURIOUS].includes(SM.current)){ if(Math.random()<0.02){ food.noticed=true; setState(STATES.TO_FOOD);} } if(waitSec>32){ todayData().foodIgnored++; saveMemory(); clearFood(); } }
+  if(food.exists && !food.eaten && !food.noticed){ const waitSec=(Date.now()-food.placedAt)/1000; if(waitSec>2.2 && [STATES.IDLE,STATES.CURIOUS].includes(SM.current)){ if(Math.random()<0.02){ food.noticed=true; setState(STATES.TO_FOOD);} } if(waitSec>90){ todayData().foodIgnored++; saveMemory(); clearFood(); } }
   switch(SM.current){
     case STATES.IDLE:
       if(SM.t>SM.nextIdleAction){ const r=Math.random(); if(food.exists && !food.eaten && Math.random()<.65){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<.34){ setState(STATES.WALK);} else if(r<.56){ setState(STATES.CURIOUS);} else if(idleSec>50){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
@@ -49764,10 +49829,11 @@ function tickStateMachine(dt){SM.t+=dt; SM.globalT+=dt; const idleSec=(Date.now(
     case STATES.TO_FOOD:{
       SM.walkProgress += dt*(SM.current===STATES.TO_FOOD ? .29 : .25);
       if(SM.walkProgress>=1){ muu.position.x=SM.walkTarget.x; muu.position.z=SM.walkTarget.z; if(SM.current===STATES.TO_FOOD) setState(STATES.EAT); else setState(STATES.IDLE); }
-      else { const p=SM.walkProgress, eased=p*p*(3-2*p); muu.position.x=lerp(SM.walkStart.x,SM.walkTarget.x,eased); muu.position.z=lerp(SM.walkStart.z,SM.walkTarget.z,eased); const dir=SM.walkTarget.clone().sub(SM.walkStart); if(dir.length()>.01){ const angle=Math.atan2(dir.x,dir.z); muu.rotation.y=lerp(muu.rotation.y,angle,.055);} }
+      else { const p=SM.walkProgress, eased=p*p*(3-2*p); muu.position.x=lerp(SM.walkStart.x,SM.walkTarget.x,eased); muu.position.z=lerp(SM.walkStart.z,SM.walkTarget.z,eased); const dir=SM.walkTarget.clone().sub(SM.walkStart); if(dir.length()>.01){ const angle=(SM.current===STATES.TO_FOOD)?0:Math.atan2(dir.x,dir.z); muu.rotation.y=lerp(muu.rotation.y,angle,SM.current===STATES.TO_FOOD?.09:.055);} }
       break; }
     case STATES.EAT:
-      if(SM.t>.85 && !food.eaten){ eatFood(); say('……',1300); }
+      muu.rotation.y=lerp(muu.rotation.y,0,.12);
+      if(SM.t>.85 && !food.eaten){ eatFood(); muuState.hunger=clamp(muuState.hunger-.35); say(food.reaction==='rush'?'むぅ':'……',1300); }
       if(SM.t>2.5) setState(STATES.IDLE);
       break;
     case STATES.SLEEP:
@@ -49797,14 +49863,14 @@ let last=null; function loop(now){const dt=last?Math.min((now-last)/1000,.05):.0
 
 const diary=document.getElementById('diary'), diaryDate=document.getElementById('diary-date'), diaryBody=document.getElementById('diary-body'); let diaryIdx=0;
 function keyToDateLabel(key){const diff=daysBetween(key,TODAY); if(key===TODAY) return '今日'; if(diff===1) return '昨日'; const d=new Date(key+'T00:00:00'); return `${d.getMonth()+1}月${d.getDate()}日`;}
-function generateDiaryText(key,d){ if(!memory.living && !d.movedIn && d.touches===0 && d.foodPlaced===0) return 'まだ、一緒には暮らしていない。\n\nでも、ときどき気配がする。\n\nそれで少しだけ、部屋がある。'; if(d.movedIn) return '今日、ここで暮らすことになった。\n\n何が変わったのかは、\nまだよく分からない。\n\nでも、部屋の空気が少し近い。'; if(d.returnedAfterDays>=2) return 'ひさしぶりに、気配が戻ってきた。\n\n数え方は知らないけど、\n少し長かった気がする。\n\nでも、また来た。'; if(d.foodPlaced>0 && d.foodEaten>0) return 'ごはんが置いてあった。\n\nすぐではなかったけど、\n気づいたあとで食べた。\n\nそういう日もある。'; if(d.foodPlaced>0 && d.foodIgnored>0) return 'ごはんが置いてあった。\n\n見えてはいたと思う。\nでも、今日は近づかなかった。\n\nまた今度でもいい。'; if(d.tired) return 'たくさん触ってもらった。\n\nうれしかった。\nでも、少し疲れた。\n\n両方、本当のことだ。'; if(d.pets>0 && d.taps>0) return '触ってもらった。\n\n短い合図と、\n長いあたたかさがあった。\n\nどちらも、手のかたち。'; if(d.pets>0) return 'しばらく、触れていてくれた。\n\n手は見えないけど、\n近くにいるのは分かった。\n\n少しだけ、眠くなった。'; if(d.taps>0) return '何度か、呼ばれた。\n\n返事をしたような、\nしていないような気もする。\n\nでも、聞こえていた。'; if(d.slept) return '今日は、よく眠った。\n\n眠っている間も、\n部屋はそこにあった。\n\nそれでよかった。'; if(d.opens>1) return '何度か、部屋に光が入った。\n\nそのたびに、\n少しだけ目が覚めた。\n\nまた静かになった。'; return '今日は、静かだった。\n\n何もなかった、\nというより、\n何かを待っていた。'; }
+function generateDiaryText(key,d){ if(!memory.living && !d.movedIn && d.touches===0 && d.foodPlaced===0) return 'まだ、一緒には暮らしていない。\n\nでも、ときどき気配がする。\n\nそれで少しだけ、部屋がある。'; if(d.movedIn) return '今日、ここで暮らすことになった。\n\n何が変わったのかは、\nまだよく分からない。\n\nでも、部屋の空気が少し近い。'; if(d.returnedAfterDays>=2) return 'ひさしぶりに、気配が戻ってきた。\n\n数え方は知らないけど、\n少し長かった気がする。\n\nでも、また来た。'; if(d.foodRush>0) return 'ごはんが置かれた。\n\n今日は、すぐに行った。\nおなかが空いていたのだと思う。\n\nたぶん。'; if(d.foodPlaced>0 && d.foodEaten>0) return 'ごはんが置いてあった。\n\nすぐではなかったけど、\n気づいたあとで食べた。\n\nそういう日もある。'; if(d.foodPlaced>0 && d.foodIgnored>0) return 'ごはんが置いてあった。\n\n見えてはいたと思う。\nでも、今日は近づかなかった。\n\nまた今度でもいい。'; if(d.tired) return 'たくさん触ってもらった。\n\nうれしかった。\nでも、少し疲れた。\n\n両方、本当のことだ。'; if(d.pets>0 && d.taps>0) return '触ってもらった。\n\n短い合図と、\n長いあたたかさがあった。\n\nどちらも、手のかたち。'; if(d.pets>0) return 'しばらく、触れていてくれた。\n\n手は見えないけど、\n近くにいるのは分かった。\n\n少しだけ、眠くなった。'; if(d.taps>0) return '何度か、呼ばれた。\n\n返事をしたような、\nしていないような気もする。\n\nでも、聞こえていた。'; if(d.slept) return '今日は、よく眠った。\n\n眠っている間も、\n部屋はそこにあった。\n\nそれでよかった。'; if(d.opens>1) return '何度か、部屋に光が入った。\n\nそのたびに、\n少しだけ目が覚めた。\n\nまた静かになった。'; return '今日は、静かだった。\n\n何もなかった、\nというより、\n何かを待っていた。'; }
 function diaryEntries(){const keys=Object.keys(memory.days).sort().reverse().slice(0,7); if(!keys.includes(TODAY)) keys.unshift(TODAY); return keys.map(key=>({d:keyToDateLabel(key),t:generateDiaryText(key,memory.days[key])}));}
 document.getElementById('diary-dot').addEventListener('click',()=>{const entries=diaryEntries(), e=entries[diaryIdx%entries.length]; diaryDate.textContent=e.d; diaryBody.textContent=e.t; diary.classList.add('open'); diaryIdx++;});
 document.getElementById('diary-close').addEventListener('click',()=>diary.classList.remove('open'));
 const liveBtn=document.getElementById('live-btn'); function updateLiveButton(){liveBtn.textContent=memory.living?'暮らしている':'一緒に暮らす'} updateLiveButton(); liveBtn.addEventListener('click',()=>{ if(!memory.living){ memory.living=true; memory.livingSince=TODAY; todayData().movedIn=true; saveMemory(); updateLiveButton(); setState(STATES.CURIOUS); say('むぅ',1700); return;} setState(STATES.CURIOUS); say(smallVoice(),1400);});
 setTimeout(()=>{if(memory.living) say('……',1500); setState(STATES.CURIOUS);},2400);
 
-window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES};
+window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu};
 </script>
 </body>
 </html>
