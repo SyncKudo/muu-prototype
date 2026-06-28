@@ -1,3 +1,4 @@
+// character-foundation deploy trigger
 export const SCENE = {
   camera: {
     desktop: { position: [0, 2.55, 12.8], target: [1.35, -0.48, 0] },
