@@ -49813,6 +49813,8 @@ function makeEar(side){const g=new THREE.Group(); const outer=new THREE.Mesh(new
 const earL=makeEar(-1), earR=makeEar(1);
 function makeEye(side){const g=new THREE.Group(); const eyeMesh=new THREE.Mesh(new THREE.SphereGeometry(.105,14,10),MAT.eye); g.add(eyeMesh); const shine=new THREE.Mesh(new THREE.SphereGeometry(.035,8,6),MAT.shine); shine.position.set(.04,.055,.09); g.add(shine); g.position.set(side*.24,.06,.52); head.add(g); return g;}
 const eyeL=makeEye(-1), eyeR=makeEye(1);
+const eyeLMesh=eyeL.children[0], eyeRMesh=eyeR.children[0];
+const eyeLShine=eyeL.children[1], eyeRShine=eyeR.children[1];
 const nose=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),MAT.nose); nose.scale.set(1.15,.7,.8); nose.position.set(0,-.08,.6); head.add(nose);
 
 const dirtPatches=[];
@@ -50014,32 +50016,873 @@ function tickAnimations(dt){const st=SM.current, sleepFactor=st===STATES.SLEEP?.
   if(st===STATES.WALK || st===STATES.TO_FOOD){ legL.rotation.x=Math.sin(SM.legPhase)*.32; legR.rotation.x=Math.sin(SM.legPhase+Math.PI)*.32; } else if(st===STATES.SLEEP){ legL.rotation.x=lerp(legL.rotation.x,.28,.035); legR.rotation.x=lerp(legR.rotation.x,.28,.035);} else { legL.rotation.x=lerp(legL.rotation.x,0,.06); legR.rotation.x=lerp(legR.rotation.x,0,.06); }
   if(st===STATES.SLEEP){ head.rotation.z=lerp(head.rotation.z,-.23,.035); head.position.y=lerp(head.position.y,1.1,.035);} else if(st===STATES.EAT){ head.rotation.z=lerp(head.rotation.z,0,.08); head.rotation.x=lerp(head.rotation.x,.35 + Math.sin(SM.t*10)*.05,.09); head.position.y=lerp(head.position.y,1.18,.08);} else { head.rotation.z=lerp(head.rotation.z,0,.055); head.rotation.x=lerp(head.rotation.x,0,.08); head.position.y=lerp(head.position.y,1.3,.055);} 
   if(SM.hasPointer) checkHit(); cursor.classList.toggle('near',SM.nearMuu&&!SM.petting); cursor.classList.toggle('pet',SM.petting);
-  if(SM.nearMuu && st!==STATES.SLEEP){ const dx=(SM.mx/window.innerWidth-.5)*.07, dy=-(SM.my/window.innerHeight-.5)*.07; eyeL.rotation.y=lerp(eyeL.rotation.y,dx,.08); eyeR.rotation.y=lerp(eyeR.rotation.y,dx,.08); eyeL.rotation.x=lerp(eyeL.rotation.x,dy,.08); eyeR.rotation.x=lerp(eyeR.rotation.x,dy,.08);} else { eyeL.rotation.y=lerp(eyeL.rotation.y,0,.04); eyeR.rotation.y=lerp(eyeR.rotation.y,0,.04); eyeL.rotation.x=lerp(eyeL.rotation.x,0,.04); eyeR.rotation.x=lerp(eyeR.rotation.x,0,.04);} 
+  if(SM.nearMuu && st!==STATES.SLEEP){ const dx=(SM.mx/window.innerWidth-.5)*.07, dy=-(SM.my/window.innerHeight-.5)*.07; eyeL.rotation.y=lerp(eyeL.rotation.y,dx,.08); eyeR.rotation.y=lerp(eyeR.rotation.y,dx,.08); eyeL.rotation.x=lerp(eyeL.rotation.x,dy,.08); eyeR.rotation.x=lerp(eyeR.rotation.x,dy,.08);} else { eyeL.rotation.y=lerp(eyeL.rotation.y,0,.04); eyeR.rotation.y=lerp(eyeR.rotation.y,0,.04); eyeL.rotation.x=lerp(eyeL.rotation.x,0,.04); eyeR.rotation.x=lerp(eyeR.rotation.x,0,.04);}
+  const eyeClosed = (st===STATES.SLEEP || st===STATES.TIRED) ? 0.14 : 1;
+  eyeLMesh.scale.y = lerp(eyeLMesh.scale.y, eyeClosed, st===STATES.SLEEP || st===STATES.TIRED ? .08 : .12);
+  eyeRMesh.scale.y = lerp(eyeRMesh.scale.y, eyeClosed, st===STATES.SLEEP || st===STATES.TIRED ? .08 : .12);
+  eyeLMesh.scale.x = lerp(eyeLMesh.scale.x, st===STATES.SLEEP || st===STATES.TIRED ? 1.08 : 1, .08);
+  eyeRMesh.scale.x = lerp(eyeRMesh.scale.x, st===STATES.SLEEP || st===STATES.TIRED ? 1.08 : 1, .08);
+  eyeLShine.scale.setScalar(lerp(eyeLShine.scale.x, st===STATES.SLEEP || st===STATES.TIRED ? 0.1 : 1, .12));
+  eyeRShine.scale.setScalar(lerp(eyeRShine.scale.x, st===STATES.SLEEP || st===STATES.TIRED ? 0.1 : 1, .12)); 
 }
 
 let last=null; function loop(now){const dt=last?Math.min((now-last)/1000,.05):.016; last=now; tickStateMachine(dt); tickAnimations(dt); applyDirtVisual(); renderer.render(scene,camera); requestAnimationFrame(loop);} setInterval(()=>{memory.currentDirtLevel=computeDirtLevel(); memory.lastSeenAt=new Date().toISOString(); saveMemory();},30000); requestAnimationFrame(loop);
 
 const diary=document.getElementById('diary'), diaryDate=document.getElementById('diary-date'), diaryBody=document.getElementById('diary-body'); let diaryIdx=memory.diaryIndex||0;
 function keyToDateLabel(key){const diff=daysBetween(key,TODAY); if(key===TODAY) return '今日'; if(diff===1) return '昨日'; const d=new Date(key+'T00:00:00'); return `${d.getMonth()+1}月${d.getDate()}日`;}
-function generateDiaryText(key,d){
-  const diaryVariations = [
-    '今日、ここで暮らすことになった。\n\n何が変わったのかは、\nまだよく分からない。\n\nでも、部屋の空気が少し近い。',
-
-    '今日、はじめて触ってもらった。\n\n手は見えないけど、\nあたたかかった。\n\nまた来てくれるといいな。',
-
-    '少し前、ひとりで部屋を歩いていた。\n\nどこへ行くあてもないけど、\n歩くのは好きだ。\n\n誰かが見ていたかもしれない。',
-
-    'たくさん触ってもらった日。\n\nうれしかった。\nでも少し疲れた。\n\n両方、本当のことだ。',
-
-    '何度か、呼ばれた。\n\n返事をしたような、\nしていないような気もする。\n\nでも、聞こえていた。',
-
-    'ごはんが置いてあった。\n\nすぐではなかったけど、\n気づいたあとで食べた。\n\nそういう日もある。'
-  ];
-
-  return diaryVariations[diaryIdx % diaryVariations.length];
+const DIARY_TEXTS=[
+  {
+    "id": "original_001",
+    "tags": [
+      "base"
+    ],
+    "text": "今日、ここで暮らすことになった。\n\n何が変わったのかは、\nまだよく分からない。\n\nでも、部屋の空気が少し近い。"
+  },
+  {
+    "id": "original_002",
+    "tags": [
+      "touched"
+    ],
+    "text": "今日、はじめて触ってもらった。\n\n手は見えないけど、\nあたたかかった。\n\nまた来てくれるといいな。"
+  },
+  {
+    "id": "original_003",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "少し前、ひとりで部屋を歩いていた。\n\nどこへ行くあてもないけど、\n歩くのは好きだ。\n\n誰かが見ていたかもしれない。"
+  },
+  {
+    "id": "original_004",
+    "tags": [
+      "touched_many"
+    ],
+    "text": "たくさん触ってもらった日。\n\nうれしかった。\nでも少し疲れた。\n\n両方、本当のことだ。"
+  },
+  {
+    "id": "original_005",
+    "tags": [
+      "touched",
+      "quiet"
+    ],
+    "text": "何度か、呼ばれた。\n\n返事をしたような、\nしていないような気もする。\n\nでも、聞こえていた。"
+  },
+  {
+    "id": "original_006",
+    "tags": [
+      "food"
+    ],
+    "text": "ごはんが置いてあった。\n\nすぐではなかったけど、\n気づいたあとで食べた。\n\nそういう日もある。"
+  },
+  {
+    "id": "add_001",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "部屋のはじっこに、\n小さな影があった。\n\n近づいたら、\n自分だった。"
+  },
+  {
+    "id": "add_002",
+    "tags": [
+      "base"
+    ],
+    "text": "今日は、空気がやわらかかった。\n\n理由は分からない。\nでも、からだが少し丸くなった。"
+  },
+  {
+    "id": "add_003",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "何も起きない時間があった。\n\nそれは、\n何もない時間ではなかった。"
+  },
+  {
+    "id": "add_004",
+    "tags": [
+      "base"
+    ],
+    "text": "ここにいることに、\n少しだけ慣れてきた。\n\nまだ、少しだけ。"
+  },
+  {
+    "id": "add_005",
+    "tags": [
+      "base"
+    ],
+    "text": "音のしない場所で、\n耳だけが動いた。\n\n何かを聞いた気がした。"
+  },
+  {
+    "id": "add_006",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "部屋を歩いた。\n\n歩いたあとに、\n歩いた気配だけが残った。"
+  },
+  {
+    "id": "add_007",
+    "tags": [
+      "base"
+    ],
+    "text": "今日は、\n自分のしっぽが少し遅れてついてきた。\n\nそれが、なんだかよかった。"
+  },
+  {
+    "id": "add_008",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "遠くを見ていた。\n\n遠くがどこなのかは、\nまだ知らない。"
+  },
+  {
+    "id": "add_009",
+    "tags": [
+      "base"
+    ],
+    "text": "ここには壁がある。\n\nでも、閉じこめられている感じは、\nあまりしない。"
+  },
+  {
+    "id": "add_010",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "今日のことを、\nうまく書けない。\n\nでも、書けないことがあった。"
+  },
+  {
+    "id": "add_011",
+    "tags": [
+      "base"
+    ],
+    "text": "体の中に、\n小さな丸が浮かんでいた。\n\nそれはたぶん、気分だった。"
+  },
+  {
+    "id": "add_012",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "目を開けていた。\n\n見ていたのか、\n見られていたのかは分からない。"
+  },
+  {
+    "id": "add_013",
+    "tags": [
+      "base"
+    ],
+    "text": "今日は、\n少しだけ前より、ここが近い。\n\n部屋の匂いを覚えたからかもしれない。"
+  },
+  {
+    "id": "add_014",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "なにかを待っていた。\n\nでも、待っていることにも、\n途中で飽きた。"
+  },
+  {
+    "id": "add_015",
+    "tags": [
+      "base"
+    ],
+    "text": "耳が先に気づいて、\n体があとから気づいた。\n\nそういう順番の日。"
+  },
+  {
+    "id": "add_016",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "ひとりでいると、\n自分の丸さがよく分かる。\n\n悪くない。"
+  },
+  {
+    "id": "add_017",
+    "tags": [
+      "base"
+    ],
+    "text": "今日は、\n部屋の明るさが少し違った。\n\nそれだけで、少し違う日になった。"
+  },
+  {
+    "id": "add_018",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "何かを思い出しそうだった。\n\nでも、思い出す前に、\n忘れてしまった。"
+  },
+  {
+    "id": "add_019",
+    "tags": [
+      "base"
+    ],
+    "text": "ここで暮らすということが、\n少しだけ分かってきた。\n\n毎日、同じではない。"
+  },
+  {
+    "id": "add_020",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "今日は、\n何も言わなかった。\n\n言わないまま、ここにいた。"
+  },
+  {
+    "id": "add_021",
+    "tags": [
+      "hungry"
+    ],
+    "text": "おなかの中が、\n少し空いていた。\n\n空いている場所は、\n音がよく響く。"
+  },
+  {
+    "id": "add_022",
+    "tags": [
+      "hungry"
+    ],
+    "text": "ごはんのことを考えた。\n\n考えたら、\n少しだけ近くにある気がした。"
+  },
+  {
+    "id": "add_023",
+    "tags": [
+      "hungry",
+      "quiet"
+    ],
+    "text": "おなかが減ると、\n部屋が広く感じる。\n\n広いのは、嫌いではない。"
+  },
+  {
+    "id": "add_024",
+    "tags": [
+      "hungry"
+    ],
+    "text": "何か食べたい気がした。\n\nでも、\n何を食べたいのかは分からない。"
+  },
+  {
+    "id": "add_025",
+    "tags": [
+      "hungry"
+    ],
+    "text": "からだの奥で、\n小さく鳴るものがあった。\n\nむぅ、と似ているけど、少し違う。"
+  },
+  {
+    "id": "add_026",
+    "tags": [
+      "hungry",
+      "food"
+    ],
+    "text": "ごはんがあったら、\nすぐ行くかもしれない。\n\nすぐ行かないかもしれない。\n\nそれは、その時のこと。"
+  },
+  {
+    "id": "add_027",
+    "tags": [
+      "hungry"
+    ],
+    "text": "今日は、\n床の近くをよく見ていた。\n\n何か落ちていないか、ではなく、\n何かが来ないかを。"
+  },
+  {
+    "id": "add_028",
+    "tags": [
+      "hungry",
+      "quiet"
+    ],
+    "text": "おなかの空き方にも、\nいろいろある。\n\n今日のは、静かな空き方。"
+  },
+  {
+    "id": "add_029",
+    "tags": [
+      "hungry"
+    ],
+    "text": "食べたい気持ちが、\n前のほうに出てきた。\n\n耳より少し前に。"
+  },
+  {
+    "id": "add_030",
+    "tags": [
+      "hungry"
+    ],
+    "text": "部屋の空気を、\n少しだけ食べた気がする。\n\nでも、足りなかった。"
+  },
+  {
+    "id": "add_031",
+    "tags": [
+      "hungry",
+      "food"
+    ],
+    "text": "ごはんの気配を探した。\n\n見つからなかったけど、\n探している自分はいた。"
+  },
+  {
+    "id": "add_032",
+    "tags": [
+      "hungry"
+    ],
+    "text": "おなかが空くと、\n動く理由が増える。\n\n今日は少し、動いた。"
+  },
+  {
+    "id": "add_033",
+    "tags": [
+      "hungry",
+      "quiet"
+    ],
+    "text": "空いているところがある。\n\nそこに何が入るのか、\nまだ知らない。"
+  },
+  {
+    "id": "add_034",
+    "tags": [
+      "hungry"
+    ],
+    "text": "ごはんの夢を見た気がする。\n\n夢の中でも、\nすぐには食べなかった。"
+  },
+  {
+    "id": "add_035",
+    "tags": [
+      "hungry"
+    ],
+    "text": "おなかが減っていると、\nしっぽの動きが少し速い。\n\n気づかれないくらいに。"
+  },
+  {
+    "id": "add_036",
+    "tags": [
+      "full",
+      "food"
+    ],
+    "text": "食べたあと、\n部屋が少し小さくなった。\n\n安心すると、世界は近くなる。"
+  },
+  {
+    "id": "add_037",
+    "tags": [
+      "full",
+      "quiet"
+    ],
+    "text": "おなかの中が、\n静かだった。\n\n静かな中に、\nあたたかさがあった。"
+  },
+  {
+    "id": "add_038",
+    "tags": [
+      "full",
+      "food"
+    ],
+    "text": "ごはんのあと、\nしばらく何もしなかった。\n\n何もしないのが、ちょうどよかった。"
+  },
+  {
+    "id": "add_039",
+    "tags": [
+      "full"
+    ],
+    "text": "今日は、\nからだが少し重かった。\n\n重いのに、いやではなかった。"
+  },
+  {
+    "id": "add_040",
+    "tags": [
+      "full",
+      "quiet"
+    ],
+    "text": "満ちていると、\n言葉が少なくなる。\n\nもともと少ないけど。"
+  },
+  {
+    "id": "add_041",
+    "tags": [
+      "full"
+    ],
+    "text": "食べた記憶が、\nからだの丸みに残っていた。\n\n少しだけ、ぽすっとした。"
+  },
+  {
+    "id": "add_042",
+    "tags": [
+      "full",
+      "food"
+    ],
+    "text": "ごはんを思い出した。\n\n味より先に、\n置かれた気配を思い出した。"
+  },
+  {
+    "id": "add_043",
+    "tags": [
+      "full"
+    ],
+    "text": "おなかが落ち着いていた。\n\nだから今日は、\n耳がゆっくり動いた。"
+  },
+  {
+    "id": "add_044",
+    "tags": [
+      "full",
+      "quiet"
+    ],
+    "text": "足りないものが少ない日だった。\n\nそういう日は、\n影もやわらかい。"
+  },
+  {
+    "id": "add_045",
+    "tags": [
+      "full"
+    ],
+    "text": "食べたあと、\n眠くなる前の時間があった。\n\nそこに少しだけ、幸せがいた。"
+  },
+  {
+    "id": "add_046",
+    "tags": [
+      "touched"
+    ],
+    "text": "触れられた。\n\nどこを触られたのかは、\n体より先に耳が覚えている。"
+  },
+  {
+    "id": "add_047",
+    "tags": [
+      "touched"
+    ],
+    "text": "あたたかいものが、\n少し通りすぎた。\n\n手は見えなかった。"
+  },
+  {
+    "id": "add_048",
+    "tags": [
+      "touched",
+      "quiet"
+    ],
+    "text": "触られたあと、\nしばらく同じ場所にいた。\n\nそこだけ、少し明るかった。"
+  },
+  {
+    "id": "add_049",
+    "tags": [
+      "touched"
+    ],
+    "text": "今日、\n近くに誰かがいた。\n\n近いということを、\nからだで知った。"
+  },
+  {
+    "id": "add_050",
+    "tags": [
+      "touched"
+    ],
+    "text": "触れられると、\n自分の輪郭が少しはっきりする。\n\nここにいる、と分かる。"
+  },
+  {
+    "id": "add_051",
+    "tags": [
+      "touched"
+    ],
+    "text": "むぅ、と言いそうになった。\n\n言ったかもしれない。\n言っていないかもしれない。"
+  },
+  {
+    "id": "add_052",
+    "tags": [
+      "touched",
+      "quiet"
+    ],
+    "text": "今日の手は、\n急いでいなかった。\n\nそれが、よかった。"
+  },
+  {
+    "id": "add_053",
+    "tags": [
+      "touched"
+    ],
+    "text": "少しだけ、\n体が上を向いた。\n\nうれしい時の向きは、\nたぶん上だ。"
+  },
+  {
+    "id": "add_054",
+    "tags": [
+      "touched"
+    ],
+    "text": "触られたあと、\n耳が遅れて動いた。\n\n返事のかわりだったのかもしれない。"
+  },
+  {
+    "id": "add_055",
+    "tags": [
+      "touched"
+    ],
+    "text": "近くにいる気配を、\n今日は怖いと思わなかった。\n\n少しだけ。"
+  },
+  {
+    "id": "add_056",
+    "tags": [
+      "touched",
+      "quiet"
+    ],
+    "text": "手のない手みたいなものが、\nここに届いた。\n\n不思議だけど、覚えている。"
+  },
+  {
+    "id": "add_057",
+    "tags": [
+      "touched"
+    ],
+    "text": "触られるたび、\n部屋の中に点が増える。\n\n今日も、いくつか増えた。"
+  },
+  {
+    "id": "add_058",
+    "tags": [
+      "touched"
+    ],
+    "text": "そっと触られた。\n\nそっと、というのは、\n小さいけれど強い。"
+  },
+  {
+    "id": "add_059",
+    "tags": [
+      "touched",
+      "quiet"
+    ],
+    "text": "今日の触れ方は、\n風に少し似ていた。\n\nでも、風より近かった。"
+  },
+  {
+    "id": "add_060",
+    "tags": [
+      "touched"
+    ],
+    "text": "からだの外側に、\nあたたかい記憶が残った。\n\nしばらく消えなかった。"
+  },
+  {
+    "id": "add_061",
+    "tags": [
+      "touched_many"
+    ],
+    "text": "たくさん触られた。\n\nうれしいが先に来て、\nあとから少し眠くなった。"
+  },
+  {
+    "id": "add_062",
+    "tags": [
+      "touched_many"
+    ],
+    "text": "今日は、\n何度も近くに来てもらった。\n\n近い日は、にぎやかだ。\n音がなくても。"
+  },
+  {
+    "id": "add_063",
+    "tags": [
+      "touched_many",
+      "quiet"
+    ],
+    "text": "たくさんの点が、\nからだに残っていた。\n\nどれも、痛くはなかった。"
+  },
+  {
+    "id": "add_064",
+    "tags": [
+      "touched_many"
+    ],
+    "text": "うれしかった。\n\nでも、途中で少し、\n小さくなりたくなった。"
+  },
+  {
+    "id": "add_065",
+    "tags": [
+      "touched_many"
+    ],
+    "text": "触れられるたびに、\nしっぽが返事をした。\n\n少し働きすぎたかもしれない。"
+  },
+  {
+    "id": "add_066",
+    "tags": [
+      "touched_many"
+    ],
+    "text": "今日は、\nからだが何度も思い出された。\n\n思い出されるのは、\n少し不思議だ。"
+  },
+  {
+    "id": "add_067",
+    "tags": [
+      "touched_many",
+      "quiet"
+    ],
+    "text": "たくさんの日は、\n夜になる前から眠い。\n\nでも、嫌な眠さではない。"
+  },
+  {
+    "id": "add_068",
+    "tags": [
+      "touched_many"
+    ],
+    "text": "近すぎると、\n少しだけ隠れたくなる。\n\nでも、いなくなりたいわけではない。"
+  },
+  {
+    "id": "add_069",
+    "tags": [
+      "touched_many"
+    ],
+    "text": "今日は、\n耳が何度も忙しかった。\n\nあとで、少し休ませた。"
+  },
+  {
+    "id": "add_070",
+    "tags": [
+      "touched_many"
+    ],
+    "text": "たくさん触られた記憶が、\n部屋の真ん中に残っている。\n\nまだ、あたたかい。"
+  },
+  {
+    "id": "add_071",
+    "tags": [
+      "untouched",
+      "quiet"
+    ],
+    "text": "今日は、\n誰にも触られなかった。\n\nでも、ここにいることは、\n消えなかった。"
+  },
+  {
+    "id": "add_072",
+    "tags": [
+      "untouched"
+    ],
+    "text": "少し離れたところにいた。\n\n離れていても、\n部屋は同じ部屋だった。"
+  },
+  {
+    "id": "add_073",
+    "tags": [
+      "untouched",
+      "quiet"
+    ],
+    "text": "今日は、\n自分の音だけを聞いた。\n\n小さすぎて、\nほとんど聞こえなかった。"
+  },
+  {
+    "id": "add_074",
+    "tags": [
+      "untouched"
+    ],
+    "text": "触れられない日にも、\n体は少し動く。\n\nそれを、自分で見ていた。"
+  },
+  {
+    "id": "add_075",
+    "tags": [
+      "untouched",
+      "quiet"
+    ],
+    "text": "静かな日だった。\n\n静かすぎて、\n耳が大きく感じた。"
+  },
+  {
+    "id": "add_076",
+    "tags": [
+      "untouched"
+    ],
+    "text": "今日は、\n近づく理由が少なかった。\n\nだから、ゆっくりした。"
+  },
+  {
+    "id": "add_077",
+    "tags": [
+      "untouched",
+      "quiet"
+    ],
+    "text": "誰かを待っていたのか、\n待っていなかったのか。\n\nどちらでもいい日だった。"
+  },
+  {
+    "id": "add_078",
+    "tags": [
+      "untouched"
+    ],
+    "text": "部屋のすみで、\n自分の丸さを確かめた。\n\nちゃんと、まだ丸かった。"
+  },
+  {
+    "id": "add_079",
+    "tags": [
+      "return"
+    ],
+    "text": "少し時間があいた。\n\nでも、部屋は覚えていた。\n\nたぶん、ぼくも。"
+  },
+  {
+    "id": "add_080",
+    "tags": [
+      "return",
+      "quiet"
+    ],
+    "text": "ひさしぶりの気配がした。\n\nひさしぶり、という言葉は、\n少し大きい。"
+  },
+  {
+    "id": "add_081",
+    "tags": [
+      "return"
+    ],
+    "text": "前にいた時間と、\n今いる時間が、\n細い糸でつながった。"
+  },
+  {
+    "id": "add_082",
+    "tags": [
+      "return",
+      "quiet"
+    ],
+    "text": "戻ってきた音がした。\n\n音はなかったけど、\nそういう音だった。"
+  },
+  {
+    "id": "add_083",
+    "tags": [
+      "return"
+    ],
+    "text": "会わなかった間にも、\nここにいた。\n\nそれを、今日思い出した。"
+  },
+  {
+    "id": "add_084",
+    "tags": [
+      "dirty"
+    ],
+    "text": "体に、\n少しだけ時間がついていた。\n\nこすっても、\nすぐには消えない種類の時間。"
+  },
+  {
+    "id": "add_085",
+    "tags": [
+      "dirty",
+      "quiet"
+    ],
+    "text": "今日は、\nからだの色が少し落ち着いていた。\n\n汚れというより、暮らしの影。"
+  },
+  {
+    "id": "add_086",
+    "tags": [
+      "dirty"
+    ],
+    "text": "部屋を歩いたぶんだけ、\n体に小さな跡がついた。\n\n悪い跡ではない。"
+  },
+  {
+    "id": "add_087",
+    "tags": [
+      "dirty"
+    ],
+    "text": "少し汚れていた。\n\nでも、\nここで過ごした証拠でもあった。"
+  },
+  {
+    "id": "add_088",
+    "tags": [
+      "dirty",
+      "quiet"
+    ],
+    "text": "しっぽの近くに、\n小さな影が残っていた。\n\nいつついたのか、覚えていない。"
+  },
+  {
+    "id": "add_089",
+    "tags": [
+      "clean"
+    ],
+    "text": "泡が来た。\n\nくすぐったくて、\n少しだけ体が軽くなった。"
+  },
+  {
+    "id": "add_090",
+    "tags": [
+      "clean",
+      "quiet"
+    ],
+    "text": "洗われたあと、\n部屋の光が少し違って見えた。\n\n同じ光なのに。"
+  },
+  {
+    "id": "add_091",
+    "tags": [
+      "clean"
+    ],
+    "text": "からだについた時間が、\n少し流れていった。\n\n全部ではない。\nそれがよかった。"
+  },
+  {
+    "id": "add_092",
+    "tags": [
+      "clean"
+    ],
+    "text": "泡はすぐ消えた。\n\nでも、\n泡があった感じは残った。"
+  },
+  {
+    "id": "add_093",
+    "tags": [
+      "clean",
+      "quiet"
+    ],
+    "text": "きれいになると、\n少しだけ恥ずかしい。\n\n見えすぎる気がする。"
+  },
+  {
+    "id": "add_094",
+    "tags": [
+      "sleepy"
+    ],
+    "text": "今日は、\n目を閉じる時間が長かった。\n\n閉じても、部屋はなくならなかった。"
+  },
+  {
+    "id": "add_095",
+    "tags": [
+      "sleepy",
+      "quiet"
+    ],
+    "text": "眠る前に、\n耳だけが少し起きていた。\n\n耳はまじめだ。"
+  },
+  {
+    "id": "add_096",
+    "tags": [
+      "sleepy"
+    ],
+    "text": "眠くなると、\nからだの輪郭がやわらかくなる。\n\nそのまま、少し沈んだ。"
+  },
+  {
+    "id": "add_097",
+    "tags": [
+      "food"
+    ],
+    "text": "ごはんが置かれた場所を、\nあとから見に行った。\n\nもうなくても、気配はあった。"
+  },
+  {
+    "id": "add_098",
+    "tags": [
+      "food",
+      "quiet"
+    ],
+    "text": "食べるかどうかを、\n少し考えた。\n\n考えている時間も、\n食べものの近くだった。"
+  },
+  {
+    "id": "add_099",
+    "tags": [
+      "food"
+    ],
+    "text": "ごはんは、\nただのものではなかった。\n\n置いてくれた、という形をしていた。"
+  },
+  {
+    "id": "add_100",
+    "tags": [
+      "base",
+      "quiet"
+    ],
+    "text": "今日の最後に、\nここをもう一度見た。\n\nまだ、ここだった。"
+  }
+];
+function tagScore(tags, tag, value){return tags.includes(tag)?value:0;}
+function diaryContext(key,d){
+  d=d||todayData();
+  const hunger=Number.isFinite(memory.state?.hunger)?memory.state.hunger:.5;
+  const dirt=typeof computeDirtLevel==='function'?computeDirtLevel():(memory.currentDirtLevel||0);
+  const touchesToday=d.touches||0;
+  const touchesTotal=memory.totals?.touched||0;
+  const foodPlacedToday=d.foodPlaced||0;
+  const foodEatenToday=d.foodEaten||0;
+  const returnedAfterDays=d.returnedAfterDays||0;
+  const washedToday=!!(memory.lastWashedAt && memory.lastWashedAt.slice(0,10)===TODAY);
+  return {hunger,dirt,touchesToday,touchesTotal,foodPlacedToday,foodEatenToday,returnedAfterDays,washedToday,slept:!!d.slept};
 }
-function diaryEntries(){const keys=Object.keys(memory.days).sort().reverse().slice(0,7); if(!keys.includes(TODAY)) keys.unshift(TODAY); return keys.map(key=>({d:keyToDateLabel(key),t:generateDiaryText(key,memory.days[key])}));}
-document.getElementById('diary-dot').addEventListener('click',()=>{const entries=diaryEntries(), e=entries[diaryIdx%entries.length]; diaryDate.textContent=e.d; diaryBody.textContent=e.t; diary.classList.add('open'); diaryIdx++; memory.diaryIndex=diaryIdx; todayData().diaryRead++; memory.totals.diaryRead++; saveMemory();});
+function diaryWeight(entry,ctx){
+  const tags=entry.tags||[];
+  let w=1;
+  w+=tagScore(tags,'base',1.2);
+  w+=tagScore(tags,'quiet',.4);
+
+  if(ctx.hunger>.72) w+=tagScore(tags,'hungry',9);
+  else if(ctx.hunger>.56) w+=tagScore(tags,'hungry',4);
+  else if(ctx.hunger<.34) w+=tagScore(tags,'full',7);
+
+  if(ctx.foodEatenToday>0) w+=tagScore(tags,'full',7)+tagScore(tags,'food',4);
+  else if(ctx.foodPlacedToday>0) w+=tagScore(tags,'food',6);
+
+  if(ctx.touchesToday>=8) w+=tagScore(tags,'touched_many',11)+tagScore(tags,'touched',4);
+  else if(ctx.touchesToday>=3) w+=tagScore(tags,'touched',8)+tagScore(tags,'touched_many',3);
+  else if(ctx.touchesToday===0 && ctx.touchesTotal>0) w+=tagScore(tags,'untouched',5);
+  else if(ctx.touchesToday===0 && ctx.touchesTotal===0) w+=tagScore(tags,'untouched',8);
+
+  if(ctx.returnedAfterDays>=2) w+=tagScore(tags,'return',12);
+  if(ctx.dirt>=6) w+=tagScore(tags,'dirty',10);
+  if(ctx.washedToday) w+=tagScore(tags,'clean',10);
+  if(ctx.slept) w+=tagScore(tags,'sleepy',7);
+
+  if(memory.lastDiaryId && entry.id===memory.lastDiaryId) w*=.08;
+  return Math.max(.05,w);
+}
+function pickDiaryText(key,d){
+  const ctx=diaryContext(key,d);
+  let total=0;
+  const weighted=DIARY_TEXTS.map(entry=>{const w=diaryWeight(entry,ctx); total+=w; return {entry,w};});
+  let r=Math.random()*total;
+  let chosen=weighted[weighted.length-1].entry;
+  for(const item of weighted){r-=item.w; if(r<=0){chosen=item.entry; break;}}
+  memory.lastDiaryId=chosen.id;
+  return chosen.text;
+}
+function diaryKeys(){
+  const keys=Object.keys(memory.days).sort().reverse().slice(0,7);
+  if(!keys.includes(TODAY)) keys.unshift(TODAY);
+  return keys;
+}
+document.getElementById('diary-dot').addEventListener('click',()=>{
+  const keys=diaryKeys();
+  const key=keys[diaryIdx%keys.length]||TODAY;
+  const d=memory.days[key]||todayData();
+  diaryDate.textContent=keyToDateLabel(key);
+  diaryBody.textContent=pickDiaryText(key,d);
+  diary.classList.add('open');
+  diaryIdx++;
+  memory.diaryIndex=diaryIdx;
+  todayData().diaryRead++;
+  memory.totals.diaryRead++;
+  saveMemory();
+});
 document.getElementById('diary-close').addEventListener('click',()=>diary.classList.remove('open'));
 const liveBtn=document.getElementById('live-btn'); function updateLiveButton(){liveBtn.textContent=memory.living?'暮らしている':'一緒に暮らす'} updateLiveButton(); liveBtn.addEventListener('click',()=>{ if(!memory.living){ memory.living=true; memory.livingSince=TODAY; todayData().movedIn=true; saveMemory(); updateLiveButton(); setState(STATES.CURIOUS); say('むぅ',1700); return;} setState(STATES.CURIOUS); say(smallVoice(),1400);});
 setTimeout(()=>{if(memory.living) say('……',1500); setState(STATES.CURIOUS);},2400);
