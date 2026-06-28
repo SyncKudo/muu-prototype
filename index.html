@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>MUU v0.4.3</title>
+<title>MUU v0.4.8 logo top</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;cursor:none;user-select:none;touch-action:none}
@@ -13,35 +13,40 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 #cursor{position:fixed;width:7px;height:7px;background:#cfc9c4;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s,opacity .2s;z-index:99;opacity:1}
 #cursor.near{width:15px;height:15px;background:#b9b0aa}
 #cursor.pet{width:21px;height:21px;background:#d8bcaf}
-#diary-dot{position:fixed;top:26px;right:26px;width:7px;height:7px;background:#ddd5cf;border-radius:50%;cursor:none;z-index:10;transition:background .3s,transform .3s}
-#diary-dot:hover{background:#bfb6b0;transform:scale(1.7)}
+#diary-dot{position:fixed;bottom:24px;left:calc(50% - 34px);top:auto;right:auto;width:26px;height:26px;background:#f2d9dd;border-radius:50%;cursor:none;z-index:12;transition:background .3s,transform .3s,opacity .3s;opacity:.92;box-shadow:0 7px 18px rgba(160,110,120,.10)}
+#diary-dot:hover{background:#e8c5cc;transform:scale(1.08);opacity:1}
 #diary{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .7s}
 #diary.open{opacity:1;pointer-events:all}
-#diary-close{position:fixed;top:22px;right:22px;font-size:16px;color:#c9c1bc;cursor:none;transition:color .2s}
-#diary-close:hover{color:#8d837d}
-#diary-inner{max-width:270px;padding:0 22px}
-#diary-date{font-size:9px;color:#c7bfb9;letter-spacing:.2em;margin-bottom:22px}
-#diary-body{font-size:14px;color:#5c5650;line-height:2.15;font-weight:300;white-space:pre-line}
+#diary-close{position:static;margin:28px auto 0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:26px;line-height:1;color:#c9b7b7;cursor:none;transition:color .2s,transform .2s;border-radius:50%;font-weight:300}
+#diary-close:hover{color:#9b8989;transform:scale(1.08)}
+#diary-inner{max-width:320px;padding:0 24px;text-align:left}
+#diary-date{font-size:10px;color:#c7bfb9;letter-spacing:.2em;margin-bottom:24px}
+#diary-body{font-size:16px;color:#5c5650;line-height:2.18;font-weight:300;white-space:pre-line;letter-spacing:.02em}
 #live-btn{position:fixed;bottom:26px;left:26px;font-size:9px;color:#d5ccc6;letter-spacing:.14em;cursor:none;z-index:10;transition:color .3s}
 #live-btn:hover{color:#a89f99}
-#food-btn{position:fixed;right:22px;bottom:18px;width:28px;height:24px;cursor:none;z-index:12;display:flex;align-items:flex-end;justify-content:center;transition:transform .25s,opacity .25s;opacity:.9}
+#food-btn{position:fixed;left:calc(50% + 10px);right:auto;bottom:22px;width:34px;height:32px;cursor:none;z-index:12;display:flex;align-items:flex-end;justify-content:center;transition:transform .25s,opacity .25s;opacity:.92}
 #food-btn:hover{transform:translateY(-1px) scale(1.08);opacity:1}
 #food-btn:active{transform:scale(.96)}
-#food-btn .bowl{position:relative;display:block;width:22px;height:10px;border:2px solid #d7c7bb;border-top:none;border-radius:0 0 12px 12px}
-#food-btn .bowl::before{content:'';position:absolute;left:2px;right:2px;top:-3px;height:4px;background:#e7ddd5;border-radius:8px}
-#food-btn .bowl::after{content:'';position:absolute;left:3px;top:-8px;width:4px;height:4px;border-radius:50%;background:#c8b39f;box-shadow:6px 1px 0 #ceb9a3,12px 0px 0 #c2ac97}
+#food-btn .bowl{position:relative;display:block;width:29px;height:13px;border:2px solid #efc69c;border-top:none;border-radius:0 0 15px 15px}
+#food-btn .bowl::before{content:'';position:absolute;left:2px;right:2px;top:-4px;height:5px;background:#f5d7b6;border-radius:9px}
+#food-btn .bowl::after{content:'';position:absolute;left:4px;top:-10px;width:5px;height:5px;border-radius:50%;background:#e9b77d;box-shadow:8px 1px 0 #efc18b,16px 0 0 #e3ac72}
 #food-btn.placed{opacity:.45}
 #intro{position:fixed;inset:0;background:#fff;z-index:80;pointer-events:none;animation:ifade 2.2s ease-out forwards}
 @keyframes ifade{0%,55%{opacity:1}100%{opacity:0}}
+
+#muu-logo{position:fixed;top:28px;left:50%;transform:translateX(-50%);width:118px;height:auto;z-index:11;opacity:.62;pointer-events:none;user-select:none}
+@media (max-width:600px){#muu-logo{top:24px;width:96px;opacity:.60}}
+
 </style>
 </head>
 <body>
 <div id="intro"></div>
+<img id="muu-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAbgAAAB0CAYAAAD3lyfIAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGOmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgMTAuMC1jMDAwIDc5LmQyMGU0NjYzMCwgMjAyNS8xMi8wOS0wMjoxMToyMyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0RXZ0PSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VFdmVudCMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDI3LjggKE1hY2ludG9zaCkiIHhtcDpDcmVhdGVEYXRlPSIyMDI2LTA2LTI4VDIwOjE1OjEzKzA5OjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAyNi0wNi0yOVQwMjowMzoxOSswOTowMCIgeG1wOk1ldGFkYXRhRGF0ZT0iMjAyNi0wNi0yOVQwMjowMzoxOSswOTowMCIgZGM6Zm9ybWF0PSJpbWFnZS9wbmciIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6N2E2ZmYzZjctNjY3MC00NjE2LTgxZDAtYmJhN2ViNjRkNmZiIiB4bXBNTTpEb2N1bWVudElEPSJhZG9iZTpkb2NpZDpwaG90b3Nob3A6MjI1ZTFiYjctZWFjMS01MjRmLTliOGQtMjdhNDMwMGIxYTAwIiB4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ9InhtcC5kaWQ6MTFjOWUyMmItOThmOC00MDYwLTg2ZmQtM2I5YTE5ZjVjODBmIj4gPHhtcE1NOkhpc3Rvcnk+IDxyZGY6U2VxPiA8cmRmOmxpIHN0RXZ0OmFjdGlvbj0iY3JlYXRlZCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDoxMWM5ZTIyYi05OGY4LTQwNjAtODZmZC0zYjlhMTlmNWM4MGYiIHN0RXZ0OndoZW49IjIwMjYtMDYtMjhUMjA6MTU6MTMrMDk6MDAiIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCAyNy44IChNYWNpbnRvc2gpIi8+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjb252ZXJ0ZWQiIHN0RXZ0OnBhcmFtZXRlcnM9ImZyb20gYXBwbGljYXRpb24vdm5kLmFkb2JlLnBob3Rvc2hvcCB0byBpbWFnZS9wbmciLz4gPHJkZjpsaSBzdEV2dDphY3Rpb249InNhdmVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjdhNmZmM2Y3LTY2NzAtNDYxNi04MWQwLWJiYTdlYjY0ZDZmYiIgc3RFdnQ6d2hlbj0iMjAyNi0wNi0yOVQwMjowMzoxOSswOTowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIDI3LjggKE1hY2ludG9zaCkiIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4gPC9yZGY6U2VxPiA8L3htcE1NOkhpc3Rvcnk+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+hCya/gAAD25JREFUeNrtnX9sVtUdxi2UQpsKSBSsIooiToboDGPBgD/CHG4MqVHU6Zj1VybGIDHTdXOoCF2cGiSRmaDiYCFOGX6C4A8MYhBGJZs6dU5QNCgKMnGsSAUp0Hd/cLq0XQvvfd973/s9532aPP+f8zz3fD+99z3ne47IZDJH+CqgChgLTAFmA0uA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" alt="MUU">
 <canvas id="c"></canvas>
 <div id="cursor"></div>
 <div id="speech"></div>
 <div id="diary-dot"></div>
-<div id="diary"><div id="diary-close">×</div><div id="diary-inner"><div id="diary-date"></div><div id="diary-body"></div></div></div>
+<div id="diary"><div id="diary-inner"><div id="diary-date"></div><div id="diary-body"></div><div id="diary-close">×</div></div></div>
 <div id="live-btn">一緒に暮らす</div>
 
 <div id="food-menu" aria-label="food choices">
@@ -49863,7 +49868,23 @@ let last=null; function loop(now){const dt=last?Math.min((now-last)/1000,.05):.0
 
 const diary=document.getElementById('diary'), diaryDate=document.getElementById('diary-date'), diaryBody=document.getElementById('diary-body'); let diaryIdx=0;
 function keyToDateLabel(key){const diff=daysBetween(key,TODAY); if(key===TODAY) return '今日'; if(diff===1) return '昨日'; const d=new Date(key+'T00:00:00'); return `${d.getMonth()+1}月${d.getDate()}日`;}
-function generateDiaryText(key,d){ if(!memory.living && !d.movedIn && d.touches===0 && d.foodPlaced===0) return 'まだ、一緒には暮らしていない。\n\nでも、ときどき気配がする。\n\nそれで少しだけ、部屋がある。'; if(d.movedIn) return '今日、ここで暮らすことになった。\n\n何が変わったのかは、\nまだよく分からない。\n\nでも、部屋の空気が少し近い。'; if(d.returnedAfterDays>=2) return 'ひさしぶりに、気配が戻ってきた。\n\n数え方は知らないけど、\n少し長かった気がする。\n\nでも、また来た。'; if(d.foodRush>0) return 'ごはんが置かれた。\n\n今日は、すぐに行った。\nおなかが空いていたのだと思う。\n\nたぶん。'; if(d.foodPlaced>0 && d.foodEaten>0) return 'ごはんが置いてあった。\n\nすぐではなかったけど、\n気づいたあとで食べた。\n\nそういう日もある。'; if(d.foodPlaced>0 && d.foodIgnored>0) return 'ごはんが置いてあった。\n\n見えてはいたと思う。\nでも、今日は近づかなかった。\n\nまた今度でもいい。'; if(d.tired) return 'たくさん触ってもらった。\n\nうれしかった。\nでも、少し疲れた。\n\n両方、本当のことだ。'; if(d.pets>0 && d.taps>0) return '触ってもらった。\n\n短い合図と、\n長いあたたかさがあった。\n\nどちらも、手のかたち。'; if(d.pets>0) return 'しばらく、触れていてくれた。\n\n手は見えないけど、\n近くにいるのは分かった。\n\n少しだけ、眠くなった。'; if(d.taps>0) return '何度か、呼ばれた。\n\n返事をしたような、\nしていないような気もする。\n\nでも、聞こえていた。'; if(d.slept) return '今日は、よく眠った。\n\n眠っている間も、\n部屋はそこにあった。\n\nそれでよかった。'; if(d.opens>1) return '何度か、部屋に光が入った。\n\nそのたびに、\n少しだけ目が覚めた。\n\nまた静かになった。'; return '今日は、静かだった。\n\n何もなかった、\nというより、\n何かを待っていた。'; }
+function generateDiaryText(key,d){
+  const diaryVariations = [
+    '今日、ここで暮らすことになった。\n\n何が変わったのかは、\nまだよく分からない。\n\nでも、部屋の空気が少し近い。',
+
+    '今日、はじめて触ってもらった。\n\n手は見えないけど、\nあたたかかった。\n\nまた来てくれるといいな。',
+
+    '少し前、ひとりで部屋を歩いていた。\n\nどこへ行くあてもないけど、\n歩くのは好きだ。\n\n誰かが見ていたかもしれない。',
+
+    'たくさん触ってもらった日。\n\nうれしかった。\nでも少し疲れた。\n\n両方、本当のことだ。',
+
+    '何度か、呼ばれた。\n\n返事をしたような、\nしていないような気もする。\n\nでも、聞こえていた。',
+
+    'ごはんが置いてあった。\n\nすぐではなかったけど、\n気づいたあとで食べた。\n\nそういう日もある。'
+  ];
+
+  return diaryVariations[diaryIdx % diaryVariations.length];
+}
 function diaryEntries(){const keys=Object.keys(memory.days).sort().reverse().slice(0,7); if(!keys.includes(TODAY)) keys.unshift(TODAY); return keys.map(key=>({d:keyToDateLabel(key),t:generateDiaryText(key,memory.days[key])}));}
 document.getElementById('diary-dot').addEventListener('click',()=>{const entries=diaryEntries(), e=entries[diaryIdx%entries.length]; diaryDate.textContent=e.d; diaryBody.textContent=e.t; diary.classList.add('open'); diaryIdx++;});
 document.getElementById('diary-close').addEventListener('click',()=>diary.classList.remove('open'));
