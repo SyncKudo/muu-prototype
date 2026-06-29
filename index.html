@@ -49760,10 +49760,10 @@ const NATIVE_TRAITS=[
   {id:'cleanly',name:'きれいずき',motion:{idleDelay:.98,walkFreq:.94,walkSpeed:.96,walkDist:.88,turn:.96,tailAmp:.88,tailSpeed:.86,tailLift:-.06,earWobble:.84,foodNotice:.96,foodDelay:1.04,touchTolerance:1.04,touchWarmth:.96,washBounce:1.55,dirtDrag:1.42,near:.96,blinkGap:.96}},
   {id:'pouty',name:'むっとしやすい',motion:{idleDelay:1.05,walkFreq:.88,walkSpeed:.94,walkDist:1.02,turn:.82,tailAmp:.62,tailSpeed:.58,tailLift:-.1,earWobble:.7,foodNotice:.82,foodDelay:1.34,touchTolerance:.55,touchWarmth:.55,washBounce:.88,dirtDrag:1.02,near:.82,blinkGap:.95,tailStill:.7}},
   {id:'curious',name:'こうきしんがつよい',motion:{idleDelay:.68,walkFreq:1.48,walkSpeed:1.08,walkDist:1.34,turn:1.22,tailAmp:1.08,tailSpeed:1.34,tailLift:.08,earWobble:1.55,foodNotice:1.24,foodDelay:.9,touchTolerance:1.0,touchWarmth:1.04,washBounce:1.06,dirtDrag:.98,near:1.04,blinkGap:.86}},
-  {id:'stubborn',name:'がんこ',motion:{idleDelay:1.48,walkFreq:.58,walkSpeed:.82,walkDist:.72,turn:.58,tailAmp:.7,tailSpeed:.62,tailLift:-.04,earWobble:.68,foodNotice:.72,foodDelay:1.56,touchTolerance:1.18,touchWarmth:.82,washBounce:.84,dirtDrag:1.02,near:1.08,blinkGap:1.08}},
+  {id:'energetic',name:'げんき',motion:{idleDelay:.78,walkFreq:1.16,walkSpeed:1.08,walkDist:.98,turn:1.05,tailAmp:1.12,tailSpeed:1.18,tailLift:.13,earWobble:1.08,foodNotice:1.18,foodDelay:.86,eatSpeed:.9,touchTolerance:1.04,touchWarmth:1.1,washBounce:1.32,hopTempo:1.16,dirtDrag:.98,near:1.05,blinkGap:.92}},
   {id:'awkwardly_affectionate',name:'あまえべた',motion:{idleDelay:1.04,walkFreq:.94,walkSpeed:.92,walkDist:.9,turn:.86,tailAmp:.82,tailSpeed:1.18,tailLift:.02,earWobble:.92,foodNotice:.98,foodDelay:1.14,touchTolerance:.82,touchWarmth:.7,washBounce:.96,dirtDrag:1,near:.9,blinkGap:.92,awkwardStop:1}}
 ];
-const NATIVE_TRAIT_ALIASES={calm:'gentle',hungry:'foodie',tidy:'cleanly',touchy:'pouty',awkward:'awkwardly_affectionate'};
+const NATIVE_TRAIT_ALIASES={calm:'gentle',hungry:'foodie',tidy:'cleanly',touchy:'pouty',stubborn:'energetic',awkward:'awkwardly_affectionate'};
 function seededUnit(seed,salt){const x=Math.sin((seed||1)*12.9898+salt*78.233)*43758.5453;return x-Math.floor(x);}
 function makeNativeTrait(memoryLike){
   const traits=memoryLike&&memoryLike.traits?memoryLike.traits:{};
@@ -49775,7 +49775,8 @@ function makeNativeTrait(memoryLike){
   return {id:def.id,name:def.name,seed:Math.floor(Math.random()*1000000)+1,assignedAt:new Date().toISOString()};
 }
 function normalizeNativeTrait(value,memoryLike){
-  const id=value&&(NATIVE_TRAIT_ALIASES[value.id]||value.id);
+  const rawId=value&&value.id;
+  const id=value&&(NATIVE_TRAIT_ALIASES[rawId]||(value.name==='がんこ'?'energetic':rawId));
   const found=id&&NATIVE_TRAITS.find(t=>t.id===id);
   if(found)return {id:found.id,name:found.name,seed:Number.isFinite(value.seed)?value.seed:Math.floor(Math.random()*1000000)+1,assignedAt:value.assignedAt||new Date().toISOString()};
   return makeNativeTrait(memoryLike);
@@ -49831,9 +49832,10 @@ function normalizeMemory(m){
   m.traits.calmness=Number.isFinite(m.traits.calmness)?m.traits.calmness:.50;
   m.traits.curiosity=Number.isFinite(m.traits.curiosity)?m.traits.curiosity:.50;
   m.traits.shyness=Number.isFinite(m.traits.shyness)?m.traits.shyness:.50;
+  const legacyStubborn=m.nativeTrait&&(m.nativeTrait.id==='stubborn'||m.nativeTrait.name==='がんこ');
   m.nativeTrait=normalizeNativeTrait(m.nativeTrait,m);
   const nativeDef=NATIVE_TRAITS.find(t=>t.id===m.nativeTrait.id)||NATIVE_TRAITS[0];
-  m.movement=normalizeMovement(m.movement,nativeDef);
+  m.movement=legacyStubborn?traitMovementDefaults(nativeDef):normalizeMovement(m.movement,nativeDef);
   m.sleep=normalizeSleep(m.sleep);
   m.food=normalizeFoodMemory(m.food);
   m.eye=normalizeEye(m.eye,nativeDef);
@@ -50135,7 +50137,7 @@ const STATES={IDLE:'idle',WALK:'walk',SLEEP:'sleep',HAPPY:'happy',SHY:'shy',TIRE
 const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,hopT:0,hopProfile:null,hopFrom:0,hopTo:0,hopY:0,hopSquash:0,hopTailLag:0,lastTouch:Date.now(),touchTimes:[],breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
 function randIdleDelay(){return (4+Math.random()*5)*nativeMotion('idleDelay',1)*nativeNoise(11,.18)}
 function lerp(a,b,t){return a+(b-a)*t}
-function smoothstep(t){return t*t*(3-2*t)}
+function smooth01(t){return t*t*(3-2*t)}
 function resetHopMotion(){SM.hopT=0; SM.hopProfile=null; SM.hopFrom=SM.walkProgress||0; SM.hopTo=SM.hopFrom; SM.hopY=0; SM.hopSquash=0; SM.hopTailLag=0;}
 function updateSleepMemoryForState(s,dirt=memory.currentDirtLevel||computeDirtLevel()){
   const next=dirt>=10?'dust_still':s===STATES.SLEEP?'sleeping':s===STATES.TIRED?'drowsy':dirt>=9?'curled':'awake';
@@ -50150,7 +50152,7 @@ function setState(s){if(SM.current===s)return; SM.current=s; SM.t=0; updateSleep
 SM.nextIdleAction=randIdleDelay();
 const EAR_TARGETS={idle:{lR:-.25,rR:.25,lS:1,rS:1},walk:{lR:-.17,rR:.20,lS:1.04,rS:1.04},sleep:{lR:-.52,rR:.52,lS:.68,rS:.68},happy:{lR:-.12,rR:.12,lS:1.13,rS:1.13},shy:{lR:-.44,rR:.44,lS:.82,rS:.82},tired:{lR:-.56,rR:.56,lS:.64,rS:.64},curious:{lR:-.35,rR:.12,lS:1.08,rS:.95},to_food:{lR:-.18,rR:.18,lS:1.02,rS:1.02},eat:{lR:-.28,rR:.28,lS:.92,rS:.92}};
 const TAIL_TARGETS={idle:{amp:.08,speed:.85,lift:0},walk:{amp:.13,speed:1.45,lift:.09},sleep:{amp:.004,speed:.12,lift:-.44},happy:{amp:.20,speed:2.55,lift:.22},shy:{amp:.05,speed:.62,lift:-.06},tired:{amp:.026,speed:.32,lift:-.16},curious:{amp:.10,speed:1.15,lift:.08},to_food:{amp:.11,speed:1.25,lift:.04},eat:{amp:.03,speed:.4,lift:-.04}};
-function pickWalkTarget(){const angle=Math.random()*Math.PI*2, dist=(.8+Math.random()*1.6)*nativeMotion('walkDist',1)*nativeNoise(17,.18), edge=nativeMotion('near',1)<.8?1.24:1; SM.walkStart.set(muu.position.x,0,muu.position.z); SM.walkTarget.set(Math.cos(angle)*dist*edge,0,Math.sin(angle)*dist*.48*edge); if(nativeMotion('awkwardStop',0)&&Math.random()<.42){SM.walkTarget.multiplyScalar(.62)} SM.walkProgress=0; resetHopMotion();}
+function pickWalkTarget(){const angle=Math.random()*Math.PI*2, dist=(.65+Math.random()*1.15)*nativeMotion('walkDist',1)*nativeNoise(17,.18), edge=nativeMotion('near',1)<.8?1.16:1; SM.walkStart.set(muu.position.x,0,muu.position.z); SM.walkTarget.set(Math.cos(angle)*dist*edge,0,Math.sin(angle)*dist*.48*edge); SM.walkTarget.x=Math.max(-1.55,Math.min(1.55,SM.walkTarget.x)); SM.walkTarget.z=Math.max(-.95,Math.min(1.5,SM.walkTarget.z)); if(nativeMotion('awkwardStop',0)&&Math.random()<.42){SM.walkTarget.multiplyScalar(.62)} SM.walkProgress=0; resetHopMotion();}
 function hopProfileFor(kind,dirt){
   const id=nativeTraitDef.id, foodHop=kind===STATES.TO_FOOD;
   const p={height:.16,duration:.58,distance:.34,anticipation:.16,landing:.18,squash:.075,rebound:.035,pause:.16,tempo:1};
@@ -50192,10 +50194,10 @@ function advanceHopMove(dt,kind,dirt,dirtMotion){
   const p=SM.hopProfile, a=p.anticipation, f=p.duration, l=p.landing, cycle=a+f+l+p.pause;
   SM.hopT+=dt*Math.max(.18,dirtMotion)*p.tempo*nativeMotion('hopTempo',1);
   let progress=SM.hopFrom, y=0, squash=0;
-  if(SM.hopT<a){const u=SM.hopT/a; squash=p.squash*.56*smoothstep(u); y=-.028*smoothstep(u);}
-  else if(SM.hopT<a+f){const u=(SM.hopT-a)/f, e=smoothstep(u); progress=lerp(SM.hopFrom,SM.hopTo,e); y=Math.sin(Math.PI*u)*p.height; squash=-p.rebound*.36*Math.sin(Math.PI*u);}
+  if(SM.hopT<a){const u=SM.hopT/a; squash=p.squash*.56*smooth01(u); y=-.028*smooth01(u);}
+  else if(SM.hopT<a+f){const u=(SM.hopT-a)/f, e=smooth01(u); progress=lerp(SM.hopFrom,SM.hopTo,e); y=Math.sin(Math.PI*u)*p.height; squash=-p.rebound*.36*Math.sin(Math.PI*u);}
   else if(SM.hopT<a+f+l){progress=SM.hopTo; const u=(SM.hopT-a-f)/l; squash=p.squash*(1-u)+Math.sin(Math.PI*u)*p.rebound; y=-.022*(1-u);}
-  else {progress=SM.hopTo; const u=(SM.hopT-a-f-l)/Math.max(.01,p.pause); squash=p.rebound*(1-smoothstep(Math.min(1,u)))*.35;}
+  else {progress=SM.hopTo; const u=(SM.hopT-a-f-l)/Math.max(.01,p.pause); squash=p.rebound*(1-smooth01(Math.min(1,u)))*.35;}
   SM.walkProgress=Math.max(SM.walkProgress,progress);
   const eased=SM.walkProgress;
   muu.position.x=lerp(SM.walkStart.x,SM.walkTarget.x,eased);
@@ -50300,9 +50302,10 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
       break;
     case STATES.WALK:
     case STATES.TO_FOOD:{
-      SM.walkProgress += dt*dirtMotion*nativeMotion('walkSpeed',1)*(SM.current===STATES.TO_FOOD ? .29 : .25);
-      if(SM.walkProgress>=1){ muu.position.x=SM.walkTarget.x; muu.position.z=SM.walkTarget.z; if(SM.current===STATES.TO_FOOD) setState(STATES.EAT); else setState(STATES.IDLE); }
-      else { const p=SM.walkProgress, eased=p*p*(3-2*p); muu.position.x=lerp(SM.walkStart.x,SM.walkTarget.x,eased); muu.position.z=lerp(SM.walkStart.z,SM.walkTarget.z,eased); const dir=SM.walkTarget.clone().sub(SM.walkStart); if(dir.length()>.01){ const angle=(SM.current===STATES.TO_FOOD)?0:Math.atan2(dir.x,dir.z); muu.rotation.y=lerp(muu.rotation.y,angle,(SM.current===STATES.TO_FOOD?.09:.055)*nativeMotion('turn',1));} }
+      const arrived=advanceHopMove(dt,SM.current,dirt,dirtMotion*nativeMotion('walkSpeed',1));
+      const dir=SM.walkTarget.clone().sub(SM.walkStart);
+      if(dir.length()>.01){ const angle=(SM.current===STATES.TO_FOOD)?0:Math.atan2(dir.x,dir.z); muu.rotation.y=lerp(muu.rotation.y,angle,(SM.current===STATES.TO_FOOD?.08:.05)*nativeMotion('turn',1));}
+      if(arrived){ if(SM.current===STATES.TO_FOOD) setState(STATES.EAT); else setState(STATES.IDLE); }
       break; }
     case STATES.EAT:
       muu.rotation.y=lerp(muu.rotation.y,0,.12);
@@ -50321,11 +50324,11 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
 }
 
 function tickAnimations(dt){const st=SM.current, dirt=memory.currentDirtLevel||computeDirtLevel(), dirtMotion=dirtMotionFactor(dirt), curl=Math.max(0,Math.min(1,(dirt-7)/3)), sleepFactor=st===STATES.SLEEP?.28:1; if(SM.nextBlink===undefined)SM.nextBlink=(2.8+seededUnit(memory.nativeTrait.seed,31)*3.8)*nativeMotion('blinkGap',1); SM.nextBlink-=dt; if(SM.nextBlink<-.16)SM.nextBlink=(2.8+Math.random()*3.8)*nativeMotion('blinkGap',1)*nativeNoise(37,.22); SM.breathPhase+=dt*.38*sleepFactor*Math.max(.18,dirtMotion); SM.floatPhase+=dt*.55*sleepFactor*Math.max(.18,dirtMotion); SM.tailPhase+=dt*TAIL_TARGETS[st].speed*Math.max(.12,dirtMotion)*nativeMotion('tailSpeed',1); SM.earPhase+=dt*.9*Math.max(.18,dirtMotion); SM.legPhase+=dt*((st===STATES.WALK || st===STATES.TO_FOOD)?4.4:.28)*Math.max(.18,dirtMotion);
-  const br=Math.sin(SM.breathPhase), brScale=1+br*(st===STATES.SLEEP?.034:.016)*(1-curl*.72); headMesh.scale.set(brScale*(1-curl*.08),brScale*.97*(1-curl*.16),brScale*(1+curl*.04)); body.scale.set(brScale*(1+curl*.18),.85*brScale*(1-curl*.18),.9*brScale*(1+curl*.12));
-  const floatY=st===STATES.SLEEP?0:Math.sin(SM.floatPhase)*.05*dirtMotion; muu.position.y=floatY; if(st===STATES.HAPPY && dirt<9){const hop=Math.max(0,Math.sin(SM.t*6.4))*.11*dirtMotion*movementBias('bounceBias',1); muu.position.y+=hop;}
-  shadowBlob.position.x=muu.position.x; shadowBlob.position.z=muu.position.z; shadowBlob.scale.setScalar(1-muu.position.y*.26);
+  const hopSquash=SM.hopSquash||0, br=Math.sin(SM.breathPhase), brScale=1+br*(st===STATES.SLEEP?.034:.016)*(1-curl*.72); headMesh.scale.set(brScale*(1-curl*.08+hopSquash*.18),brScale*.97*(1-curl*.16-hopSquash*.12),brScale*(1+curl*.04+hopSquash*.1)); body.scale.set(brScale*(1+curl*.18+hopSquash*.24),.85*brScale*(1-curl*.18-hopSquash*.42),.9*brScale*(1+curl*.12+hopSquash*.16));
+  const floatY=st===STATES.SLEEP?0:Math.sin(SM.floatPhase)*.05*dirtMotion; muu.position.y=floatY+(SM.hopY||0); if(st===STATES.IDLE&&nativeTraitDef.id==='energetic'&&dirt<8){muu.position.y+=Math.max(0,Math.sin(SM.t*3.2))*0.014*dirtMotion;} if(st===STATES.HAPPY && dirt<9){const hop=Math.max(0,Math.sin(SM.t*6.4*nativeMotion('hopTempo',1)))*.11*dirtMotion*movementBias('bounceBias',1); muu.position.y+=hop;}
+  shadowBlob.position.x=muu.position.x; shadowBlob.position.z=muu.position.z; shadowBlob.scale.setScalar(Math.max(.72,1-muu.position.y*.26+hopSquash*.26));
   const et=EAR_TARGETS[st]; SM.earLRot=lerp(SM.earLRot,et.lR-curl*.18,.06); SM.earRRot=lerp(SM.earRRot,et.rR+curl*.18,.06); SM.earLScY=lerp(SM.earLScY,et.lS*(1-curl*.22),.06); SM.earRScY=lerp(SM.earRScY,et.rS*(1-curl*.22),.06); const earWobble=Math.sin(SM.earPhase*1.65)*.028*dirtMotion*nativeMotion('earWobble',1); earL.rotation.z=SM.earLRot+earWobble; earR.rotation.z=SM.earRRot-earWobble; earL.scale.y=SM.earLScY; earR.scale.y=SM.earRScY;
-  const tt=TAIL_TARGETS[st], tailStill=nativeMotion('tailStill',1), sleepTail=st===STATES.SLEEP; SM.tailAmp=lerp(SM.tailAmp,tt.amp*dirtMotion*(sleepTail?1:nativeMotion('tailAmp',1)*tailStill),.045); SM.tailSpeed=lerp(SM.tailSpeed,tt.speed*dirtMotion*(sleepTail?1:nativeMotion('tailSpeed',1)),.045); SM.tailLift=lerp(SM.tailLift,tt.lift+(sleepTail?0:nativeMotion('tailLift',0))-curl*.12,.045); updateTail();
+  const tt=TAIL_TARGETS[st], tailStill=nativeMotion('tailStill',1), sleepTail=st===STATES.SLEEP; SM.tailAmp=lerp(SM.tailAmp,tt.amp*dirtMotion*(sleepTail?1:nativeMotion('tailAmp',1)*tailStill)+(SM.hopTailLag||0),.045); SM.tailSpeed=lerp(SM.tailSpeed,tt.speed*dirtMotion*(sleepTail?1:nativeMotion('tailSpeed',1)),.045); SM.tailLift=lerp(SM.tailLift,tt.lift+(sleepTail?0:nativeMotion('tailLift',0))-curl*.12-hopSquash*.08,.045); updateTail();
   if(st===STATES.WALK || st===STATES.TO_FOOD){ legL.rotation.x=Math.sin(SM.legPhase)*.32; legR.rotation.x=Math.sin(SM.legPhase+Math.PI)*.32; } else if(st===STATES.SLEEP){ legL.rotation.x=lerp(legL.rotation.x,.28,.035); legR.rotation.x=lerp(legR.rotation.x,.28,.035);} else { legL.rotation.x=lerp(legL.rotation.x,0,.06); legR.rotation.x=lerp(legR.rotation.x,0,.06); }
   if(st===STATES.SLEEP){ head.rotation.z=lerp(head.rotation.z,-.23-curl*.18,.035); head.position.y=lerp(head.position.y,1.1-curl*.16,.035);} else if(st===STATES.EAT){ head.rotation.z=lerp(head.rotation.z,-curl*.16,.08); head.rotation.x=lerp(head.rotation.x,.35*(1-curl*.45) + Math.sin(SM.t*10)*.05*dirtMotion,.09); head.position.y=lerp(head.position.y,1.18-curl*.20,.08);} else { head.rotation.z=lerp(head.rotation.z,-curl*.24,.055); head.rotation.x=lerp(head.rotation.x,curl*.18,.08); head.position.y=lerp(head.position.y,1.3-curl*.30,.055);} 
   if(SM.hasPointer) checkHit(); cursor.classList.toggle('near',SM.nearMuu&&!SM.petting); cursor.classList.toggle('pet',SM.petting);
