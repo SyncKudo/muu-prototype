@@ -49825,6 +49825,49 @@ function normalizeEye(value,trait){
   const e=value||{}, m=(trait&&trait.motion)||{};
   return {openness:Number.isFinite(e.openness)?e.openness:1,blinkType:e.blinkType||'soft',blinkFrequencyBias:Number.isFinite(e.blinkFrequencyBias)?e.blinkFrequencyBias:(m.blinkGap?1/m.blinkGap:1),lastBlinkAt:e.lastBlinkAt||null,updatedAt:e.updatedAt||new Date().toISOString()};
 }
+const TOUCH_ZONE_LIBRARY=[
+  {key:'front_belly',bodyPart:'body',anchor:{mode:'normalizedSurface',x:0,y:.28,z:.72},radius:.34,intensityRadius:.14},
+  {key:'upper_body_left',bodyPart:'body',anchor:{mode:'normalizedSurface',x:-.42,y:.48,z:.48},radius:.28,intensityRadius:.11},
+  {key:'upper_body_right',bodyPart:'body',anchor:{mode:'normalizedSurface',x:.42,y:.48,z:.48},radius:.28,intensityRadius:.11},
+  {key:'cheek_left',bodyPart:'head',anchor:{mode:'normalizedSurface',x:-.38,y:.74,z:.54},radius:.28,intensityRadius:.12},
+  {key:'cheek_right',bodyPart:'head',anchor:{mode:'normalizedSurface',x:.38,y:.74,z:.54},radius:.28,intensityRadius:.12},
+  {key:'head_top',bodyPart:'head',anchor:{mode:'normalizedSurface',x:0,y:.96,z:.18},radius:.26,intensityRadius:.10},
+  {key:'lower_body',bodyPart:'body',anchor:{mode:'normalizedSurface',x:0,y:.12,z:.34},radius:.30,intensityRadius:.11},
+  {key:'body_back',bodyPart:'body',anchor:{mode:'normalizedSurface',x:0,y:.42,z:-.62},radius:.32,intensityRadius:.12},
+  {key:'head_side_left',bodyPart:'head',anchor:{mode:'normalizedSurface',x:-.72,y:.74,z:.05},radius:.25,intensityRadius:.10},
+  {key:'head_side_right',bodyPart:'head',anchor:{mode:'normalizedSurface',x:.72,y:.74,z:.05},radius:.25,intensityRadius:.10}
+];
+function buildTouchZone(kind,index,entry,seed){
+  const jitter=(salt,amount)=> (seededUnit(seed,salt)-.5)*amount;
+  return {
+    id:`${kind}_${String(index+1).padStart(2,'0')}`,
+    type:kind,
+    bodyPart:entry.bodyPart,
+    growthStageRange:{min:1,max:12},
+    anchor:{mode:'normalizedSurface',x:clampMemory(entry.anchor.x+jitter(index+11,.08),-1,1),y:clampMemory(entry.anchor.y+jitter(index+17,.06),0,1),z:clampMemory(entry.anchor.z+jitter(index+23,.08),-1,1)},
+    radius:entry.radius+jitter(index+31,.035),
+    intensityRadius:entry.intensityRadius+jitter(index+37,.02),
+    reactionScale:1+jitter(index+43,.18)
+  };
+}
+function makeTouchProfile(memoryLike,traitDef){
+  const seed=(memoryLike.nativeTrait&&memoryLike.nativeTrait.seed)||Math.floor(Math.random()*1000000)+1, id=traitDef.id;
+  const likedCount=(id==='affectionate'||id==='energetic'||id==='awkwardly_affectionate')?2:1;
+  const dislikedCount=(id==='solitary'||id==='timid'||id==='pouty'||id==='cleanly')?2:1;
+  const likedStart=Math.floor(seededUnit(seed,101)*6), dislikedStart=6+Math.floor(seededUnit(seed,151)*4);
+  const likedZones=[], dislikedZones=[];
+  for(let i=0;i<likedCount;i++)likedZones.push(buildTouchZone('liked',i,TOUCH_ZONE_LIBRARY[(likedStart+i*2)%6],seed));
+  for(let i=0;i<dislikedCount;i++)dislikedZones.push(buildTouchZone('disliked',i,TOUCH_ZONE_LIBRARY[6+((dislikedStart-6+i*2)%4)],seed));
+  return {version:1,growthStage:memoryLike.growth&&Number.isFinite(memoryLike.growth.stage)?memoryLike.growth.stage:1,likedZones,dislikedZones,generatedAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+}
+function normalizeTouchZone(zone,type,index){
+  const z=zone||{}, a=z.anchor||{};
+  return {id:z.id||`${type}_${String(index+1).padStart(2,'0')}`,type,bodyPart:z.bodyPart||'body',growthStageRange:z.growthStageRange||{min:1,max:12},anchor:{mode:a.mode||'normalizedSurface',x:Number.isFinite(a.x)?a.x:0,y:Number.isFinite(a.y)?a.y:.5,z:Number.isFinite(a.z)?a.z:.5},radius:Number.isFinite(z.radius)?z.radius:.28,intensityRadius:Number.isFinite(z.intensityRadius)?z.intensityRadius:.12,reactionScale:Number.isFinite(z.reactionScale)?z.reactionScale:1};
+}
+function normalizeTouchProfile(value,memoryLike,traitDef){
+  if(!value||!Array.isArray(value.likedZones)||!Array.isArray(value.dislikedZones))return makeTouchProfile(memoryLike,traitDef);
+  return {version:value.version||1,growthStage:Number.isFinite(value.growthStage)?value.growthStage:(memoryLike.growth&&memoryLike.growth.stage)||1,likedZones:value.likedZones.map((z,i)=>normalizeTouchZone(z,'liked',i)),dislikedZones:value.dislikedZones.map((z,i)=>normalizeTouchZone(z,'disliked',i)),generatedAt:value.generatedAt||new Date().toISOString(),updatedAt:value.updatedAt||new Date().toISOString()};
+}
 function normalizeMemory(m){
   m=m||{};
   if(!m.id)m.id=makeMuuId();
@@ -49857,6 +49900,7 @@ function normalizeMemory(m){
   m.growth.stage=Number.isFinite(m.growth.stage)?Math.max(1,Math.min(108,Math.round(m.growth.stage))):1;
   m.growth.points=Number.isFinite(m.growth.points)?m.growth.points:0;
   m.growth.updatedAt=m.growth.updatedAt||new Date().toISOString();
+  m.touchProfile=normalizeTouchProfile(m.touchProfile,m,nativeDef);
   m.dirtLevel=Number.isFinite(m.dirtLevel)?m.dirtLevel:2;
   if(!m.lastWashedAt)m.lastWashedAt=m.bornAt+'T00:00:00';
   return m;
@@ -50173,7 +50217,7 @@ const foodGroup=new THREE.Group(); foodGroup.visible=false; scene.add(foodGroup)
 const food={exists:false,eaten:false,noticed:false,placedAt:0,target:new THREE.Vector3(0,0,1.12),lastServedDay:null};
 
 const STATES={IDLE:'idle',WALK:'walk',SLEEP:'sleep',HAPPY:'happy',SHY:'shy',TIRED:'tired',CURIOUS:'curious',TO_FOOD:'to_food',EAT:'eat'};
-const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,hopT:0,hopProfile:null,hopFrom:0,hopTo:0,hopY:0,hopSquash:0,hopTailLag:0,lastTailRotY:0,tailTurnLag:0,tailTipLagX:0,tailTipLagY:0,tailTipVX:0,tailTipVY:0,lastTouch:Date.now(),touchTimes:[],breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
+const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,hopT:0,hopProfile:null,hopFrom:0,hopTo:0,hopY:0,hopSquash:0,hopTailLag:0,lastTailRotY:0,tailTurnLag:0,tailTipLagX:0,tailTipLagY:0,tailTipVX:0,tailTipVY:0,lastTouch:Date.now(),touchTimes:[],touchPoint:null,lastHit:null,breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
 function randIdleDelay(){return (2.8+Math.random()*3.6)*nativeMotion('idleDelay',1)*nativeNoise(11,.18)}
 function lerp(a,b,t){return a+(b-a)*t}
 function smooth01(t){return t*t*(3-2*t)}
@@ -50286,6 +50330,8 @@ const VOICE_POOLS={
   idle:['む','むぅ','むー','む…','むぅ…','……','んむ','ふむ…','むむ','むん…'],
   startup:['む','むぅ','む…','むぅ…','……む','…む','んむ','む、む','むぅん…','ふむ…'],
   touch:['む','むぅ','む？','むっ？','む、む','むに','むに…','むきゅ？','むふ','……む'],
+  liked_touch:['むぅ','む〜','む、む','むぅ〜','んむぅ','むきゅ','むふ','むにゅ','ぽふ','むぴ'],
+  disliked_touch:['むっ','む……','……','……む','む？','むぅ？','んむ…','むっ…','むす…','む、、'],
   sleepy:['むぅ…','すぅ…','……む','むぅぅ…','むぅぅ、、、ん','すぅ……む','む……すぅ','んむぅ…','むゆ…','ふむ…'],
   sleeping:['すぅ…','すぅ……む','……','……む','むぅ…','むぅぅ…','んむ…','む……すぅ','ふむ…','むぅぅ、、、ん'],
   weak:['む……','むぅ…','んむ…','む……ん','ん……む','むす…','むすぅ…','むしゅ…','むゅ…','……む'],
@@ -50353,12 +50399,79 @@ function scheduleStartupVoice(){const delay=800+Math.random()*1000; setTimeout((
 const cursor=document.getElementById('cursor'); const raycaster=new THREE.Raycaster(); const mouse2=new THREE.Vector2(); const interactables=[headMesh,body,belly];
 function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#live-btn,#food-btn,#wash-btn,#pet-name,#food-menu,.food-choice'));}
 function updatePointer(e){SM.hasPointer=true; SM.pointerType=e.pointerType||'mouse'; SM.mx=e.clientX; SM.my=e.clientY; mouse2.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1); if(SM.pointerType==='touch'){cursor.style.opacity='0'}else{cursor.style.opacity='1'; cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px';}}
-function checkHit(){if(!SM.hasPointer) return false; raycaster.setFromCamera(mouse2,camera); const hits=raycaster.intersectObjects(interactables,false); SM.nearMuu=hits.length>0; return SM.nearMuu;}
+function checkHit(){if(!SM.hasPointer) return false; raycaster.setFromCamera(mouse2,camera); const hits=raycaster.intersectObjects(interactables,false); SM.lastHit=hits[0]||null; SM.nearMuu=hits.length>0; return SM.nearMuu;}
+function bodyPartForHit(object){if(object===headMesh)return 'head'; if(object===body||object===belly)return 'body'; return 'body';}
+function getTouchPointOnMuu(e){
+  const hit=SM.lastHit, local=hit&&hit.point?muu.worldToLocal(hit.point.clone()):null;
+  if(local){
+    return {mode:'normalizedSurface',bodyPart:bodyPartForHit(hit.object),x:clamp(local.x/.78,-1,1),y:clamp((local.y-.16)/1.72,0,1),z:clamp(local.z/.78,-1,1),screen:{x:e.clientX,y:e.clientY}};
+  }
+  return {mode:'screenApprox',bodyPart:'body',x:clamp((e.clientX-window.innerWidth/2)/(window.innerWidth*.22),-1,1),y:clamp(1-(e.clientY-window.innerHeight*.35)/(window.innerHeight*.34),0,1),z:.55,screen:{x:e.clientX,y:e.clientY}};
+}
+function distanceToTouchZone(point,zone){
+  const a=zone.anchor||{}, partPenalty=(zone.bodyPart&&point.bodyPart&&zone.bodyPart!==point.bodyPart)?.18:0;
+  const dx=(point.x||0)-(a.x||0), dy=((point.y||0)-(a.y||0))*1.12, dz=((point.z||0)-(a.z||0))*.72;
+  return Math.sqrt(dx*dx+dy*dy+dz*dz)+partPenalty;
+}
+function evaluateTouchZone(point,profile=memory.touchProfile){
+  const all=[...(profile&&profile.likedZones||[]),...(profile&&profile.dislikedZones||[])];
+  let best={type:'neutral',zone:null,intensity:0,point,distance:Infinity};
+  for(const zone of all){
+    const dist=distanceToTouchZone(point,zone), radius=Math.max(.05,zone.radius||.28);
+    if(dist>radius)continue;
+    const inner=Math.min(radius*.85,Math.max(.02,zone.intensityRadius||.12));
+    const intensity=dist<=inner?1:clamp((radius-dist)/(radius-inner),0,1);
+    const scaled=clamp(intensity*(zone.reactionScale||1),0,1);
+    if(scaled>best.intensity)best={type:zone.type,zone,intensity:scaled,point,distance:dist};
+  }
+  return best;
+}
+function touchReactionScale(result){
+  const dirt=memory.currentDirtLevel||computeDirtLevel(), id=nativeTraitDef.id;
+  let liked=1, disliked=1, overall=1;
+  if(id==='affectionate'){liked*=1.18; disliked*=.88}
+  if(id==='solitary'){liked*=.82; disliked*=1.12; overall*=.9}
+  if(id==='timid'){liked*=.86; disliked*=1.2}
+  if(id==='energetic'){liked*=1.22}
+  if(id==='cleanly'&&dirt>=5){liked*=.72; disliked*=1.18}
+  if(id==='awkwardly_affectionate'){liked*=.88; disliked*=.95}
+  if(SM.current===STATES.TIRED||memory.state.sleepiness>.62)overall*=.62;
+  if(SM.current===STATES.SLEEP)overall*=.42;
+  if(SM.current===STATES.SHY||memory.state.mood<.28){liked*=.72; disliked*=1.16}
+  if(dirt>=5){liked*=.72; disliked*=1.12}
+  if(dirt>=10)overall*=.22;
+  return clamp(result.intensity*(result.type==='liked'?liked:result.type==='disliked'?disliked:1)*overall,0,1);
+}
+function applyTouchReaction(result,kind,recent,tolerance){
+  const intensity=touchReactionScale(result), touchVoice={force:true,noRepeat:true,cooldown:0};
+  if((memory.currentDirtLevel||computeDirtLevel())>=10){SM.tailTipVY-=.008; sayVoice('dust',1100,1,touchVoice); return {handled:true};}
+  if(SM.current===STATES.SLEEP){SM.tailTipVY-=.01*intensity; sayVoice('sleeping',1150,1,touchVoice); return {handled:true};}
+  if(result.type==='liked'&&intensity>.08){
+    memory.state.trust=clampMemory(memory.state.trust+.004+.008*intensity);
+    memory.state.mood=clampMemory(memory.state.mood+.004+.01*intensity);
+    SM.hopTailLag=Math.max(SM.hopTailLag||0,.025+.04*intensity);
+    SM.tailTipVY+=.018*intensity;
+    if(SM.current!==STATES.TIRED)setState(STATES.HAPPY);
+    sayVoice('liked_touch',1050+intensity*220,1,touchVoice);
+    saveMemory();
+    return {handled:true};
+  }
+  if(result.type==='disliked'&&intensity>.08){
+    memory.state.mood=clampMemory(memory.state.mood-.003-.008*intensity);
+    SM.tailTipVY-=.018*intensity;
+    SM.tailTipVX*=.55;
+    if(intensity>.46||recent>=Math.max(3,Math.round(tolerance*.72)))setState(STATES.SHY);
+    sayVoice('disliked_touch',1000+intensity*180,1,touchVoice);
+    saveMemory();
+    return {handled:true};
+  }
+  return {handled:false,intensity};
+}
 addEventListener('pointermove',e=>{updatePointer(e); if(!isUiTarget(e)) checkHit();});
-addEventListener('pointerdown',e=>{updatePointer(e); if(isUiTarget(e)) return; e.preventDefault(); if(!checkHit()) return; SM.petting=true; SM.petStart=Date.now(); SM.lastTouch=Date.now();});
-addEventListener('pointerup',e=>{if(!SM.petting) return; e.preventDefault(); const dur=Date.now()-SM.petStart; SM.petting=false; SM.lastTouch=Date.now(); onMuuTouched(dur);}); addEventListener('pointercancel',()=>SM.petting=false);
+addEventListener('pointerdown',e=>{updatePointer(e); if(isUiTarget(e)) return; e.preventDefault(); if(!checkHit()) return; SM.touchPoint=getTouchPointOnMuu(e); SM.petting=true; SM.petStart=Date.now(); SM.lastTouch=Date.now();});
+addEventListener('pointerup',e=>{if(!SM.petting) return; updatePointer(e); e.preventDefault(); const dur=Date.now()-SM.petStart; SM.petting=false; SM.lastTouch=Date.now(); onMuuTouched(dur,SM.touchPoint); SM.touchPoint=null;}); addEventListener('pointercancel',()=>{SM.petting=false; SM.touchPoint=null;});
 function recordTouch(kind){const d=todayData(); d.touches++; d.lastInteractionAt=new Date().toISOString(); if(kind==='tap'){d.taps++; memory.state.trust=clampMemory(memory.state.trust+.002); memory.traits.curiosity=clampMemory(memory.traits.curiosity+.002);} if(kind==='pet'){d.pets++; memory.state.trust=clampMemory(memory.state.trust+.006); memory.state.mood=clampMemory(memory.state.mood+.004); memory.traits.calmness=clampMemory(memory.traits.calmness+.003);} memory.totals.touched++; saveMemory(); const now=Date.now(); SM.touchTimes.push(now); SM.touchTimes=SM.touchTimes.filter(t=>now-t<15000); return SM.touchTimes.length;}
-function onMuuTouched(duration){const kind=duration<260?'tap':'pet'; const recent=recordTouch(kind), tolerance=Math.max(3,Math.round(8*nativeMotion('touchTolerance',1))), touchVoice={force:true,noRepeat:true,cooldown:0}; if(SM.current===STATES.TIRED){sayVoice('sleepy',1100,1,touchVoice); return;} if(SM.current===STATES.SLEEP){setState(STATES.CURIOUS); sayVoice('sleepy',1200,1,touchVoice); return;} if(recent>=tolerance){setState(nativeTraitDef.id==='pouty'?STATES.SHY:STATES.TIRED); sayVoice('moody',1100,1,touchVoice); return;} if(kind==='pet'&&nativeMotion('touchWarmth',1)>.75){setState(STATES.HAPPY); sayVoice('happy',1150,1,touchVoice); return;} if(recent>=Math.max(3,Math.round(5*nativeMotion('touchTolerance',1)))){setState(STATES.SHY); sayVoice('moody',1100,1,touchVoice); return;} setState(nativeMotion('touchWarmth',1)<.7?STATES.CURIOUS:STATES.HAPPY); sayVoice(SM.current===STATES.CURIOUS?'curious':'touch',1100,1,touchVoice);}
+function onMuuTouched(duration,touchPoint){const kind=duration<260?'tap':'pet'; const recent=recordTouch(kind), tolerance=Math.max(3,Math.round(8*nativeMotion('touchTolerance',1))), touchVoice={force:true,noRepeat:true,cooldown:0}, zoneResult=evaluateTouchZone(touchPoint||{mode:'screenApprox',bodyPart:'body',x:0,y:.5,z:.55}); const zoneReaction=applyTouchReaction(zoneResult,kind,recent,tolerance); if(zoneReaction.handled)return; if(SM.current===STATES.TIRED){sayVoice('sleepy',1100,1,touchVoice); return;} if(recent>=tolerance){setState(nativeTraitDef.id==='pouty'?STATES.SHY:STATES.TIRED); sayVoice('moody',1100,1,touchVoice); return;} if(kind==='pet'&&nativeMotion('touchWarmth',1)>.75){setState(STATES.HAPPY); sayVoice('happy',1150,1,touchVoice); return;} if(recent>=Math.max(3,Math.round(5*nativeMotion('touchTolerance',1)))){setState(STATES.SHY); sayVoice('moody',1100,1,touchVoice); return;} setState(nativeMotion('touchWarmth',1)<.7?STATES.CURIOUS:STATES.HAPPY); sayVoice(SM.current===STATES.CURIOUS?'curious':'touch',1100,1,touchVoice);}
 
 function placeFood(type='normal'){if(food.exists) return; setFoodType(type); food.type=type; food.reaction=computeFoodReaction(type); food.exists=true; food.eaten=false; food.noticed=false; food.placedAt=Date.now(); foodGroup.position.set(0,0,1.75); foodGroup.visible=true; foodGroup.position.set(0,0,1.75); for(const k of kibbles) k.visible=true; sayVoice('food',900,.74); todayData().foodPlaced++; memory.totals.foodPlaced++; memory.lastFoodAt=new Date().toISOString(); memory.food.hasFood=true; memory.food.placedAt=new Date(food.placedAt).toISOString(); memory.food.lastReaction=food.reaction; memory.food.updatedAt=new Date().toISOString(); if(food.reaction==='rush')todayData().foodRush++; saveMemory(); closeFoodMenu(); document.getElementById('food-btn').classList.add('placed'); const foodDelay=nativeMotion('foodDelay',1)*nativeNoise(23,.16); if(food.reaction==='rush'){setTimeout(()=>{if(food.exists&&!food.eaten){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.7);}},240*foodDelay);} else if(food.reaction==='approach'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.58);}},(1200+Math.random()*1300)*foodDelay);} else if(food.reaction==='wait'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){setState(STATES.CURIOUS); sayVoice('curious',1100,.55);}},(1500+Math.random()*1600)*foodDelay); setTimeout(()=>{if(food.exists&&!food.eaten&&Math.random()<.65*nativeMotion('foodNotice',1)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.58);}},(7000+Math.random()*4000)*foodDelay);} }
 function clearFood(){food.exists=false; food.eaten=false; food.noticed=false; foodGroup.visible=false; memory.food.hasFood=false; memory.food.updatedAt=new Date().toISOString(); saveMemory(); document.getElementById('food-btn').classList.remove('placed'); closeFoodMenu && closeFoodMenu();}
@@ -51359,7 +51472,7 @@ setTimeout(()=>{if(memory.living) sayVoice('idle',1300,.38); setState(STATES.CUR
 
 scheduleStartupVoice();
 
-window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE};
+window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction};
 </script>
 </body>
 </html>
