@@ -35,7 +35,7 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 #diary-dot:hover{background:#e8c5cc;transform:scale(1.08);opacity:1}
 #diary{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .7s}
 #diary.open{opacity:1;pointer-events:all}
-#diary-close{position:static;margin:28px auto 0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:26px;line-height:1;color:#c9b7b7;cursor:none;transition:color .2s,transform .2s;border-radius:50%;font-weight:300}
+#diary-close{position:static;margin:28px auto 0;width:34px;height:34px;display:none;align-items:center;justify-content:center;font-size:26px;line-height:1;color:#c9b7b7;cursor:none;transition:color .2s,transform .2s;border-radius:50%;font-weight:300}
 #diary-close:hover{color:#9b8989;transform:scale(1.08)}
 #diary-inner{max-width:320px;padding:0 24px;text-align:left}
 #diary-date{font-size:10px;color:#c7bfb9;letter-spacing:.2em;margin-bottom:24px}
@@ -50939,7 +50939,8 @@ function diaryKeys(){
   if(!keys.includes(TODAY)) keys.unshift(TODAY);
   return keys;
 }
-document.getElementById('diary-dot').addEventListener('click',()=>{
+document.getElementById('diary-dot').addEventListener('click',(event)=>{
+  event.stopPropagation();
   const keys=diaryKeys();
   const key=keys[diaryIdx%keys.length]||TODAY;
   const d=memory.days[key]||todayData();
@@ -50952,7 +50953,7 @@ document.getElementById('diary-dot').addEventListener('click',()=>{
   memory.totals.diaryRead++;
   saveMemory();
 });
-document.getElementById('diary-close').addEventListener('click',()=>diary.classList.remove('open'));
+diary.addEventListener('click',()=>diary.classList.remove('open'));
 const liveBtn=document.getElementById('live-btn'); function updateLiveButton(){liveBtn.textContent=memory.living?'暮らしている':'一緒に暮らす'} updateLiveButton(); liveBtn.addEventListener('click',()=>{ if(!memory.living){ memory.living=true; memory.livingSince=TODAY; todayData().movedIn=true; saveMemory(); updateLiveButton(); setState(STATES.CURIOUS); say('むぅ',1700); return;} setState(STATES.CURIOUS); say(smallVoice(),1400);});
 setTimeout(()=>{if(memory.living) say('……',1500); setState(STATES.CURIOUS);},2400);
 
