@@ -50384,7 +50384,9 @@ const VOICE_POOLS={
   startup:['む','むぅ','む…','むぅ…','……む','…む','んむ','む、む','むぅん…','ふむ…'],
   touch:['む','むぅ','む？','むっ？','む、む','むに','むに…','むきゅ？','むふ','……む'],
   liked_touch:['むぅ','む〜','む、む','むぅ〜','んむぅ','むきゅ','むふ','むにゅ','ぽふ','むぴ'],
+  liked_touch_core:['むぅ〜❣️','んむぅ❣️','むきゅ❣️','むぴ❣️'],
   disliked_touch:['むっ','む……','……','……む','む？','むぅ？','んむ…','むっ…','むす…','む、、'],
+  disliked_touch_core:['むっ………','む………','……む………','んむ………'],
   sleepy:['むぅ…','すぅ…','……む','むぅぅ…','むぅぅ、、、ん','すぅ……む','む……すぅ','んむぅ…','むゆ…','ふむ…'],
   sleeping:['すぅ…','すぅ……む','……','……む','むぅ…','むぅぅ…','んむ…','む……すぅ','ふむ…','むぅぅ、、、ん'],
   weak:['む……','むぅ…','んむ…','む……ん','ん……む','むす…','むすぅ…','むしゅ…','むゅ…','……む'],
@@ -50402,7 +50404,7 @@ const VOICE_POOLS={
 const VOICE_CONTEXT_ALIASES={pouty:'moody',bad:'moody',bad_mood:'moody',tired:'sleepy',asleep:'sleeping'};
 const TRAIT_VOICES={affectionate:['むぅ','む〜','むぅ〜','む、むぅ'],solitary:['……','む','…む','ふむ…'],gentle:['むぅ…','すぅ…','ふむ…'],restless:['む、む','むっ','む、む…'],timid:['……む','むぅ？','む…'],foodie:['むっ','むぅ？','むきゅ？'],sleepy:['すぅ…','むぅ…','むぅぅ、、、ん'],cleanly:['む〜','ぽふ','むぽふ'],pouty:['むっ','……','むす…'],curious:['むぅ？','むっ','むきゅ？'],energetic:['む！','む、む','む、む、む'],awkwardly_affectionate:['……む','むぅ…','む、']};
 const VOICE_LOCALE=((navigator.languages||[navigator.language||'ja']).some(l=>String(l).toLowerCase().startsWith('ja')))?'ja':'romaji';
-function voiceToRomaji(text){return String(text).replace(/きゅ/g,'kyu').replace(/にゅ/g,'nyu').replace(/しゅ/g,'shu').replace(/む/g,'mu').replace(/ぅ/g,'u').replace(/ー/g,'-').replace(/〜/g,'~').replace(/…/g,'...').replace(/、/g,',').replace(/！/g,'!').replace(/？/g,'?').replace(/ん/g,'n').replace(/す/g,'su').replace(/ふ/g,'fu').replace(/ぽ/g,'po').replace(/ぷ/g,'pu').replace(/に/g,'ni').replace(/ゆ/g,'yu').replace(/ゅ/g,'yu').replace(/ぁ/g,'a').replace(/ぴ/g,'pi').replace(/っ/g,"'");}
+function voiceToRomaji(text){return String(text).replace(/むっ/g,'mu!').replace(/きゅ/g,'kyu').replace(/にゅ/g,'nyu').replace(/しゅ/g,'shu').replace(/む/g,'mu').replace(/ぅ/g,'u').replace(/ー/g,'-').replace(/〜/g,'~').replace(/、/g,',').replace(/！/g,'!').replace(/？/g,'?').replace(/ん/g,'n').replace(/す/g,'su').replace(/ふ/g,'fu').replace(/ぽ/g,'po').replace(/ぷ/g,'pu').replace(/に/g,'ni').replace(/ゆ/g,'yu').replace(/ゅ/g,'yu').replace(/ぁ/g,'a').replace(/ぴ/g,'pi').replace(/っ/g,"'");}
 function localizeVoice(text,locale=VOICE_LOCALE){return locale==='ja'?text:voiceToRomaji(text);}
 function chooseVoiceFromPool(pool,noRepeat=false){const list=Array.from(new Set(pool.filter(Boolean))); const filtered=noRepeat&&list.length>1?list.filter(v=>v!==lastVoiceText):list; return (filtered.length?filtered:list)[Math.floor(Math.random()*(filtered.length?filtered:list).length)]||'む';}
 function resolveVoiceContext(context='idle'){
@@ -50410,6 +50412,7 @@ function resolveVoiceContext(context='idle'){
   if(requested==='wash')return requested;
   if(dirt>=10)return 'dust';
   if(SM.current===STATES.SLEEP)return 'sleeping';
+  if(['liked_touch','disliked_touch','liked_touch_core','disliked_touch_core'].includes(requested))return requested;
   if(dirt>=7)return 'weak';
   if(dirt>=5)return 'dirty';
   if(requested==='food'){const hp=hungerFoodProfile(); if(hp.isHungry)return 'hungry'; if(hp.isFull)return 'full'; return 'food';}
@@ -50471,14 +50474,14 @@ function distanceToTouchZone(point,zone){
 }
 function evaluateTouchZone(point,profile=memory.touchProfile){
   const all=[...(profile&&profile.likedZones||[]),...(profile&&profile.dislikedZones||[])];
-  let best={type:'neutral',zone:null,intensity:0,point,distance:Infinity};
+  let best={type:'neutral',zone:null,intensity:0,point,distance:Infinity,isCore:false};
   for(const zone of all){
     const dist=distanceToTouchZone(point,zone), radius=Math.max(.05,zone.radius||.28);
     if(dist>radius)continue;
     const inner=Math.min(radius*.85,Math.max(.02,zone.intensityRadius||.12));
     const intensity=dist<=inner?1:clamp((radius-dist)/(radius-inner),0,1);
     const scaled=clamp(intensity*(zone.reactionScale||1),0,1);
-    if(scaled>best.intensity)best={type:zone.type,zone,intensity:scaled,point,distance:dist};
+    if(scaled>best.intensity)best={type:zone.type,zone,intensity:scaled,point,distance:dist,isCore:dist<=inner};
   }
   return best;
 }
@@ -50508,7 +50511,7 @@ function applyTouchReaction(result,kind,recent,tolerance){
     SM.hopTailLag=Math.max(SM.hopTailLag||0,.025+.04*intensity);
     SM.tailTipVY+=.018*intensity;
     if(SM.current!==STATES.TIRED)setState(STATES.HAPPY);
-    sayVoice('liked_touch',1050+intensity*220,1,touchVoice);
+    sayVoice(result.isCore&&Math.random()<.42?'liked_touch_core':'liked_touch',1050+intensity*220,1,touchVoice);
     saveMemory();
     return {handled:true};
   }
@@ -50517,7 +50520,7 @@ function applyTouchReaction(result,kind,recent,tolerance){
     SM.tailTipVY-=.018*intensity;
     SM.tailTipVX*=.55;
     if(intensity>.46||recent>=Math.max(3,Math.round(tolerance*.72)))setState(STATES.SHY);
-    sayVoice('disliked_touch',1000+intensity*180,1,touchVoice);
+    sayVoice(result.isCore&&Math.random()<.42?'disliked_touch_core':'disliked_touch',1000+intensity*180,1,touchVoice);
     saveMemory();
     return {handled:true};
   }
