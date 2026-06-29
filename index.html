@@ -49821,6 +49821,21 @@ function normalizeFoodMemory(value){
   const f=value||{};
   return {hasFood:!!f.hasFood,placedAt:f.placedAt||null,lastAteAt:f.lastAteAt||null,lastIgnoredAt:f.lastIgnoredAt||null,lastReaction:f.lastReaction||null,updatedAt:f.updatedAt||new Date().toISOString()};
 }
+function hungerBiasForTrait(traitDef){
+  const id=traitDef&&traitDef.id;
+  return ({foodie:1.34,energetic:1.12,restless:1.08,sleepy:.86,solitary:.9,gentle:.94,cleanly:.98,pouty:.96,timid:.92}[id]||1);
+}
+function normalizeHunger(value,memoryLike,traitDef){
+  const h=value||{}, legacy=memoryLike&&memoryLike.state&&Number.isFinite(memoryLike.state.hunger)?memoryLike.state.hunger*10:4.8;
+  return {
+    version:1,
+    level:clampMemory(Number.isFinite(h.level)?h.level:legacy,0,10),
+    lastFedAt:h.lastFedAt||memoryLike.lastAteAt||null,
+    lastUpdatedAt:h.lastUpdatedAt||memoryLike.lastOpenedAt||new Date().toISOString(),
+    appetiteBias:Number.isFinite(h.appetiteBias)?h.appetiteBias:hungerBiasForTrait(traitDef),
+    growthStage:Number.isFinite(h.growthStage)?h.growthStage:(memoryLike.growth&&memoryLike.growth.stage)||1
+  };
+}
 function normalizeEye(value,trait){
   const e=value||{}, m=(trait&&trait.motion)||{};
   return {openness:Number.isFinite(e.openness)?e.openness:1,blinkType:e.blinkType||'soft',blinkFrequencyBias:Number.isFinite(e.blinkFrequencyBias)?e.blinkFrequencyBias:(m.blinkGap?1/m.blinkGap:1),lastBlinkAt:e.lastBlinkAt||null,updatedAt:e.updatedAt||new Date().toISOString()};
@@ -49900,6 +49915,8 @@ function normalizeMemory(m){
   m.growth.stage=Number.isFinite(m.growth.stage)?Math.max(1,Math.min(108,Math.round(m.growth.stage))):1;
   m.growth.points=Number.isFinite(m.growth.points)?m.growth.points:0;
   m.growth.updatedAt=m.growth.updatedAt||new Date().toISOString();
+  m.hunger=normalizeHunger(m.hunger,m,nativeDef);
+  m.state.hunger=clampMemory(m.hunger.level/10);
   m.touchProfile=normalizeTouchProfile(m.touchProfile,m,nativeDef);
   m.dirtLevel=Number.isFinite(m.dirtLevel)?m.dirtLevel:2;
   if(!m.lastWashedAt)m.lastWashedAt=m.bornAt+'T00:00:00';
@@ -49916,16 +49933,51 @@ function nativeMotion(key,fallback=1){
   return nativeTraitDef.motion[key]===undefined?fallback:nativeTraitDef.motion[key];
 }
 function nativeNoise(salt,amount=.08){return 1+(seededUnit(memory.nativeTrait.seed,salt)-.5)*amount;}
+function syncLegacyHunger(){if(memory.hunger)memory.state.hunger=clampMemory(memory.hunger.level/10);}
+function updateHungerForElapsed(now=Date.now()){
+  if(!memory.hunger)return;
+  const last=new Date(memory.hunger.lastUpdatedAt||memory.lastOpenedAt||memory.bornAt+'T00:00:00').getTime();
+  const hours=Math.max(0,(now-last)/36e5);
+  if(hours<=.05){syncLegacyHunger(); return;}
+  const gain=(hours/6)*Math.max(.35,Math.min(1.8,memory.hunger.appetiteBias||1));
+  memory.hunger.level=clampMemory(memory.hunger.level+gain,0,10);
+  memory.hunger.lastUpdatedAt=new Date(now).toISOString();
+  memory.hunger.growthStage=memory.growth.stage;
+  syncLegacyHunger();
+}
+function setHungerLevel(level,opts={}){
+  if(!memory.hunger)return;
+  memory.hunger.level=clampMemory(level,0,10);
+  if(opts.fed)memory.hunger.lastFedAt=new Date().toISOString();
+  memory.hunger.lastUpdatedAt=new Date().toISOString();
+  memory.hunger.growthStage=memory.growth.stage;
+  syncLegacyHunger();
+}
+function hungerFoodProfile(){
+  const level=memory.hunger?memory.hunger.level:((memory.state.hunger||.5)*10), norm=clampMemory(level/10);
+  let notice=.72+norm*.72, delay=1.22-norm*.42, eatChance=.42+norm*.48, hop=1+Math.max(0,norm-.55)*.18;
+  const id=nativeTraitDef.id, dirt=memory.currentDirtLevel||computeDirtLevel();
+  if(id==='foodie'){notice*=1.28; delay*=.78; eatChance+=.22}
+  if(id==='sleepy'&&(SM.current===STATES.SLEEP||SM.current===STATES.TIRED||memory.state.sleepiness>.58)){notice*=.62; delay*=1.35; eatChance-=.18}
+  if(id==='solitary'){notice*=.86; eatChance-=.08}
+  if(id==='energetic'&&norm>.55){notice*=1.08; hop*=1.08}
+  if(id==='cleanly'&&dirt>=5){notice*=.72; delay*=1.22; eatChance-=.12}
+  if(SM.current===STATES.SLEEP){notice*=.38; delay*=1.8; eatChance-=.25}
+  if(SM.current===STATES.SHY){notice*=.85; eatChance-=.08}
+  if(dirt>=5){notice*=.82; delay*=1.18; eatChance-=.1}
+  if(dirt>=10){notice*=.08; delay*=3.2; eatChance=0}
+  return {level,norm,isHungry:level>=6,isFull:level<=2,notice:Math.max(.05,notice),delay:Math.max(.45,delay),eatChance:clampMemory(eatChance),hop};
+}
 const TODAY=todayKey();
 const previousOpenedAt=memory.lastOpenedAt||null;
 if(memory.lastOpenedAt){
   const elapsedHours=Math.max(0,(Date.now()-new Date(memory.lastOpenedAt).getTime())/36e5);
   if(Number.isFinite(elapsedHours)){
-    memory.state.hunger=clampMemory(memory.state.hunger+elapsedHours*.012);
     memory.state.sleepiness=clampMemory(memory.state.sleepiness+elapsedHours*.006);
     memory.state.energy=clampMemory(memory.state.energy+elapsedHours*.004);
   }
 }
+updateHungerForElapsed();
 if(!memory.days[TODAY]) memory.days[TODAY]=blankDay();
 const gap=daysBetween(memory.lastVisitDay,TODAY); if(gap>=2) memory.days[TODAY].returnedAfterDays=gap;
 memory.days[TODAY].opens++;
@@ -50202,7 +50254,8 @@ let muuState=memory.state;
 function clamp(v,min=0,max=1){return Math.max(min,Math.min(max,v));}
 function computeFoodReaction(type){
   const pref={normal:.55,warm:.62,sweet:.50,seed:.56,dry:.45}[type]||.5;
-  const urge=(muuState.hunger*.42+muuState.appetite*.22+pref*.18+muuState.trust*.08-muuState.sleepiness*.12)*nativeMotion('foodNotice',1)*nativeNoise(7,.08);
+  const hp=hungerFoodProfile();
+  const urge=(hp.norm*.46+muuState.appetite*.18+pref*.16+muuState.trust*.08-muuState.sleepiness*.13-(hp.isFull&&nativeTraitDef.id!=='foodie'?.14:0))*nativeMotion('foodNotice',1)*hp.notice*nativeNoise(7,.08);
   if(urge>.72)return 'rush';
   if(urge>.52)return 'approach';
   if(urge>.34)return 'wait';
@@ -50257,7 +50310,7 @@ function hopProfileFor(kind,dirt){
   for(const k in trait)p[k]*=trait[k];
   const sleepyDrag=1+Math.max(0,memory.state.sleepiness-.45)*.85;
   p.height/=sleepyDrag; p.duration*=sleepyDrag; p.anticipation*=sleepyDrag; p.pause*=sleepyDrag;
-  if(foodHop){p.height*=1.1; p.distance*=1.18; p.duration*=.82; p.anticipation*=.82; p.pause*=.58;}
+  if(foodHop){const hp=hungerFoodProfile(); p.height*=1.1*hp.hop; p.distance*=1.18*(hp.isHungry?1.08:hp.isFull?.86:1); p.duration*=.82*(hp.isFull?1.12:hp.isHungry?.92:1); p.anticipation*=.82*(hp.isFull?1.1:1); p.pause*=.58*(hp.isFull?1.28:1);}
   if(dirt>=5){const drag=1+(dirt-4)*.22; p.height/=drag; p.duration*=drag; p.pause*=drag; p.anticipation*=1+(dirt-4)*.12; p.squash*=1+(dirt-4)*.08;}
   if(dirt>=8){p.height*=.56; p.distance*=.66; p.pause*=1.55; p.anticipation*=1.18;}
   p.height*=nativeNoise(41,.14); p.duration*=nativeNoise(43,.10); p.distance*=nativeNoise(47,.14); p.pause*=nativeNoise(53,.12);
@@ -50337,6 +50390,8 @@ const VOICE_POOLS={
   weak:['む……','むぅ…','んむ…','む……ん','ん……む','むす…','むすぅ…','むしゅ…','むゅ…','……む'],
   moody:['むっ','むっ…','むす…','む','……','む？','むむ…','む、、','ふむ…','……む'],
   food:['むっ','むぅ？','む、む','む？','むきゅ？','むぷ','むむ？','むん','むぴ？','む、むぅ'],
+  hungry:['むっ','むぅ？','む、む','んむ','むきゅ','む！','むむ？','むん','むぴ','む、むぅ'],
+  full:['ふむ…','む……','むぅ…','……','んむ…','むぽ…','ぽふ…','むぅん…','むふ…','む〜…'],
   wash:['む〜','むぅ〜','ぽふ','ぽふ…','むぽふ','むぅ','むふ','むふぅ','むぷぅ','むぅ、む'],
   dirty:['む……','……む','むぅ…','んむ…','ん……む','む……ん','むす…','むしゅ…','むゅ…','むぅ……'],
   dust:['……','……む','すぅ…','むぅ……','すぅ……む','ん……む','む……すぅ','……んむ','む……','むぅぅ…'],
@@ -50357,6 +50412,7 @@ function resolveVoiceContext(context='idle'){
   if(SM.current===STATES.SLEEP)return 'sleeping';
   if(dirt>=7)return 'weak';
   if(dirt>=5)return 'dirty';
+  if(requested==='food'){const hp=hungerFoodProfile(); if(hp.isHungry)return 'hungry'; if(hp.isFull)return 'full'; return 'food';}
   if(SM.current===STATES.TIRED||state.sleepiness>.62)return 'sleepy';
   if(SM.current===STATES.SHY||state.mood<.28)return requested==='touch'?'moody':(requested==='idle'?'moody':requested);
   if((state.energy!==undefined&&state.energy<.22)||(state.hunger!==undefined&&state.hunger>.78))return requested==='food'?requested:'weak';
@@ -50376,7 +50432,7 @@ function startupVoiceContext(){
   return 'startup';
 }
 function selectVoice(context='idle',opts={}){
-  const stateContext=resolveVoiceContext(context), quietState=['dust','dirty','weak','sleepy','sleeping','moody'].includes(stateContext);
+  const stateContext=resolveVoiceContext(context), quietState=['dust','dirty','weak','sleepy','sleeping','moody','full'].includes(stateContext);
   if(!quietState&&!opts.noRare&&Math.random()<.001)return RARE_VOICES.almost;
   if(!quietState&&!opts.noRare&&Math.random()<.01)return RARE_VOICES.mupi;
   const base=(VOICE_POOLS[stateContext]||VOICE_POOLS.idle).slice();
@@ -50473,9 +50529,13 @@ addEventListener('pointerup',e=>{if(!SM.petting) return; updatePointer(e); e.pre
 function recordTouch(kind){const d=todayData(); d.touches++; d.lastInteractionAt=new Date().toISOString(); if(kind==='tap'){d.taps++; memory.state.trust=clampMemory(memory.state.trust+.002); memory.traits.curiosity=clampMemory(memory.traits.curiosity+.002);} if(kind==='pet'){d.pets++; memory.state.trust=clampMemory(memory.state.trust+.006); memory.state.mood=clampMemory(memory.state.mood+.004); memory.traits.calmness=clampMemory(memory.traits.calmness+.003);} memory.totals.touched++; saveMemory(); const now=Date.now(); SM.touchTimes.push(now); SM.touchTimes=SM.touchTimes.filter(t=>now-t<15000); return SM.touchTimes.length;}
 function onMuuTouched(duration,touchPoint){const kind=duration<260?'tap':'pet'; const recent=recordTouch(kind), tolerance=Math.max(3,Math.round(8*nativeMotion('touchTolerance',1))), touchVoice={force:true,noRepeat:true,cooldown:0}, zoneResult=evaluateTouchZone(touchPoint||{mode:'screenApprox',bodyPart:'body',x:0,y:.5,z:.55}); const zoneReaction=applyTouchReaction(zoneResult,kind,recent,tolerance); if(zoneReaction.handled)return; if(SM.current===STATES.TIRED){sayVoice('sleepy',1100,1,touchVoice); return;} if(recent>=tolerance){setState(nativeTraitDef.id==='pouty'?STATES.SHY:STATES.TIRED); sayVoice('moody',1100,1,touchVoice); return;} if(kind==='pet'&&nativeMotion('touchWarmth',1)>.75){setState(STATES.HAPPY); sayVoice('happy',1150,1,touchVoice); return;} if(recent>=Math.max(3,Math.round(5*nativeMotion('touchTolerance',1)))){setState(STATES.SHY); sayVoice('moody',1100,1,touchVoice); return;} setState(nativeMotion('touchWarmth',1)<.7?STATES.CURIOUS:STATES.HAPPY); sayVoice(SM.current===STATES.CURIOUS?'curious':'touch',1100,1,touchVoice);}
 
-function placeFood(type='normal'){if(food.exists) return; setFoodType(type); food.type=type; food.reaction=computeFoodReaction(type); food.exists=true; food.eaten=false; food.noticed=false; food.placedAt=Date.now(); foodGroup.position.set(0,0,1.75); foodGroup.visible=true; foodGroup.position.set(0,0,1.75); for(const k of kibbles) k.visible=true; sayVoice('food',900,.74); todayData().foodPlaced++; memory.totals.foodPlaced++; memory.lastFoodAt=new Date().toISOString(); memory.food.hasFood=true; memory.food.placedAt=new Date(food.placedAt).toISOString(); memory.food.lastReaction=food.reaction; memory.food.updatedAt=new Date().toISOString(); if(food.reaction==='rush')todayData().foodRush++; saveMemory(); closeFoodMenu(); document.getElementById('food-btn').classList.add('placed'); const foodDelay=nativeMotion('foodDelay',1)*nativeNoise(23,.16); if(food.reaction==='rush'){setTimeout(()=>{if(food.exists&&!food.eaten){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.7);}},240*foodDelay);} else if(food.reaction==='approach'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.58);}},(1200+Math.random()*1300)*foodDelay);} else if(food.reaction==='wait'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){setState(STATES.CURIOUS); sayVoice('curious',1100,.55);}},(1500+Math.random()*1600)*foodDelay); setTimeout(()=>{if(food.exists&&!food.eaten&&Math.random()<.65*nativeMotion('foodNotice',1)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.58);}},(7000+Math.random()*4000)*foodDelay);} }
+function placeFood(type='normal'){
+  if(food.exists) return;
+  const hunger=hungerFoodProfile();
+  setFoodType(type); food.type=type; food.reaction=computeFoodReaction(type); food.exists=true; food.eaten=false; food.noticed=false; food.placedAt=Date.now(); foodGroup.position.set(0,0,1.75); foodGroup.visible=true; foodGroup.position.set(0,0,1.75); for(const k of kibbles) k.visible=true; sayVoice('food',900,hunger.isHungry?.86:.66); todayData().foodPlaced++; memory.totals.foodPlaced++; memory.lastFoodAt=new Date().toISOString(); memory.food.hasFood=true; memory.food.placedAt=new Date(food.placedAt).toISOString(); memory.food.lastReaction=food.reaction; memory.food.updatedAt=new Date().toISOString(); if(food.reaction==='rush')todayData().foodRush++; saveMemory(); closeFoodMenu(); document.getElementById('food-btn').classList.add('placed'); const foodDelay=nativeMotion('foodDelay',1)*nativeNoise(23,.16)*hunger.delay; if(food.reaction==='rush'){setTimeout(()=>{if(food.exists&&!food.eaten){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.82);}},240*foodDelay);} else if(food.reaction==='approach'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,hunger.isHungry?.7:.5);}},(1200+Math.random()*1300)*foodDelay);} else if(food.reaction==='wait'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){setState(STATES.CURIOUS); sayVoice(hunger.isFull?'full':'curious',1100,.55);}},(1500+Math.random()*1600)*foodDelay); setTimeout(()=>{if(food.exists&&!food.eaten&&Math.random()<clamp(.65*nativeMotion('foodNotice',1)*hunger.notice,0,.92)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,hunger.isHungry?.72:.54);}},(7000+Math.random()*4000)*foodDelay);}
+}
 function clearFood(){food.exists=false; food.eaten=false; food.noticed=false; foodGroup.visible=false; memory.food.hasFood=false; memory.food.updatedAt=new Date().toISOString(); saveMemory(); document.getElementById('food-btn').classList.remove('placed'); closeFoodMenu && closeFoodMenu();}
-function eatFood(){if(!food.exists || food.eaten) return; food.eaten=true; for(const k of kibbles) k.visible=false; todayData().foodEaten++; memory.totals.foodEaten++; memory.state.hunger=clampMemory(memory.state.hunger-.32); memory.state.appetite=clampMemory(memory.state.appetite+.004); memory.state.trust=clampMemory(memory.state.trust+.003); memory.state.mood=clampMemory(memory.state.mood+.004); memory.lastAteAt=new Date().toISOString(); memory.food.lastAteAt=memory.lastAteAt; memory.food.lastReaction='eaten'; memory.food.updatedAt=memory.lastAteAt; saveMemory(); setTimeout(()=>clearFood(),1600);} 
+function eatFood(){if(!food.exists || food.eaten) return; food.eaten=true; for(const k of kibbles) k.visible=false; todayData().foodEaten++; memory.totals.foodEaten++; setHungerLevel(.7+seededUnit(memory.nativeTrait.seed,71)*1.4,{fed:true}); memory.state.appetite=clampMemory(memory.state.appetite+.004); memory.state.trust=clampMemory(memory.state.trust+.003); memory.state.mood=clampMemory(memory.state.mood+.004); memory.lastAteAt=new Date().toISOString(); memory.food.lastAteAt=memory.lastAteAt; memory.food.lastReaction='eaten'; memory.food.updatedAt=memory.lastAteAt; saveMemory(); setTimeout(()=>clearFood(),1600);}
 
 
 
@@ -50548,11 +50608,11 @@ for(const node of document.querySelectorAll('.food-choice')){
   });
 }
 
-function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLevel(), dirtMotion=dirtMotionFactor(dirt); updateSleepMemoryForState(SM.current,dirt); SM.t+=dt*dirtMotion; SM.globalT+=dt*dirtMotion; const idleSec=(Date.now()-SM.lastTouch)/1000;
-  if(food.exists && !food.eaten && !food.noticed){ const waitSec=(Date.now()-food.placedAt)/1000; if(waitSec>2.2*nativeMotion('foodDelay',1) && [STATES.IDLE,STATES.CURIOUS].includes(SM.current)){ if(Math.random()<0.02*nativeMotion('foodNotice',1)){ food.noticed=true; setState(STATES.TO_FOOD);} } if(waitSec>90){ todayData().foodIgnored++; memory.totals.foodIgnored++; memory.state.hunger=clampMemory(memory.state.hunger+.03); memory.traits.shyness=clampMemory(memory.traits.shyness+.002); memory.food.lastIgnoredAt=new Date().toISOString(); memory.food.lastReaction='ignored'; memory.food.updatedAt=memory.food.lastIgnoredAt; saveMemory(); clearFood(); } }
+function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLevel(), dirtMotion=dirtMotionFactor(dirt), hunger=hungerFoodProfile(); updateSleepMemoryForState(SM.current,dirt); SM.t+=dt*dirtMotion; SM.globalT+=dt*dirtMotion; const idleSec=(Date.now()-SM.lastTouch)/1000;
+  if(food.exists && !food.eaten && !food.noticed){ const waitSec=(Date.now()-food.placedAt)/1000; if(waitSec>2.2*nativeMotion('foodDelay',1)*hunger.delay && [STATES.IDLE,STATES.CURIOUS].includes(SM.current)){ if(Math.random()<clamp(0.02*nativeMotion('foodNotice',1)*hunger.notice,0,.09)){ food.noticed=true; setState(STATES.TO_FOOD);} } if(waitSec>90){ todayData().foodIgnored++; memory.totals.foodIgnored++; setHungerLevel((memory.hunger?.level||0)+.35); memory.traits.shyness=clampMemory(memory.traits.shyness+.002); memory.food.lastIgnoredAt=new Date().toISOString(); memory.food.lastReaction='ignored'; memory.food.updatedAt=memory.food.lastIgnoredAt; saveMemory(); clearFood(); } }
   switch(SM.current){
     case STATES.IDLE:
-      if(SM.t>SM.nextIdleAction){ const r=Math.random(), walkChance=.42*nativeMotion('walkFreq',1), curiousChance=walkChance+.26*nativeMotion('near',1); if(food.exists && !food.eaten && Math.random()<.65*nativeMotion('foodNotice',1)){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<walkChance && dirt<9){ setState(STATES.WALK);} else if(r<curiousChance && dirt<10){ setState(STATES.CURIOUS);} else if(idleSec>50/nativeMotion('sleepChance',1)){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
+      if(SM.t>SM.nextIdleAction){ const r=Math.random(), walkChance=.42*nativeMotion('walkFreq',1), curiousChance=walkChance+.26*nativeMotion('near',1); if(food.exists && !food.eaten && Math.random()<clamp(.65*nativeMotion('foodNotice',1)*hunger.notice,0,.94)){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<walkChance && dirt<9){ setState(STATES.WALK);} else if(r<curiousChance && dirt<10){ setState(STATES.CURIOUS);} else if(idleSec>50/nativeMotion('sleepChance',1)){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
       break;
     case STATES.WALK:
     case STATES.TO_FOOD:{
@@ -50563,7 +50623,7 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
       break; }
     case STATES.EAT:
       muu.rotation.y=lerp(muu.rotation.y,0,.12);
-      if(SM.t>.85*nativeMotion('eatSpeed',1) && !food.eaten){ eatFood(); muuState.hunger=clamp(muuState.hunger-.35); sayVoice('food',1200,food.reaction==='rush'?.82:.52,{force:food.reaction==='rush'}); }
+      if(SM.t>.85*nativeMotion('eatSpeed',1) && !food.eaten){ const hp=hungerFoodProfile(); if(hp.isFull&&nativeTraitDef.id!=='foodie'&&Math.random()>hp.eatChance){todayData().foodIgnored++; memory.totals.foodIgnored++; memory.food.lastIgnoredAt=new Date().toISOString(); memory.food.lastReaction='full_ignored'; memory.food.updatedAt=memory.food.lastIgnoredAt; saveMemory(); sayVoice('full',1200,.9,{force:true,noRepeat:true}); setState(STATES.IDLE); setTimeout(()=>clearFood(),900);} else {eatFood(); muuState.hunger=clampMemory(memory.hunger.level/10); sayVoice('food',1200,food.reaction==='rush'?.82:.52,{force:food.reaction==='rush'});} }
       if(SM.t>2.5*nativeMotion('eatSpeed',1)) setState(nativeTraitDef.id==='foodie'?STATES.HAPPY:STATES.IDLE);
       break;
     case STATES.SLEEP:
@@ -51401,7 +51461,7 @@ const DIARY_TEXTS=[
 function tagScore(tags, tag, value){return tags.includes(tag)?value:0;}
 function diaryContext(key,d){
   d=d||todayData();
-  const hunger=Number.isFinite(memory.state?.hunger)?memory.state.hunger:.5;
+  const hunger=memory.hunger&&Number.isFinite(memory.hunger.level)?memory.hunger.level/10:(Number.isFinite(memory.state?.hunger)?memory.state.hunger:.5);
   const dirt=typeof computeDirtLevel==='function'?computeDirtLevel():(memory.currentDirtLevel||0);
   const touchesToday=d.touches||0;
   const touchesTotal=memory.totals?.touched||0;
@@ -51472,7 +51532,7 @@ setTimeout(()=>{if(memory.living) sayVoice('idle',1300,.38); setState(STATES.CUR
 
 scheduleStartupVoice();
 
-window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction};
+window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction,hungerFoodProfile,setHungerLevel,updateHungerForElapsed};
 </script>
 </body>
 </html>
