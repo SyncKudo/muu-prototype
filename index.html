@@ -50160,7 +50160,7 @@ const food={exists:false,eaten:false,noticed:false,placedAt:0,target:new THREE.V
 
 const STATES={IDLE:'idle',WALK:'walk',SLEEP:'sleep',HAPPY:'happy',SHY:'shy',TIRED:'tired',CURIOUS:'curious',TO_FOOD:'to_food',EAT:'eat'};
 const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,hopT:0,hopProfile:null,hopFrom:0,hopTo:0,hopY:0,hopSquash:0,hopTailLag:0,lastTailRotY:0,tailTurnLag:0,tailTipLagX:0,tailTipLagY:0,tailTipVX:0,tailTipVY:0,lastTouch:Date.now(),touchTimes:[],breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
-function randIdleDelay(){return (4+Math.random()*5)*nativeMotion('idleDelay',1)*nativeNoise(11,.18)}
+function randIdleDelay(){return (3.5+Math.random()*4.3)*nativeMotion('idleDelay',1)*nativeNoise(11,.18)}
 function lerp(a,b,t){return a+(b-a)*t}
 function smooth01(t){return t*t*(3-2*t)}
 function angleDelta(a,b){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
@@ -50181,27 +50181,27 @@ const TAIL_TARGETS={idle:{amp:.08,speed:.85,lift:0},walk:{amp:.13,speed:1.45,lif
 function pickWalkTarget(){const angle=Math.random()*Math.PI*2, dist=(.65+Math.random()*1.15)*nativeMotion('walkDist',1)*nativeNoise(17,.18), edge=nativeMotion('near',1)<.8?1.16:1; SM.walkStart.set(muu.position.x,0,muu.position.z); SM.walkTarget.set(Math.cos(angle)*dist*edge,0,Math.sin(angle)*dist*.48*edge); SM.walkTarget.x=Math.max(-1.55,Math.min(1.55,SM.walkTarget.x)); SM.walkTarget.z=Math.max(-.95,Math.min(1.5,SM.walkTarget.z)); if(nativeMotion('awkwardStop',0)&&Math.random()<.42){SM.walkTarget.multiplyScalar(.62)} SM.walkProgress=0; resetHopMotion();}
 function hopProfileFor(kind,dirt){
   const id=nativeTraitDef.id, foodHop=kind===STATES.TO_FOOD;
-  const p={height:.16,duration:.58,distance:.34,anticipation:.16,landing:.18,squash:.075,rebound:.035,pause:.16,tempo:1};
+  const p={height:.165,duration:.52,distance:.35,anticipation:.13,landing:.16,squash:.062,rebound:.039,pause:.11,tempo:1.06};
   const trait={
-    affectionate:{height:1.02,duration:.94,distance:1.05,anticipation:.92,pause:.84,squash:1.0,rebound:1.06,tempo:1.06},
-    solitary:{height:.78,duration:1.04,distance:.82,anticipation:1.08,pause:1.28,squash:.9,rebound:.88,tempo:.94},
-    gentle:{height:.86,duration:1.22,distance:.9,anticipation:1.36,pause:1.34,squash:.92,rebound:.82,tempo:.82},
-    restless:{height:.74,duration:.78,distance:.78,anticipation:.74,pause:.72,squash:.88,rebound:1.0,tempo:1.24},
-    timid:{height:.68,duration:1.12,distance:.76,anticipation:1.22,pause:1.42,squash:.84,rebound:.74,tempo:.82},
-    foodie:{height:foodHop?1.12:.96,duration:foodHop?.86:.96,distance:foodHop?1.2:1,anticipation:foodHop?.82:1,pause:foodHop?.72:1,squash:1.02,rebound:1.08,tempo:foodHop?1.18:1},
-    sleepy:{height:.62,duration:1.28,distance:.72,anticipation:1.38,pause:1.45,squash:.82,rebound:.68,tempo:.74},
+    affectionate:{height:1.03,duration:.9,distance:1.08,anticipation:.86,pause:.76,squash:.94,rebound:1.08,tempo:1.1},
+    solitary:{height:.78,duration:1,distance:.84,anticipation:1.02,pause:1.22,squash:.84,rebound:.92,tempo:.98},
+    gentle:{height:.84,duration:1.14,distance:.9,anticipation:1.24,pause:1.22,squash:.84,rebound:.9,tempo:.88},
+    restless:{height:.74,duration:.74,distance:.8,anticipation:.68,pause:.66,squash:.82,rebound:1.02,tempo:1.28},
+    timid:{height:.68,duration:1.06,distance:.78,anticipation:1.12,pause:1.32,squash:.78,rebound:.82,tempo:.88},
+    foodie:{height:foodHop?1.14:.98,duration:foodHop?.8:.92,distance:foodHop?1.24:1.02,anticipation:foodHop?.72:.92,pause:foodHop?.62:.9,squash:.92,rebound:1.1,tempo:foodHop?1.24:1.06},
+    sleepy:{height:.62,duration:1.2,distance:.74,anticipation:1.3,pause:1.34,squash:.76,rebound:.74,tempo:.8},
     cleanly:{height:1,duration:1,distance:.98,anticipation:1.02,pause:1.05,squash:1,rebound:1.04,tempo:1},
-    pouty:{height:.84,duration:1.08,distance:.86,anticipation:1.18,pause:1.34,squash:.9,rebound:.76,tempo:.86},
-    curious:{height:.88,duration:.86,distance:1.08,anticipation:.82,pause:.78,squash:.9,rebound:1,tempo:1.16},
-    energetic:{height:1.22,duration:.86,distance:1.06,anticipation:.82,pause:.78,squash:1.02,rebound:1.22,tempo:1.16},
-    awkwardly_affectionate:{height:.86,duration:1.06,distance:.82,anticipation:1.24,pause:1.22,squash:.9,rebound:.86,tempo:.9}
+    pouty:{height:.84,duration:1.02,distance:.86,anticipation:1.1,pause:1.24,squash:.82,rebound:.84,tempo:.9},
+    curious:{height:.9,duration:.8,distance:1.1,anticipation:.74,pause:.7,squash:.84,rebound:1.04,tempo:1.22},
+    energetic:{height:1.28,duration:.78,distance:1.08,anticipation:.72,pause:.66,squash:.92,rebound:1.24,tempo:1.28},
+    awkwardly_affectionate:{height:.88,duration:1,distance:.84,anticipation:1.14,pause:1.12,squash:.82,rebound:.92,tempo:.95}
   }[id]||{};
   for(const k in trait)p[k]*=trait[k];
   const sleepyDrag=1+Math.max(0,memory.state.sleepiness-.45)*.85;
   p.height/=sleepyDrag; p.duration*=sleepyDrag; p.anticipation*=sleepyDrag; p.pause*=sleepyDrag;
-  if(foodHop){p.height*=1.06; p.distance*=1.12; p.duration*=.92; p.pause*=.82;}
-  if(dirt>=5){const drag=1+(dirt-4)*.16; p.height/=drag; p.duration*=drag; p.pause*=drag; p.squash*=1+(dirt-4)*.08;}
-  if(dirt>=8){p.height*=.65; p.distance*=.72; p.pause*=1.35;}
+  if(foodHop){p.height*=1.08; p.distance*=1.16; p.duration*=.88; p.pause*=.72;}
+  if(dirt>=5){const drag=1+(dirt-4)*.18; p.height/=drag; p.duration*=drag; p.pause*=drag; p.squash*=1+(dirt-4)*.08;}
+  if(dirt>=8){p.height*=.6; p.distance*=.68; p.pause*=1.45;}
   p.height*=nativeNoise(41,.14); p.duration*=nativeNoise(43,.10); p.distance*=nativeNoise(47,.14); p.pause*=nativeNoise(53,.12);
   return p;
 }
@@ -50220,9 +50220,9 @@ function advanceHopMove(dt,kind,dirt,dirtMotion){
   const p=SM.hopProfile, a=p.anticipation, f=p.duration, l=p.landing, cycle=a+f+l+p.pause;
   SM.hopT+=dt*Math.max(.18,dirtMotion)*p.tempo*nativeMotion('hopTempo',1);
   let progress=SM.hopFrom, y=0, squash=0;
-  if(SM.hopT<a){const u=SM.hopT/a; squash=p.squash*.56*smooth01(u); y=-.028*smooth01(u);}
+  if(SM.hopT<a){const u=SM.hopT/a; squash=p.squash*.48*smooth01(u); y=-.022*smooth01(u);}
   else if(SM.hopT<a+f){const u=(SM.hopT-a)/f, e=smooth01(u); progress=lerp(SM.hopFrom,SM.hopTo,e); y=Math.sin(Math.PI*u)*p.height; squash=-p.rebound*.36*Math.sin(Math.PI*u);}
-  else if(SM.hopT<a+f+l){progress=SM.hopTo; const u=(SM.hopT-a-f)/l; squash=p.squash*(1-u)+Math.sin(Math.PI*u)*p.rebound; y=-.022*(1-u);}
+  else if(SM.hopT<a+f+l){progress=SM.hopTo; const u=(SM.hopT-a-f)/l; squash=p.squash*.82*(1-u)+Math.sin(Math.PI*u)*p.rebound; y=-.018*(1-u);}
   else {progress=SM.hopTo; const u=(SM.hopT-a-f-l)/Math.max(.01,p.pause); squash=p.rebound*(1-smooth01(Math.min(1,u)))*.35;}
   SM.walkProgress=Math.max(SM.walkProgress,progress);
   const eased=SM.walkProgress;
@@ -50355,7 +50355,7 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
   if(food.exists && !food.eaten && !food.noticed){ const waitSec=(Date.now()-food.placedAt)/1000; if(waitSec>2.2*nativeMotion('foodDelay',1) && [STATES.IDLE,STATES.CURIOUS].includes(SM.current)){ if(Math.random()<0.02*nativeMotion('foodNotice',1)){ food.noticed=true; setState(STATES.TO_FOOD);} } if(waitSec>90){ todayData().foodIgnored++; memory.totals.foodIgnored++; memory.state.hunger=clampMemory(memory.state.hunger+.03); memory.traits.shyness=clampMemory(memory.traits.shyness+.002); memory.food.lastIgnoredAt=new Date().toISOString(); memory.food.lastReaction='ignored'; memory.food.updatedAt=memory.food.lastIgnoredAt; saveMemory(); clearFood(); } }
   switch(SM.current){
     case STATES.IDLE:
-      if(SM.t>SM.nextIdleAction){ const r=Math.random(), walkChance=.34*nativeMotion('walkFreq',1), curiousChance=walkChance+.22*nativeMotion('near',1); if(food.exists && !food.eaten && Math.random()<.65*nativeMotion('foodNotice',1)){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<walkChance && dirt<9){ setState(STATES.WALK);} else if(r<curiousChance && dirt<10){ setState(STATES.CURIOUS);} else if(idleSec>50/nativeMotion('sleepChance',1)){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
+      if(SM.t>SM.nextIdleAction){ const r=Math.random(), walkChance=.38*nativeMotion('walkFreq',1), curiousChance=walkChance+.24*nativeMotion('near',1); if(food.exists && !food.eaten && Math.random()<.65*nativeMotion('foodNotice',1)){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<walkChance && dirt<9){ setState(STATES.WALK);} else if(r<curiousChance && dirt<10){ setState(STATES.CURIOUS);} else if(idleSec>50/nativeMotion('sleepChance',1)){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
       break;
     case STATES.WALK:
     case STATES.TO_FOOD:{
