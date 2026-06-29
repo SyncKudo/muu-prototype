@@ -49797,13 +49797,17 @@ memory.lastOpenedAt=new Date().toISOString();
 saveMemory();
 function saveMemory(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(memory))}catch{}}
 function todayData(){if(!memory.days[TODAY]) memory.days[TODAY]=blankDay(); return memory.days[TODAY];}
+const dirtPreviewParam=new URLSearchParams(location.search).get('previewDirt');
+let previewDirtLevel=Number.isFinite(Number(dirtPreviewParam))?Math.max(0,Math.min(10,Number(dirtPreviewParam))):null;
 function computeDirtLevel(){
+  if(previewDirtLevel!==null)return previewDirtLevel;
   const base=Number.isFinite(memory.dirtLevel)?memory.dirtLevel:2;
   const t=memory.lastWashedAt?new Date(memory.lastWashedAt).getTime():Date.now();
   const days=Math.floor(Math.max(0,Date.now()-t)/86400000);
   return Math.max(0,Math.min(10,base+days));
 }
 function setDirtLevel(level){
+  previewDirtLevel=null;
   memory.dirtLevel=Math.max(0,Math.min(10,level));
   memory.lastWashedAt=new Date().toISOString();
   memory.currentDirtLevel=computeDirtLevel();
@@ -49901,15 +49905,110 @@ makeDirtPatch(body,.05,-.34,.70,.92,.34,.06);
 makeDirtPatch(headMesh,-.18,.17,.58,.58,.32,-.18);
 makeDirtPatch(headMesh,.22,.02,.59,.50,.27,.26);
 
+const dustGroup=new THREE.Group(); muu.add(dustGroup);
+const dustColors=[0x8f765f,0xa98d70,0xc1ad91,0x735f4f,0xb89a78,0x6f6258];
+const dustMaterials=dustColors.map(c=>new THREE.MeshLambertMaterial({color:c,transparent:true,opacity:.66,depthWrite:false}));
+const dustSphereGeo=new THREE.SphereGeometry(1,10,8);
+const dustChunkGeo=new THREE.IcosahedronGeometry(1,0);
+const dustMotes=[], dustStrands=[];
+function dustRand(seed){const x=Math.sin(seed*12.9898)*43758.5453; return x-Math.floor(x);}
+function addDustMote(x,y,z,size,level,matIndex,chunk=false,opacity=.72){
+  const mesh=new THREE.Mesh(chunk?dustChunkGeo:dustSphereGeo,dustMaterials[matIndex%dustMaterials.length].clone());
+  mesh.position.set(x,y,z);
+  const flat=.62+dustRand(matIndex+17)*.48;
+  mesh.scale.set(size*(.86+dustRand(matIndex+11)*.34),size*flat,size*(.82+dustRand(matIndex+23)*.42));
+  mesh.visible=false;
+  mesh.castShadow=true;
+  mesh.userData={base:new THREE.Vector3(x,y,z),size,flat,level,opacity,phase:matIndex*.73+x*2.1+y};
+  dustGroup.add(mesh);
+  dustMotes.push(mesh);
+}
+function addDustStrand(x,y,z,len,level,matIndex,opacity=.58){
+  const bend=(dustRand(matIndex+31)-.5)*.28, sag=(dustRand(matIndex+37)-.5)*.16;
+  const curve=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(x,y,z),
+    new THREE.Vector3(x+len*.34,y+sag,z+bend*.55),
+    new THREE.Vector3(x+len*.68,y-sag*.7,z-bend*.35),
+    new THREE.Vector3(x+len,y+(dustRand(matIndex+43)-.5)*.11,z+bend)
+  ]);
+  const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,8,.006+dustRand(matIndex+47)*.012,5,false),dustMaterials[matIndex%dustMaterials.length].clone());
+  mesh.visible=false;
+  mesh.userData={level,opacity,phase:matIndex*.61+x+y};
+  dustGroup.add(mesh);
+  dustStrands.push(mesh);
+}
+for(let i=0;i<58;i++){
+  const a=i*2.399, r=.28+dustRand(i+1)*.62, y=.34+dustRand(i+8)*.92, front=.42+dustRand(i+13)*.34;
+  const level=i<8?3:i<20?4:i<36?5:i<48?6:7;
+  addDustMote(Math.cos(a)*r,y,Math.sin(a)*r*.55+front,.026+dustRand(i+21)*.07,level,i,i%2===0,.54+dustRand(i+31)*.30);
+}
+for(let i=0;i<46;i++){
+  const a=i*1.87, r=.46+dustRand(i+41)*.58, y=.62+dustRand(i+49)*1.16, z=(dustRand(i+57)-.36)*.82;
+  const level=i<14?6:i<30?7:i<40?8:9;
+  addDustMote(Math.cos(a)*r,y,z,.045+dustRand(i+63)*.11,level,i+2,true,.60+dustRand(i+67)*.30);
+}
+for(let i=0;i<28;i++){
+  const side=i%2?-1:1, a=i*1.31;
+  const level=i<10?7:i<20?8:9;
+  addDustMote(side*(.36+dustRand(i+71)*.34),1.24+dustRand(i+79)*.78,Math.sin(a)*.28+.22,.035+dustRand(i+83)*.10,level,i+4,true,.60+dustRand(i+89)*.32);
+}
+for(let i=0;i<32;i++){
+  const a=i*2.05, shell=.72+dustRand(i+91)*.34, y=.55+dustRand(i+97)*.92;
+  const level=i<14?8:i<24?9:10;
+  addDustMote(Math.cos(a)*shell,y,Math.sin(a)*shell*.72+.16,.08+dustRand(i+103)*.16,level,i+1,true,.68+dustRand(i+109)*.24);
+}
+for(let i=0;i<54;i++){
+  const a=i*1.72, r=.28+dustRand(i+121)*.74, y=.42+dustRand(i+127)*1.12, z=Math.sin(a)*.46+.42;
+  const level=i<10?4:i<24?5:i<36?7:i<46?8:9;
+  addDustStrand(Math.cos(a)*r,y,z,(dustRand(i+131)-.5)*.34,level,i+3,.45+dustRand(i+137)*.36);
+}
+const dustCover=[
+  [-.36,.92,.62,.23,9,1], [.34,.78,.66,.21,9,2], [.02,1.12,.72,.27,10,0],
+  [-.23,1.45,.58,.20,10,4], [.25,1.39,.60,.19,10,3], [.00,.56,.78,.30,10,5],
+  [-.52,.55,.36,.17,10,2], [.55,.62,.32,.16,10,1], [.04,.28,.54,.19,9,4]
+];
+for(const d of dustCover)addDustMote(d[0],d[1],d[2],d[3],d[4],d[5],false,.82);
+
+function dirtMotionFactor(level){
+  if(level>=10)return .08;
+  if(level>=9)return .16;
+  if(level>=8)return .34;
+  if(level>=7)return .52;
+  return 1;
+}
+
 function applyDirtVisual(){
   const level=computeDirtLevel();
   memory.currentDirtLevel=level;
-  const alpha=Math.min(.34,level*.034);
+  const alpha=Math.min(.18,level*.018);
   dirtMaterial.opacity=alpha;
   for(let i=0;i<dirtPatches.length;i++){
-    dirtPatches[i].visible=level>0 && i<Math.ceil(level/2);
+    dirtPatches[i].visible=level>=3 && i<Math.ceil(level/2);
   }
-  const darken=1-level*.018;
+  const dustT=Math.max(0,Math.min(1,(level-2)/8));
+  const t=(typeof SM!=='undefined'?SM.globalT:0);
+  for(const mote of dustMotes){
+    const show=level>=mote.userData.level;
+    mote.visible=show;
+    if(!show)continue;
+    const localT=Math.max(0,Math.min(1,(level-mote.userData.level+1)/3));
+    const breathe=1+Math.sin(t*.55+mote.userData.phase)*.025*(1-dustT*.5);
+    mote.position.copy(mote.userData.base);
+    mote.position.y+=Math.sin(t*.32+mote.userData.phase)*.012*(1-dustT*.35);
+    const s=mote.userData.size*(.74+localT*.56+dustT*.24)*breathe;
+    mote.scale.set(s*(1.04+dustT*.18),s*mote.userData.flat,s*(.92+dustT*.12));
+    mote.material.opacity=mote.userData.opacity*(.46+localT*.54);
+  }
+  for(const strand of dustStrands){
+    const show=level>=strand.userData.level;
+    strand.visible=show;
+    if(!show)continue;
+    const localT=Math.max(0,Math.min(1,(level-strand.userData.level+1)/3));
+    strand.position.y=Math.sin(t*.24+strand.userData.phase)*.01*(1-dustT*.45);
+    strand.material.opacity=strand.userData.opacity*(.42+localT*.58);
+  }
+  dustGroup.visible=level>=3;
+  const darken=1-level*.006;
   MAT.body.color.setRGB(0xd9/255*darken,0xcf/255*darken,0xbf/255*darken);
   MAT.belly.color.setRGB(0xcf/255*darken,0xc2/255*darken,0xb2/255*darken);
   MAT.tail.color.setRGB(0xcc/255*darken,0xc0/255*darken,0xb2/255*darken);
@@ -50047,15 +50146,15 @@ for(const node of document.querySelectorAll('.food-choice')){
   });
 }
 
-function tickStateMachine(dt){SM.t+=dt; SM.globalT+=dt; const idleSec=(Date.now()-SM.lastTouch)/1000;
+function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLevel(), dirtMotion=dirtMotionFactor(dirt); SM.t+=dt*dirtMotion; SM.globalT+=dt*dirtMotion; const idleSec=(Date.now()-SM.lastTouch)/1000;
   if(food.exists && !food.eaten && !food.noticed){ const waitSec=(Date.now()-food.placedAt)/1000; if(waitSec>2.2 && [STATES.IDLE,STATES.CURIOUS].includes(SM.current)){ if(Math.random()<0.02){ food.noticed=true; setState(STATES.TO_FOOD);} } if(waitSec>90){ todayData().foodIgnored++; memory.totals.foodIgnored++; memory.state.hunger=clampMemory(memory.state.hunger+.03); memory.traits.shyness=clampMemory(memory.traits.shyness+.002); saveMemory(); clearFood(); } }
   switch(SM.current){
     case STATES.IDLE:
-      if(SM.t>SM.nextIdleAction){ const r=Math.random(); if(food.exists && !food.eaten && Math.random()<.65){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<.34){ setState(STATES.WALK);} else if(r<.56){ setState(STATES.CURIOUS);} else if(idleSec>50){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
+      if(SM.t>SM.nextIdleAction){ const r=Math.random(); if(food.exists && !food.eaten && Math.random()<.65){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<.34 && dirt<9){ setState(STATES.WALK);} else if(r<.56 && dirt<10){ setState(STATES.CURIOUS);} else if(idleSec>50){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
       break;
     case STATES.WALK:
     case STATES.TO_FOOD:{
-      SM.walkProgress += dt*(SM.current===STATES.TO_FOOD ? .29 : .25);
+      SM.walkProgress += dt*dirtMotion*(SM.current===STATES.TO_FOOD ? .29 : .25);
       if(SM.walkProgress>=1){ muu.position.x=SM.walkTarget.x; muu.position.z=SM.walkTarget.z; if(SM.current===STATES.TO_FOOD) setState(STATES.EAT); else setState(STATES.IDLE); }
       else { const p=SM.walkProgress, eased=p*p*(3-2*p); muu.position.x=lerp(SM.walkStart.x,SM.walkTarget.x,eased); muu.position.z=lerp(SM.walkStart.z,SM.walkTarget.z,eased); const dir=SM.walkTarget.clone().sub(SM.walkStart); if(dir.length()>.01){ const angle=(SM.current===STATES.TO_FOOD)?0:Math.atan2(dir.x,dir.z); muu.rotation.y=lerp(muu.rotation.y,angle,SM.current===STATES.TO_FOOD?.09:.055);} }
       break; }
@@ -50075,14 +50174,14 @@ function tickStateMachine(dt){SM.t+=dt; SM.globalT+=dt; const idleSec=(Date.now(
   if(idleSec>45 && SM.current===STATES.IDLE && Math.random()<.004){ setState(STATES.SLEEP); }
 }
 
-function tickAnimations(dt){const st=SM.current, sleepFactor=st===STATES.SLEEP?.28:1; SM.breathPhase+=dt*.38*sleepFactor; SM.floatPhase+=dt*.55*sleepFactor; SM.tailPhase+=dt*TAIL_TARGETS[st].speed; SM.earPhase+=dt*.9; SM.legPhase+=dt*((st===STATES.WALK || st===STATES.TO_FOOD)?4.4:.28);
-  const br=Math.sin(SM.breathPhase), brScale=1+br*(st===STATES.SLEEP?.034:.016); headMesh.scale.set(brScale,brScale*.97,brScale); body.scale.set(brScale,.85*brScale,.9*brScale);
-  const floatY=st===STATES.SLEEP?0:Math.sin(SM.floatPhase)*.05; muu.position.y=floatY; if(st===STATES.HAPPY){const hop=Math.max(0,Math.sin(SM.t*6.4))*.11; muu.position.y+=hop;}
+function tickAnimations(dt){const st=SM.current, dirt=memory.currentDirtLevel||computeDirtLevel(), dirtMotion=dirtMotionFactor(dirt), curl=Math.max(0,Math.min(1,(dirt-7)/3)), sleepFactor=st===STATES.SLEEP?.28:1; SM.breathPhase+=dt*.38*sleepFactor*Math.max(.18,dirtMotion); SM.floatPhase+=dt*.55*sleepFactor*Math.max(.18,dirtMotion); SM.tailPhase+=dt*TAIL_TARGETS[st].speed*Math.max(.12,dirtMotion); SM.earPhase+=dt*.9*Math.max(.18,dirtMotion); SM.legPhase+=dt*((st===STATES.WALK || st===STATES.TO_FOOD)?4.4:.28)*Math.max(.18,dirtMotion);
+  const br=Math.sin(SM.breathPhase), brScale=1+br*(st===STATES.SLEEP?.034:.016)*(1-curl*.72); headMesh.scale.set(brScale*(1-curl*.08),brScale*.97*(1-curl*.16),brScale*(1+curl*.04)); body.scale.set(brScale*(1+curl*.18),.85*brScale*(1-curl*.18),.9*brScale*(1+curl*.12));
+  const floatY=st===STATES.SLEEP?0:Math.sin(SM.floatPhase)*.05*dirtMotion; muu.position.y=floatY; if(st===STATES.HAPPY && dirt<9){const hop=Math.max(0,Math.sin(SM.t*6.4))*.11*dirtMotion; muu.position.y+=hop;}
   shadowBlob.position.x=muu.position.x; shadowBlob.position.z=muu.position.z; shadowBlob.scale.setScalar(1-muu.position.y*.26);
-  const et=EAR_TARGETS[st]; SM.earLRot=lerp(SM.earLRot,et.lR,.06); SM.earRRot=lerp(SM.earRRot,et.rR,.06); SM.earLScY=lerp(SM.earLScY,et.lS,.06); SM.earRScY=lerp(SM.earRScY,et.rS,.06); const earWobble=Math.sin(SM.earPhase*1.65)*.028; earL.rotation.z=SM.earLRot+earWobble; earR.rotation.z=SM.earRRot-earWobble; earL.scale.y=SM.earLScY; earR.scale.y=SM.earRScY;
-  const tt=TAIL_TARGETS[st]; SM.tailAmp=lerp(SM.tailAmp,tt.amp,.045); SM.tailSpeed=lerp(SM.tailSpeed,tt.speed,.045); SM.tailLift=lerp(SM.tailLift,tt.lift,.045); updateTail();
+  const et=EAR_TARGETS[st]; SM.earLRot=lerp(SM.earLRot,et.lR-curl*.18,.06); SM.earRRot=lerp(SM.earRRot,et.rR+curl*.18,.06); SM.earLScY=lerp(SM.earLScY,et.lS*(1-curl*.22),.06); SM.earRScY=lerp(SM.earRScY,et.rS*(1-curl*.22),.06); const earWobble=Math.sin(SM.earPhase*1.65)*.028*dirtMotion; earL.rotation.z=SM.earLRot+earWobble; earR.rotation.z=SM.earRRot-earWobble; earL.scale.y=SM.earLScY; earR.scale.y=SM.earRScY;
+  const tt=TAIL_TARGETS[st]; SM.tailAmp=lerp(SM.tailAmp,tt.amp*dirtMotion,.045); SM.tailSpeed=lerp(SM.tailSpeed,tt.speed*dirtMotion,.045); SM.tailLift=lerp(SM.tailLift,tt.lift-curl*.12,.045); updateTail();
   if(st===STATES.WALK || st===STATES.TO_FOOD){ legL.rotation.x=Math.sin(SM.legPhase)*.32; legR.rotation.x=Math.sin(SM.legPhase+Math.PI)*.32; } else if(st===STATES.SLEEP){ legL.rotation.x=lerp(legL.rotation.x,.28,.035); legR.rotation.x=lerp(legR.rotation.x,.28,.035);} else { legL.rotation.x=lerp(legL.rotation.x,0,.06); legR.rotation.x=lerp(legR.rotation.x,0,.06); }
-  if(st===STATES.SLEEP){ head.rotation.z=lerp(head.rotation.z,-.23,.035); head.position.y=lerp(head.position.y,1.1,.035);} else if(st===STATES.EAT){ head.rotation.z=lerp(head.rotation.z,0,.08); head.rotation.x=lerp(head.rotation.x,.35 + Math.sin(SM.t*10)*.05,.09); head.position.y=lerp(head.position.y,1.18,.08);} else { head.rotation.z=lerp(head.rotation.z,0,.055); head.rotation.x=lerp(head.rotation.x,0,.08); head.position.y=lerp(head.position.y,1.3,.055);} 
+  if(st===STATES.SLEEP){ head.rotation.z=lerp(head.rotation.z,-.23-curl*.18,.035); head.position.y=lerp(head.position.y,1.1-curl*.16,.035);} else if(st===STATES.EAT){ head.rotation.z=lerp(head.rotation.z,-curl*.16,.08); head.rotation.x=lerp(head.rotation.x,.35*(1-curl*.45) + Math.sin(SM.t*10)*.05*dirtMotion,.09); head.position.y=lerp(head.position.y,1.18-curl*.20,.08);} else { head.rotation.z=lerp(head.rotation.z,-curl*.24,.055); head.rotation.x=lerp(head.rotation.x,curl*.18,.08); head.position.y=lerp(head.position.y,1.3-curl*.30,.055);} 
   if(SM.hasPointer) checkHit(); cursor.classList.toggle('near',SM.nearMuu&&!SM.petting); cursor.classList.toggle('pet',SM.petting);
   if(SM.nearMuu && st!==STATES.SLEEP){ const dx=(SM.mx/window.innerWidth-.5)*.07, dy=-(SM.my/window.innerHeight-.5)*.07; eyeL.rotation.y=lerp(eyeL.rotation.y,dx,.08); eyeR.rotation.y=lerp(eyeR.rotation.y,dx,.08); eyeL.rotation.x=lerp(eyeL.rotation.x,dy,.08); eyeR.rotation.x=lerp(eyeR.rotation.x,dy,.08);} else { eyeL.rotation.y=lerp(eyeL.rotation.y,0,.04); eyeR.rotation.y=lerp(eyeR.rotation.y,0,.04); eyeL.rotation.x=lerp(eyeL.rotation.x,0,.04); eyeR.rotation.x=lerp(eyeR.rotation.x,0,.04);}
   const eyeClosed = (st===STATES.SLEEP || st===STATES.TIRED) ? 0.14 : 1;
@@ -50957,7 +51056,7 @@ diary.addEventListener('click',()=>diary.classList.remove('open'));
 const liveBtn=document.getElementById('live-btn'); function updateLiveButton(){liveBtn.textContent=memory.living?'暮らしている':'一緒に暮らす'} updateLiveButton(); liveBtn.addEventListener('click',()=>{ if(!memory.living){ memory.living=true; memory.livingSince=TODAY; todayData().movedIn=true; saveMemory(); updateLiveButton(); setState(STATES.CURIOUS); say('むぅ',1700); return;} setState(STATES.CURIOUS); say(smallVoice(),1400);});
 setTimeout(()=>{if(memory.living) say('……',1500); setState(STATES.CURIOUS);},2400);
 
-window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu};
+window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual};
 </script>
 </body>
 </html>
