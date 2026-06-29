@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>MUU｜AIあるデジタルいきもの</title>
+<title>MUU｜あなたのそばの、デジタルいきもの</title>
 
-<meta name="description" content="MUUは、AIとつくるデジタルいきもの。会話しない、静かなデジタル生命体です。">
+<meta name="description" content="その子だけの気配と未来に、少しずつ出会おう。">
 <link rel="canonical" href="https://muu.life/">
 
-<meta property="og:title" content="MUU｜AIあるデジタルいきもの">
-<meta property="og:description" content="MUUは、AIとつくるデジタルいきもの。会話しない、静かなデジタル生命体です。">
+<meta property="og:title" content="MUU｜あなたのそばの、デジタルいきもの">
+<meta property="og:description" content="その子だけの気配と未来に、少しずつ出会おう。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://muu.life/">
 <meta property="og:image" content="https://muu.life/ogp.jpg">
@@ -18,9 +18,20 @@
 <meta property="og:site_name" content="MUU">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="MUU｜AIあるデジタルいきもの">
-<meta name="twitter:description" content="MUUは、AIとつくるデジタルいきもの。会話しない、静かなデジタル生命体です。">
+<meta name="twitter:title" content="MUU｜あなたのそばの、デジタルいきもの">
+<meta name="twitter:description" content="その子だけの気配と未来に、少しずつ出会おう。">
 <meta name="twitter:image" content="https://muu.life/ogp.jpg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "MUU",
+  "url": "https://muu.life/",
+  "description": "その子だけの気配と未来に、少しずつ出会おう。",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Web"
+}
+</script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -49862,6 +49873,7 @@ function nativeMotion(key,fallback=1){
 }
 function nativeNoise(salt,amount=.08){return 1+(seededUnit(memory.nativeTrait.seed,salt)-.5)*amount;}
 const TODAY=todayKey();
+const previousOpenedAt=memory.lastOpenedAt||null;
 if(memory.lastOpenedAt){
   const elapsedHours=Math.max(0,(Date.now()-new Date(memory.lastOpenedAt).getTime())/36e5);
   if(Number.isFinite(elapsedHours)){
@@ -49921,7 +49933,7 @@ function setupPetName(){
       memory.growth.updatedAt=new Date().toISOString();
       saveMemory();
       updatePetNameView();
-      say('むぅ',700);
+      sayVoice('happy',800,.8,{force:true});
     }
   };
   el.addEventListener('pointerdown',edit);
@@ -50174,7 +50186,7 @@ function updateSleepMemoryForState(s,dirt=memory.currentDirtLevel||computeDirtLe
     memory.sleep.updatedAt=new Date().toISOString();
   }
 }
-function setState(s){if(SM.current===s)return; SM.current=s; SM.t=0; updateSleepMemoryForState(s); if(s===STATES.IDLE){SM.nextIdleAction=randIdleDelay(); resetHopMotion()} if(s===STATES.WALK){pickWalkTarget()} if(s===STATES.SLEEP){resetHopMotion(); todayData().slept=true; saveMemory()} if(s===STATES.TIRED){resetHopMotion(); todayData().tired=true; saveMemory()} if(s===STATES.TO_FOOD){SM.walkStart.set(muu.position.x,0,muu.position.z); SM.walkTarget.copy(food.target); SM.walkProgress=0; resetHopMotion();} }
+function setState(s){if(SM.current===s)return; SM.current=s; SM.t=0; updateSleepMemoryForState(s); if(s===STATES.IDLE){SM.nextIdleAction=randIdleDelay(); resetHopMotion()} if(s===STATES.WALK){pickWalkTarget()} if(s===STATES.SLEEP){resetHopMotion(); todayData().slept=true; saveMemory(); sayVoice('sleepy',1200,.42)} if(s===STATES.TIRED){resetHopMotion(); todayData().tired=true; saveMemory(); sayVoice('sleepy',1100,.38)} if(s===STATES.TO_FOOD){SM.walkStart.set(muu.position.x,0,muu.position.z); SM.walkTarget.copy(food.target); SM.walkProgress=0; resetHopMotion();} }
 SM.nextIdleAction=randIdleDelay();
 const EAR_TARGETS={idle:{lR:-.25,rR:.25,lS:1,rS:1},walk:{lR:-.17,rR:.20,lS:1.04,rS:1.04},sleep:{lR:-.52,rR:.52,lS:.68,rS:.68},happy:{lR:-.12,rR:.12,lS:1.13,rS:1.13},shy:{lR:-.44,rR:.44,lS:.82,rS:.82},tired:{lR:-.56,rR:.56,lS:.64,rS:.64},curious:{lR:-.35,rR:.12,lS:1.08,rS:.95},to_food:{lR:-.18,rR:.18,lS:1.02,rS:1.02},eat:{lR:-.28,rR:.28,lS:.92,rS:.92}};
 const TAIL_TARGETS={idle:{amp:.08,speed:.85,lift:0},walk:{amp:.13,speed:1.45,lift:.09},sleep:{amp:.004,speed:.12,lift:-.44},happy:{amp:.20,speed:2.55,lift:.22},shy:{amp:.05,speed:.62,lift:-.06},tired:{amp:.026,speed:.32,lift:-.16},curious:{amp:.10,speed:1.15,lift:.08},to_food:{amp:.11,speed:1.25,lift:.04},eat:{amp:.03,speed:.4,lift:-.04}};
@@ -50264,7 +50276,46 @@ function updateTailInertia(dt,st,dirt,dirtMotion,hopSquash){
   SM.tailTipLagY=clamp(SM.tailTipLagY+SM.tailTipVY*rate,-.18,.06);
 }
 
-const speechEl=document.getElementById('speech'); let speechTimer=null; function say(text,dur=1500){speechEl.textContent=text; speechEl.classList.add('show'); clearTimeout(speechTimer); speechTimer=setTimeout(()=>speechEl.classList.remove('show'),dur);} function smallVoice(){const r=Math.random(); if(r<.55) return 'むぅ'; if(r<.85) return '……'; return 'む';}
+const speechEl=document.getElementById('speech'); let speechTimer=null, lastVoiceAt=0; function say(text,dur=1500){speechEl.textContent=text; speechEl.classList.add('show'); clearTimeout(speechTimer); speechTimer=setTimeout(()=>speechEl.classList.remove('show'),dur);}
+const ALL_VOICES=Array.from(new Set(['む','むぅ','むー','む…','むぅ…','む……','……む','…む','む、む','むっ','むぅ？','む？','む〜','むぅ〜','んむ','んむ…','んむぅ','すぅ…','ふむ…','ぽふ','む！','むっ？','むむ','むむ…','むむぅ','むぅむ','むぅ、む','む、むぅ','むん','むん…','むに','むに…','むきゅ','むきゅ…','むきゅ？','むきゅぅ','むぷ','むぷ…','むぷぅ','むぽ','むぽ…','むふ','むふ…','むふぅ','むぁ','むぁ…','むぅぁ','むぅぅ','むぅぅ…','むぅぅ、、、ん','むぅん','むぅん…','むぅ、ん','む……ん','ん……む','……んむ','む、、','むぅ、、','むぅ……','むーー','むーー…','む〜…','むぅ〜…','むぅぅ？','むむ？','むっ…','む、む…','む、む、む','むむむ','むむむ…','むぅむぅ','むぅむぅ…','んむん','んむん…','んむぅ…','むす…','むすぅ…','むしゅ','むしゅ…','むにゅ','むにゅ…','むにゅぅ','むゆ','むゆ…','むゅ','むゅ…','むぴ','むぴ…','むぴ？','むぴぃ','むぽふ','むぽふ…','ぽふ…','すぅ……む','む……すぅ','あ…','……あ']));
+const RARE_VOICES={mupi:'むぴ',almost:'あ…'};
+const COMMON_VOICES=ALL_VOICES.filter(v=>v!==RARE_VOICES.mupi&&v!==RARE_VOICES.almost);
+const VOICE_POOLS={idle:['む','むぅ','むー','む…','むぅ…','……','んむ','ふむ…'],startup:['む','むぅ','む…','むぅ…','……む','…む','んむ'],sleepy:['むぅ…','すぅ…','……む','むぅぅ…','むぅぅ、、、ん','すぅ……む'],food:['むっ','むぅ？','む、む','む？','むきゅ？','むぷ'],wash:['む〜','むぅ〜','ぽふ','ぽふ…','むぽふ','むぅ'],dirty:['む……','……む','むぅ…','んむ…','ん……む','む……ん'],dust:['……','……む','すぅ…','むぅ……','すぅ……む'],pouty:['むっ','……','む','むっ…','むす…'],curious:['むぅ？','むっ','む？','むむ？','むきゅ？'],happy:['むぅ','む〜','ぽふ','む！','む、む']};
+const TRAIT_VOICES={affectionate:['むぅ','む〜','むぅ〜','む、むぅ'],solitary:['……','む','…む','ふむ…'],gentle:['むぅ…','すぅ…','ふむ…'],restless:['む、む','むっ','む、む…'],timid:['……む','むぅ？','む…'],foodie:['むっ','むぅ？','むきゅ？'],sleepy:['すぅ…','むぅ…','むぅぅ、、、ん'],cleanly:['む〜','ぽふ','むぽふ'],pouty:['むっ','……','むす…'],curious:['むぅ？','むっ','むきゅ？'],energetic:['む！','む、む','む、む、む'],awkwardly_affectionate:['……む','むぅ…','む、']};
+function startupVoiceContext(){
+  const dirt=memory.currentDirtLevel||computeDirtLevel();
+  const awayHours=previousOpenedAt?Math.max(0,(Date.now()-new Date(previousOpenedAt).getTime())/36e5):0;
+  if(dirt>=10)return 'dust';
+  if(dirt>=5)return 'dirty';
+  if(memory.state.sleepiness>.62||SM.current===STATES.SLEEP||SM.current===STATES.TIRED)return 'sleepy';
+  if(awayHours>=36||todayData().returnedAfterDays)return 'sleepy';
+  if(food.exists&&!food.eaten)return 'food';
+  if(nativeTraitDef.id==='energetic')return 'happy';
+  if(nativeTraitDef.id==='timid')return 'curious';
+  if(nativeTraitDef.id==='awkwardly_affectionate')return 'startup';
+  return 'startup';
+}
+function pickVoice(context='idle'){
+  const dirt=memory.currentDirtLevel||computeDirtLevel();
+  const stateContext=dirt>=10?'dust':dirt>=5?'dirty':(SM.current===STATES.SLEEP||SM.current===STATES.TIRED)?'sleepy':context;
+  const quietState=stateContext==='dust'||stateContext==='dirty'||stateContext==='sleepy';
+  if(!quietState&&Math.random()<.001)return RARE_VOICES.almost;
+  if(!quietState&&Math.random()<.01)return RARE_VOICES.mupi;
+  const base=(VOICE_POOLS[stateContext]||VOICE_POOLS.idle).slice();
+  const trait=TRAIT_VOICES[nativeTraitDef.id]||[];
+  const pool=base.concat(trait);
+  if(!quietState&&context!=='startup'&&Math.random()<.07)return COMMON_VOICES[Math.floor(Math.random()*COMMON_VOICES.length)]||'む';
+  return pool[Math.floor(Math.random()*pool.length)]||'む';
+}
+function sayVoice(context='idle',dur=1200,chance=.72,opts={}){
+  const now=Date.now(), cooldown=opts.cooldown||2100;
+  if(!opts.force&&now-lastVoiceAt<cooldown)return;
+  if(!opts.force&&Math.random()>chance)return;
+  lastVoiceAt=now;
+  say(pickVoice(context),dur);
+}
+function smallVoice(){return pickVoice('idle');}
+function scheduleStartupVoice(){const delay=800+Math.random()*1000; setTimeout(()=>sayVoice(startupVoiceContext(),1250,1,{force:true,cooldown:3600}),delay);}
 
 const cursor=document.getElementById('cursor'); const raycaster=new THREE.Raycaster(); const mouse2=new THREE.Vector2(); const interactables=[headMesh,body,belly];
 function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#live-btn,#food-btn,#wash-btn,#pet-name,#food-menu,.food-choice'));}
@@ -50274,9 +50325,9 @@ addEventListener('pointermove',e=>{updatePointer(e); if(!isUiTarget(e)) checkHit
 addEventListener('pointerdown',e=>{updatePointer(e); if(isUiTarget(e)) return; e.preventDefault(); if(!checkHit()) return; SM.petting=true; SM.petStart=Date.now(); SM.lastTouch=Date.now();});
 addEventListener('pointerup',e=>{if(!SM.petting) return; e.preventDefault(); const dur=Date.now()-SM.petStart; SM.petting=false; SM.lastTouch=Date.now(); onMuuTouched(dur);}); addEventListener('pointercancel',()=>SM.petting=false);
 function recordTouch(kind){const d=todayData(); d.touches++; d.lastInteractionAt=new Date().toISOString(); if(kind==='tap'){d.taps++; memory.state.trust=clampMemory(memory.state.trust+.002); memory.traits.curiosity=clampMemory(memory.traits.curiosity+.002);} if(kind==='pet'){d.pets++; memory.state.trust=clampMemory(memory.state.trust+.006); memory.state.mood=clampMemory(memory.state.mood+.004); memory.traits.calmness=clampMemory(memory.traits.calmness+.003);} memory.totals.touched++; saveMemory(); const now=Date.now(); SM.touchTimes.push(now); SM.touchTimes=SM.touchTimes.filter(t=>now-t<15000); return SM.touchTimes.length;}
-function onMuuTouched(duration){const kind=duration<260?'tap':'pet'; const recent=recordTouch(kind), tolerance=Math.max(3,Math.round(8*nativeMotion('touchTolerance',1))); if(SM.current===STATES.TIRED){say('……'); return;} if(SM.current===STATES.SLEEP){setState(STATES.CURIOUS); say('むぅ'); return;} if(recent>=tolerance){setState(nativeTraitDef.id==='pouty'?STATES.SHY:STATES.TIRED); say('……'); return;} if(kind==='pet'&&nativeMotion('touchWarmth',1)>.75){setState(STATES.HAPPY); say('……'); return;} if(recent>=Math.max(3,Math.round(5*nativeMotion('touchTolerance',1)))){setState(STATES.SHY); say('……'); return;} setState(nativeMotion('touchWarmth',1)<.7?STATES.CURIOUS:STATES.HAPPY); say(smallVoice());}
+function onMuuTouched(duration){const kind=duration<260?'tap':'pet'; const recent=recordTouch(kind), tolerance=Math.max(3,Math.round(8*nativeMotion('touchTolerance',1))); if(SM.current===STATES.TIRED){sayVoice('sleepy',1100,.9,{force:true}); return;} if(SM.current===STATES.SLEEP){setState(STATES.CURIOUS); sayVoice('sleepy',1200,.9,{force:true}); return;} if(recent>=tolerance){setState(nativeTraitDef.id==='pouty'?STATES.SHY:STATES.TIRED); sayVoice('pouty',1100,.85,{force:true}); return;} if(kind==='pet'&&nativeMotion('touchWarmth',1)>.75){setState(STATES.HAPPY); sayVoice('happy',1150,.65); return;} if(recent>=Math.max(3,Math.round(5*nativeMotion('touchTolerance',1)))){setState(STATES.SHY); sayVoice('pouty',1100,.65); return;} setState(nativeMotion('touchWarmth',1)<.7?STATES.CURIOUS:STATES.HAPPY); sayVoice(SM.current===STATES.CURIOUS?'curious':'idle',1100,.62);}
 
-function placeFood(type='normal'){if(food.exists) return; setFoodType(type); food.type=type; food.reaction=computeFoodReaction(type); food.exists=true; food.eaten=false; food.noticed=false; food.placedAt=Date.now(); foodGroup.position.set(0,0,1.75); foodGroup.visible=true; foodGroup.position.set(0,0,1.75); for(const k of kibbles) k.visible=true; say('……',700); todayData().foodPlaced++; memory.totals.foodPlaced++; memory.lastFoodAt=new Date().toISOString(); memory.food.hasFood=true; memory.food.placedAt=new Date(food.placedAt).toISOString(); memory.food.lastReaction=food.reaction; memory.food.updatedAt=new Date().toISOString(); if(food.reaction==='rush')todayData().foodRush++; saveMemory(); closeFoodMenu(); document.getElementById('food-btn').classList.add('placed'); const foodDelay=nativeMotion('foodDelay',1)*nativeNoise(23,.16); if(food.reaction==='rush'){setTimeout(()=>{if(food.exists&&!food.eaten){food.noticed=true; setState(STATES.TO_FOOD);}},240*foodDelay);} else if(food.reaction==='approach'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){food.noticed=true; setState(STATES.TO_FOOD);}},(1200+Math.random()*1300)*foodDelay);} else if(food.reaction==='wait'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){setState(STATES.CURIOUS); say('……',1200);}},(1500+Math.random()*1600)*foodDelay); setTimeout(()=>{if(food.exists&&!food.eaten&&Math.random()<.65*nativeMotion('foodNotice',1)){food.noticed=true; setState(STATES.TO_FOOD);}},(7000+Math.random()*4000)*foodDelay);} }
+function placeFood(type='normal'){if(food.exists) return; setFoodType(type); food.type=type; food.reaction=computeFoodReaction(type); food.exists=true; food.eaten=false; food.noticed=false; food.placedAt=Date.now(); foodGroup.position.set(0,0,1.75); foodGroup.visible=true; foodGroup.position.set(0,0,1.75); for(const k of kibbles) k.visible=true; sayVoice('food',900,.74); todayData().foodPlaced++; memory.totals.foodPlaced++; memory.lastFoodAt=new Date().toISOString(); memory.food.hasFood=true; memory.food.placedAt=new Date(food.placedAt).toISOString(); memory.food.lastReaction=food.reaction; memory.food.updatedAt=new Date().toISOString(); if(food.reaction==='rush')todayData().foodRush++; saveMemory(); closeFoodMenu(); document.getElementById('food-btn').classList.add('placed'); const foodDelay=nativeMotion('foodDelay',1)*nativeNoise(23,.16); if(food.reaction==='rush'){setTimeout(()=>{if(food.exists&&!food.eaten){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.7);}},240*foodDelay);} else if(food.reaction==='approach'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.58);}},(1200+Math.random()*1300)*foodDelay);} else if(food.reaction==='wait'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){setState(STATES.CURIOUS); sayVoice('curious',1100,.55);}},(1500+Math.random()*1600)*foodDelay); setTimeout(()=>{if(food.exists&&!food.eaten&&Math.random()<.65*nativeMotion('foodNotice',1)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.58);}},(7000+Math.random()*4000)*foodDelay);} }
 function clearFood(){food.exists=false; food.eaten=false; food.noticed=false; foodGroup.visible=false; memory.food.hasFood=false; memory.food.updatedAt=new Date().toISOString(); saveMemory(); document.getElementById('food-btn').classList.remove('placed'); closeFoodMenu && closeFoodMenu();}
 function eatFood(){if(!food.exists || food.eaten) return; food.eaten=true; for(const k of kibbles) k.visible=false; todayData().foodEaten++; memory.totals.foodEaten++; memory.state.hunger=clampMemory(memory.state.hunger-.32); memory.state.appetite=clampMemory(memory.state.appetite+.004); memory.state.trust=clampMemory(memory.state.trust+.003); memory.state.mood=clampMemory(memory.state.mood+.004); memory.lastAteAt=new Date().toISOString(); memory.food.lastAteAt=memory.lastAteAt; memory.food.lastReaction='eaten'; memory.food.updatedAt=memory.lastAteAt; saveMemory(); setTimeout(()=>clearFood(),1600);} 
 
@@ -50334,7 +50385,7 @@ function washMuu(e){
   applyDirtVisual();
   spawnWashBubbles();
   if(nativeMotion('washBounce',1)>1.15)setState(STATES.HAPPY);
-  say('……',900);
+  sayVoice('wash',1000,.85,{force:true});
 }
 if(washBtn){
   washBtn.addEventListener('pointerdown',washMuu);
@@ -50366,7 +50417,7 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
       break; }
     case STATES.EAT:
       muu.rotation.y=lerp(muu.rotation.y,0,.12);
-      if(SM.t>.85*nativeMotion('eatSpeed',1) && !food.eaten){ eatFood(); muuState.hunger=clamp(muuState.hunger-.35); say(food.reaction==='rush'?'むぅ':'……',1300); }
+      if(SM.t>.85*nativeMotion('eatSpeed',1) && !food.eaten){ eatFood(); muuState.hunger=clamp(muuState.hunger-.35); sayVoice('food',1200,food.reaction==='rush'?.82:.52,{force:food.reaction==='rush'}); }
       if(SM.t>2.5*nativeMotion('eatSpeed',1)) setState(nativeTraitDef.id==='foodie'?STATES.HAPPY:STATES.IDLE);
       break;
     case STATES.SLEEP:
@@ -50377,6 +50428,7 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
     case STATES.TIRED: if(SM.t>7){ SM.touchTimes=[]; setState(STATES.SLEEP);} break;
     case STATES.CURIOUS: if(food.exists && !food.eaten && SM.t>1.4){ food.noticed=true; setState(STATES.TO_FOOD);} else if(SM.t>2.8) setState(STATES.IDLE); break;
   }
+  if((SM.current===STATES.IDLE||SM.current===STATES.CURIOUS) && idleSec>8 && Math.random()<dt*(dirt>=5?.018:.007)){sayVoice(dirt>=5?'dirty':'idle',1100,.52,{cooldown:14000});}
   if(idleSec>45/nativeMotion('sleepChance',1) && SM.current===STATES.IDLE && Math.random()<.004*nativeMotion('sleepChance',1)){ setState(STATES.SLEEP); }
 }
 
@@ -51269,10 +51321,12 @@ document.getElementById('diary-dot').addEventListener('click',(event)=>{
   saveMemory();
 });
 diary.addEventListener('click',()=>diary.classList.remove('open'));
-const liveBtn=document.getElementById('live-btn'); function updateLiveButton(){liveBtn.textContent=memory.living?'暮らしている':'一緒に暮らす'} updateLiveButton(); liveBtn.addEventListener('click',()=>{ if(!memory.living){ memory.living=true; memory.livingSince=TODAY; todayData().movedIn=true; saveMemory(); updateLiveButton(); setState(STATES.CURIOUS); say('むぅ',1700); return;} setState(STATES.CURIOUS); say(smallVoice(),1400);});
-setTimeout(()=>{if(memory.living) say('……',1500); setState(STATES.CURIOUS);},2400);
+const liveBtn=document.getElementById('live-btn'); function updateLiveButton(){liveBtn.textContent=memory.living?'暮らしている':'一緒に暮らす'} updateLiveButton(); liveBtn.addEventListener('click',()=>{ if(!memory.living){ memory.living=true; memory.livingSince=TODAY; todayData().movedIn=true; saveMemory(); updateLiveButton(); setState(STATES.CURIOUS); sayVoice('curious',1400,.9,{force:true}); return;} setState(STATES.CURIOUS); sayVoice('curious',1200,.6);});
+setTimeout(()=>{if(memory.living) sayVoice('idle',1300,.38); setState(STATES.CURIOUS);},2400);
 
-window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual};
+scheduleStartupVoice();
+
+window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,sayVoice,ALL_VOICES};
 </script>
 </body>
 </html>

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://muu.life/sitemap.xml
