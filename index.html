@@ -50132,9 +50132,11 @@ const foodGroup=new THREE.Group(); foodGroup.visible=false; scene.add(foodGroup)
 const food={exists:false,eaten:false,noticed:false,placedAt:0,target:new THREE.Vector3(0,0,1.12),lastServedDay:null};
 
 const STATES={IDLE:'idle',WALK:'walk',SLEEP:'sleep',HAPPY:'happy',SHY:'shy',TIRED:'tired',CURIOUS:'curious',TO_FOOD:'to_food',EAT:'eat'};
-const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,lastTouch:Date.now(),touchTimes:[],breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
+const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,hopT:0,hopProfile:null,hopFrom:0,hopTo:0,hopY:0,hopSquash:0,hopTailLag:0,lastTouch:Date.now(),touchTimes:[],breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
 function randIdleDelay(){return (4+Math.random()*5)*nativeMotion('idleDelay',1)*nativeNoise(11,.18)}
 function lerp(a,b,t){return a+(b-a)*t}
+function smoothstep(t){return t*t*(3-2*t)}
+function resetHopMotion(){SM.hopT=0; SM.hopProfile=null; SM.hopFrom=SM.walkProgress||0; SM.hopTo=SM.hopFrom; SM.hopY=0; SM.hopSquash=0; SM.hopTailLag=0;}
 function updateSleepMemoryForState(s,dirt=memory.currentDirtLevel||computeDirtLevel()){
   const next=dirt>=10?'dust_still':s===STATES.SLEEP?'sleeping':s===STATES.TIRED?'drowsy':dirt>=9?'curled':'awake';
   if(memory.sleep.state!==next){
@@ -50144,11 +50146,64 @@ function updateSleepMemoryForState(s,dirt=memory.currentDirtLevel||computeDirtLe
     memory.sleep.updatedAt=new Date().toISOString();
   }
 }
-function setState(s){if(SM.current===s)return; SM.current=s; SM.t=0; updateSleepMemoryForState(s); if(s===STATES.IDLE){SM.nextIdleAction=randIdleDelay()} if(s===STATES.WALK){pickWalkTarget()} if(s===STATES.SLEEP){todayData().slept=true; saveMemory()} if(s===STATES.TIRED){todayData().tired=true; saveMemory()} if(s===STATES.TO_FOOD){SM.walkStart.set(muu.position.x,0,muu.position.z); SM.walkTarget.copy(food.target); SM.walkProgress=0;} }
+function setState(s){if(SM.current===s)return; SM.current=s; SM.t=0; updateSleepMemoryForState(s); if(s===STATES.IDLE){SM.nextIdleAction=randIdleDelay(); resetHopMotion()} if(s===STATES.WALK){pickWalkTarget()} if(s===STATES.SLEEP){resetHopMotion(); todayData().slept=true; saveMemory()} if(s===STATES.TIRED){resetHopMotion(); todayData().tired=true; saveMemory()} if(s===STATES.TO_FOOD){SM.walkStart.set(muu.position.x,0,muu.position.z); SM.walkTarget.copy(food.target); SM.walkProgress=0; resetHopMotion();} }
 SM.nextIdleAction=randIdleDelay();
 const EAR_TARGETS={idle:{lR:-.25,rR:.25,lS:1,rS:1},walk:{lR:-.17,rR:.20,lS:1.04,rS:1.04},sleep:{lR:-.52,rR:.52,lS:.68,rS:.68},happy:{lR:-.12,rR:.12,lS:1.13,rS:1.13},shy:{lR:-.44,rR:.44,lS:.82,rS:.82},tired:{lR:-.56,rR:.56,lS:.64,rS:.64},curious:{lR:-.35,rR:.12,lS:1.08,rS:.95},to_food:{lR:-.18,rR:.18,lS:1.02,rS:1.02},eat:{lR:-.28,rR:.28,lS:.92,rS:.92}};
 const TAIL_TARGETS={idle:{amp:.08,speed:.85,lift:0},walk:{amp:.13,speed:1.45,lift:.09},sleep:{amp:.004,speed:.12,lift:-.44},happy:{amp:.20,speed:2.55,lift:.22},shy:{amp:.05,speed:.62,lift:-.06},tired:{amp:.026,speed:.32,lift:-.16},curious:{amp:.10,speed:1.15,lift:.08},to_food:{amp:.11,speed:1.25,lift:.04},eat:{amp:.03,speed:.4,lift:-.04}};
-function pickWalkTarget(){const angle=Math.random()*Math.PI*2, dist=(.8+Math.random()*1.6)*nativeMotion('walkDist',1)*nativeNoise(17,.18), edge=nativeMotion('near',1)<.8?1.24:1; SM.walkStart.set(muu.position.x,0,muu.position.z); SM.walkTarget.set(Math.cos(angle)*dist*edge,0,Math.sin(angle)*dist*.48*edge); if(nativeMotion('awkwardStop',0)&&Math.random()<.42){SM.walkTarget.multiplyScalar(.62)} SM.walkProgress=0;}
+function pickWalkTarget(){const angle=Math.random()*Math.PI*2, dist=(.8+Math.random()*1.6)*nativeMotion('walkDist',1)*nativeNoise(17,.18), edge=nativeMotion('near',1)<.8?1.24:1; SM.walkStart.set(muu.position.x,0,muu.position.z); SM.walkTarget.set(Math.cos(angle)*dist*edge,0,Math.sin(angle)*dist*.48*edge); if(nativeMotion('awkwardStop',0)&&Math.random()<.42){SM.walkTarget.multiplyScalar(.62)} SM.walkProgress=0; resetHopMotion();}
+function hopProfileFor(kind,dirt){
+  const id=nativeTraitDef.id, foodHop=kind===STATES.TO_FOOD;
+  const p={height:.16,duration:.58,distance:.34,anticipation:.16,landing:.18,squash:.075,rebound:.035,pause:.16,tempo:1};
+  const trait={
+    affectionate:{height:1.02,duration:.94,distance:1.05,anticipation:.92,pause:.84,squash:1.0,rebound:1.06,tempo:1.06},
+    solitary:{height:.78,duration:1.04,distance:.82,anticipation:1.08,pause:1.28,squash:.9,rebound:.88,tempo:.94},
+    gentle:{height:.86,duration:1.22,distance:.9,anticipation:1.36,pause:1.34,squash:.92,rebound:.82,tempo:.82},
+    restless:{height:.74,duration:.78,distance:.78,anticipation:.74,pause:.72,squash:.88,rebound:1.0,tempo:1.24},
+    timid:{height:.68,duration:1.12,distance:.76,anticipation:1.22,pause:1.42,squash:.84,rebound:.74,tempo:.82},
+    foodie:{height:foodHop?1.12:.96,duration:foodHop?.86:.96,distance:foodHop?1.2:1,anticipation:foodHop?.82:1,pause:foodHop?.72:1,squash:1.02,rebound:1.08,tempo:foodHop?1.18:1},
+    sleepy:{height:.62,duration:1.28,distance:.72,anticipation:1.38,pause:1.45,squash:.82,rebound:.68,tempo:.74},
+    cleanly:{height:1,duration:1,distance:.98,anticipation:1.02,pause:1.05,squash:1,rebound:1.04,tempo:1},
+    pouty:{height:.84,duration:1.08,distance:.86,anticipation:1.18,pause:1.34,squash:.9,rebound:.76,tempo:.86},
+    curious:{height:.88,duration:.86,distance:1.08,anticipation:.82,pause:.78,squash:.9,rebound:1,tempo:1.16},
+    energetic:{height:1.22,duration:.86,distance:1.06,anticipation:.82,pause:.78,squash:1.02,rebound:1.22,tempo:1.16},
+    awkwardly_affectionate:{height:.86,duration:1.06,distance:.82,anticipation:1.24,pause:1.22,squash:.9,rebound:.86,tempo:.9}
+  }[id]||{};
+  for(const k in trait)p[k]*=trait[k];
+  const sleepyDrag=1+Math.max(0,memory.state.sleepiness-.45)*.85;
+  p.height/=sleepyDrag; p.duration*=sleepyDrag; p.anticipation*=sleepyDrag; p.pause*=sleepyDrag;
+  if(foodHop){p.height*=1.06; p.distance*=1.12; p.duration*=.92; p.pause*=.82;}
+  if(dirt>=5){const drag=1+(dirt-4)*.16; p.height/=drag; p.duration*=drag; p.pause*=drag; p.squash*=1+(dirt-4)*.08;}
+  if(dirt>=8){p.height*=.65; p.distance*=.72; p.pause*=1.35;}
+  p.height*=nativeNoise(41,.14); p.duration*=nativeNoise(43,.10); p.distance*=nativeNoise(47,.14); p.pause*=nativeNoise(53,.12);
+  return p;
+}
+function startNextHop(kind,dirt){
+  const total=SM.walkStart.distanceTo(SM.walkTarget);
+  if(total<.001){SM.walkProgress=1; return;}
+  SM.hopProfile=hopProfileFor(kind,dirt);
+  SM.hopFrom=SM.walkProgress;
+  SM.hopTo=Math.min(1,SM.hopFrom+SM.hopProfile.distance/total);
+  if(nativeTraitDef.id==='awkwardly_affectionate'&&kind!==STATES.TO_FOOD&&Math.random()<.18)SM.hopTo=SM.hopFrom;
+  SM.hopT=0; SM.hopY=0; SM.hopSquash=0; SM.hopTailLag=0;
+}
+function advanceHopMove(dt,kind,dirt,dirtMotion){
+  if(dirt>=10){SM.hopY=Math.sin(SM.globalT*1.3)*.006; SM.hopSquash=.018; return false;}
+  if(!SM.hopProfile||SM.hopT>=SM.hopProfile.anticipation+SM.hopProfile.duration+SM.hopProfile.landing+SM.hopProfile.pause)startNextHop(kind,dirt);
+  const p=SM.hopProfile, a=p.anticipation, f=p.duration, l=p.landing, cycle=a+f+l+p.pause;
+  SM.hopT+=dt*Math.max(.18,dirtMotion)*p.tempo*nativeMotion('hopTempo',1);
+  let progress=SM.hopFrom, y=0, squash=0;
+  if(SM.hopT<a){const u=SM.hopT/a; squash=p.squash*.56*smoothstep(u); y=-.028*smoothstep(u);}
+  else if(SM.hopT<a+f){const u=(SM.hopT-a)/f, e=smoothstep(u); progress=lerp(SM.hopFrom,SM.hopTo,e); y=Math.sin(Math.PI*u)*p.height; squash=-p.rebound*.36*Math.sin(Math.PI*u);}
+  else if(SM.hopT<a+f+l){progress=SM.hopTo; const u=(SM.hopT-a-f)/l; squash=p.squash*(1-u)+Math.sin(Math.PI*u)*p.rebound; y=-.022*(1-u);}
+  else {progress=SM.hopTo; const u=(SM.hopT-a-f-l)/Math.max(.01,p.pause); squash=p.rebound*(1-smoothstep(Math.min(1,u)))*.35;}
+  SM.walkProgress=Math.max(SM.walkProgress,progress);
+  const eased=SM.walkProgress;
+  muu.position.x=lerp(SM.walkStart.x,SM.walkTarget.x,eased);
+  muu.position.z=lerp(SM.walkStart.z,SM.walkTarget.z,eased);
+  SM.hopY=y; SM.hopSquash=squash; SM.hopTailLag=lerp(SM.hopTailLag,kind===STATES.TO_FOOD?.035:.02,.12);
+  if(SM.walkProgress>=.999&&SM.hopT>Math.min(cycle,a+f+l*.8)){muu.position.x=SM.walkTarget.x; muu.position.z=SM.walkTarget.z; SM.hopY=0; return true;}
+  return false;
+}
 
 const speechEl=document.getElementById('speech'); let speechTimer=null; function say(text,dur=1500){speechEl.textContent=text; speechEl.classList.add('show'); clearTimeout(speechTimer); speechTimer=setTimeout(()=>speechEl.classList.remove('show'),dur);} function smallVoice(){const r=Math.random(); if(r<.55) return 'むぅ'; if(r<.85) return '……'; return 'む';}
 
