@@ -87,6 +87,8 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 .karte-date{font-size:16px;line-height:1.7;color:rgba(61,54,48,.72);letter-spacing:.04em}
 .karte-time{margin-top:2px;font-size:11px;line-height:1.7;color:rgba(86,76,68,.48);letter-spacing:.06em}
 .karte-day{margin-top:5px;font-size:13px;line-height:1.8;color:rgba(73,64,56,.58);letter-spacing:.05em}
+.karte-age{margin-top:1px;font-size:11px;line-height:1.7;color:rgba(86,76,68,.42);letter-spacing:.04em}
+.karte-birthday{margin-top:3px;font-size:12px;line-height:1.8;color:rgba(95,78,70,.54);letter-spacing:.04em}
 .karte-lines{display:grid;gap:12px;margin-top:22px}
 .karte-line{font-size:12px;line-height:1.9;color:rgba(65,57,50,.66);letter-spacing:.04em}
 @media (max-width:600px){#karte-panel{padding:20px}#karte-body{width:min(310px,calc(100vw - 40px));padding:26px 23px 28px}.karte-lines{gap:11px}}
@@ -49773,6 +49775,25 @@ const STORAGE_KEY='muu_v03_memory';
 
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function daysBetween(a,b){if(!a||!b)return 0;return Math.floor((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);}
+function dateFromMemoryValue(value){
+  if(typeof value==='string'){
+    const m=value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if(m)return new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
+  }
+  const d=value?new Date(value):new Date();
+  return Number.isFinite(d.getTime())?new Date(d.getFullYear(),d.getMonth(),d.getDate()):new Date();
+}
+function memoryBirthDate(memoryLike){return dateFromMemoryValue((memoryLike&&memoryLike.bornAt)||(memoryLike&&memoryLike.livingSince)||todayKey());}
+function effectiveBirthdayDate(year,month,day){
+  const d=new Date(year,month-1,day);
+  if(d.getMonth()!==month-1)return new Date(year,1,28);
+  return d;
+}
+function daysAliveFromBirthDate(birthDate,now=new Date()){
+  const start=new Date(birthDate.getFullYear(),birthDate.getMonth(),birthDate.getDate());
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  return Math.max(1,Math.floor((today-start)/86400000)+1);
+}
 function makeMuuId(){return 'muu_'+Math.random().toString(16).slice(2)+Date.now().toString(16);}
 function clampMemory(v,min=0,max=1){return Math.max(min,Math.min(max,v));}
 function blankDay(){return{opens:0,touches:0,taps:0,pets:0,tired:false,slept:false,movedIn:false,returnedAfterDays:0,foodPlaced:0,foodEaten:0,foodIgnored:0,foodRush:0,diaryRead:0,lastInteractionAt:null};}
@@ -49881,6 +49902,61 @@ function normalizeAffinity(value,memoryLike,traitDef){
     growthStage:Number.isFinite(a.growthStage)?a.growthStage:(memoryLike.growth&&memoryLike.growth.stage)||1
   };
 }
+function currentSeasonSense(now=new Date()){
+  const m=now.getMonth()+1;
+  if(m>=3&&m<=5)return 'spring';
+  if(m>=6&&m<=8)return 'summer';
+  if(m>=9&&m<=11)return 'autumn';
+  return 'winter';
+}
+function initialLifeParams(memoryLike,traitDef){
+  const seed=(memoryLike.nativeTrait&&memoryLike.nativeTrait.seed)||Math.floor(Math.random()*1000000)+1, id=traitDef&&traitDef.id;
+  let activity=48+seededUnit(seed,311)*12, curiosity=48+seededUnit(seed,313)*12, comfort=48+seededUnit(seed,317)*12, condition=78+seededUnit(seed,319)*10;
+  if(id==='energetic'){activity+=15;condition+=4}
+  if(id==='curious'){curiosity+=18;activity+=5}
+  if(id==='sleepy')activity-=10;
+  if(id==='gentle')comfort+=8;
+  if(id==='timid'){comfort-=7;curiosity-=5}
+  if(id==='cleanly')condition+=5;
+  return {version:1,loneliness:0,comfort:clampMemory(comfort,0,100),activity:clampMemory(activity,0,100),curiosity:clampMemory(curiosity,0,100),condition:clampMemory(condition,0,100),seasonSense:currentSeasonSense(),memoryDepth:clampMemory(Math.min(100,(memoryLike.totals?.opened||0)*.4+(memoryLike.totals?.diaryRead||0)*.8),0,100),lastUpdatedAt:new Date().toISOString()};
+}
+function normalizeLifeParams(value,memoryLike,traitDef){
+  const base=initialLifeParams(memoryLike,traitDef), l=value||{};
+  return {
+    version:1,
+    loneliness:clampMemory(Number.isFinite(l.loneliness)?l.loneliness:base.loneliness,0,100),
+    comfort:clampMemory(Number.isFinite(l.comfort)?l.comfort:base.comfort,0,100),
+    activity:clampMemory(Number.isFinite(l.activity)?l.activity:base.activity,0,100),
+    curiosity:clampMemory(Number.isFinite(l.curiosity)?l.curiosity:base.curiosity,0,100),
+    condition:clampMemory(Number.isFinite(l.condition)?l.condition:base.condition,0,100),
+    seasonSense:typeof l.seasonSense==='string'?l.seasonSense:base.seasonSense,
+    memoryDepth:clampMemory(Number.isFinite(l.memoryDepth)?l.memoryDepth:base.memoryDepth,0,100),
+    lastUpdatedAt:l.lastUpdatedAt||base.lastUpdatedAt
+  };
+}
+function calculateAgeYears(birthDate,birthdayMonth,birthdayDay,now=new Date()){
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  let years=today.getFullYear()-birthDate.getFullYear();
+  const thisBirthday=effectiveBirthdayDate(today.getFullYear(),birthdayMonth,birthdayDay);
+  if(today<thisBirthday)years--;
+  return Math.max(0,years);
+}
+function normalizeAge(value,memoryLike){
+  const a=value||{}, birth=memoryBirthDate(memoryLike), now=new Date();
+  const birthdayMonth=Number.isFinite(a.birthdayMonth)?a.birthdayMonth:birth.getMonth()+1;
+  const birthdayDay=Number.isFinite(a.birthdayDay)?a.birthdayDay:birth.getDate();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const birthdayToday=effectiveBirthdayDate(today.getFullYear(),birthdayMonth,birthdayDay);
+  return {
+    version:1,
+    years:calculateAgeYears(birth,birthdayMonth,birthdayDay,now),
+    birthdayMonth,
+    birthdayDay,
+    daysAlive:daysAliveFromBirthDate(birth,now),
+    isBirthdayToday:today.getTime()===birthdayToday.getTime(),
+    lastUpdatedAt:new Date().toISOString()
+  };
+}
 function normalizeEye(value,trait){
   const e=value||{}, m=(trait&&trait.motion)||{};
   return {openness:Number.isFinite(e.openness)?e.openness:1,blinkType:e.blinkType||'soft',blinkFrequencyBias:Number.isFinite(e.blinkFrequencyBias)?e.blinkFrequencyBias:(m.blinkGap?1/m.blinkGap:1),lastBlinkAt:e.lastBlinkAt||null,updatedAt:e.updatedAt||new Date().toISOString()};
@@ -49963,6 +50039,8 @@ function normalizeMemory(m){
   m.hunger=normalizeHunger(m.hunger,m,nativeDef);
   m.state.hunger=clampMemory(m.hunger.level/10);
   m.affinity=normalizeAffinity(m.affinity,m,nativeDef);
+  m.lifeParams=normalizeLifeParams(m.lifeParams,m,nativeDef);
+  m.age=normalizeAge(m.age,m);
   m.touchProfile=normalizeTouchProfile(m.touchProfile,m,nativeDef);
   m.dirtLevel=Number.isFinite(m.dirtLevel)?m.dirtLevel:2;
   if(!m.lastWashedAt)m.lastWashedAt=m.bornAt+'T00:00:00';
@@ -50043,6 +50121,51 @@ function updateAffinityForElapsed(hours){
   if(dirt>=10)updateAffinity(-Math.min(1.2,hours/24*.38),'dust_elapsed');
   else if(dirt>=7)updateAffinity(-Math.min(.7,hours/24*.22),'dirty_elapsed');
 }
+function lifeParam(name,fallback=50){return memory.lifeParams&&Number.isFinite(memory.lifeParams[name])?clampMemory(memory.lifeParams[name],0,100):fallback;}
+function adjustLifeParams(delta={},reason='neutral'){
+  if(!memory.lifeParams)return;
+  for(const [key,value] of Object.entries(delta)){
+    if(['loneliness','comfort','activity','curiosity','condition','memoryDepth'].includes(key)&&Number.isFinite(value)){
+      memory.lifeParams[key]=clampMemory((memory.lifeParams[key]||0)+value,0,100);
+    }
+  }
+  memory.lifeParams.seasonSense=currentSeasonSense();
+  memory.lifeParams.lastUpdatedAt=new Date().toISOString();
+  memory.lifeParams.lastReason=reason;
+}
+function updateLifeParamsForElapsed(hours=0,reason='elapsed'){
+  if(!memory.lifeParams)return;
+  const dirt=memory.currentDirtLevel||computeDirtLevel(), hunger=memory.hunger?.level||0, aff=affinityNorm();
+  const longAway=Math.max(0,hours);
+  const lonelinessGain=longAway>1?Math.min(18,(longAway/24)*(2.4+aff*1.6)):0;
+  const conditionLoss=(dirt>=10?4.2:dirt>=7?2.2:dirt>=5?1.1:0)+(hunger>=8?.9:0)+(longAway>48?1.2:0);
+  let activityTarget=50+(nativeTraitDef.id==='energetic'?18:0)+(nativeTraitDef.id==='curious'?7:0)+(lifeParam('curiosity')-50)*.14-(memory.state.sleepiness||0)*18-dirt*2.7-(hunger<=2?4:0);
+  let comfortTarget=48+aff*28-dirt*3-hunger*1.4-lifeParam('loneliness')*.18+(nativeTraitDef.id==='gentle'?6:0);
+  if(currentSeasonSense()==='summer')activityTarget+=3;
+  if(currentSeasonSense()==='winter')activityTarget-=3;
+  adjustLifeParams({
+    loneliness:lonelinessGain,
+    condition:-conditionLoss,
+    memoryDepth:Math.min(2.2,longAway/24*.35),
+    activity:(clampMemory(activityTarget,8,92)-lifeParam('activity'))*.08,
+    comfort:(clampMemory(comfortTarget,8,94)-lifeParam('comfort'))*.08,
+    curiosity:((nativeTraitDef.id==='curious'?66:nativeTraitDef.id==='timid'?42:52)-lifeParam('curiosity'))*.025
+  },reason);
+}
+function lifeEvent(kind,intensity=1){
+  const scale=Math.max(.15,Math.min(2,intensity||1));
+  const changes={
+    open:{loneliness:-4*scale,comfort:1.2*scale,curiosity:.8*scale,memoryDepth:.35*scale},
+    touch:{loneliness:-3*scale,comfort:1.4*scale,curiosity:.8*scale,memoryDepth:.45*scale},
+    liked_touch:{loneliness:-4.5*scale,comfort:3*scale,activity:1*scale,memoryDepth:.75*scale},
+    disliked_touch:{comfort:-2.4*scale,activity:-.5*scale,memoryDepth:.45*scale},
+    food:{loneliness:-2*scale,comfort:2.4*scale,condition:2.8*scale,activity:.8*scale,memoryDepth:.7*scale},
+    wash:{loneliness:-2.4*scale,comfort:3.2*scale,condition:4.2*scale,activity:1.4*scale,memoryDepth:.7*scale},
+    diary:{loneliness:-1.8*scale,comfort:1.1*scale,memoryDepth:1.2*scale},
+    idle:{condition:.12*scale}
+  };
+  adjustLifeParams(changes[kind]||{},kind);
+}
 function hungerFoodProfile(){
   const level=memory.hunger?memory.hunger.level:((memory.state.hunger||.5)*10), norm=clampMemory(level/10);
   let notice=.72+norm*.72, delay=1.22-norm*.42, eatChance=.42+norm*.48, hop=1+Math.max(0,norm-.55)*.18;
@@ -50052,6 +50175,8 @@ function hungerFoodProfile(){
   if(id==='solitary'){notice*=.86; eatChance-=.08}
   if(id==='energetic'&&norm>.55){notice*=1.08; hop*=1.08}
   if(id==='cleanly'&&dirt>=5){notice*=.72; delay*=1.22; eatChance-=.12}
+  if(lifeParam('condition',80)<42){notice*=.78; delay*=1.18; eatChance-=.08}
+  if(lifeParam('activity',50)>66&&level>2){notice*=1.06; delay*=.96}
   if(SM.current===STATES.SLEEP){notice*=.38; delay*=1.8; eatChance-=.25}
   if(SM.current===STATES.SHY){notice*=.85; eatChance-=.08}
   if(dirt>=5){notice*=.82; delay*=1.18; eatChance-=.1}
@@ -50074,6 +50199,7 @@ memory.days[TODAY].opens++;
 memory.totals.opened++;
 memory.lastVisitDay=TODAY;
 memory.lastOpenedAt=new Date().toISOString();
+lifeEvent('open',gap>=2?1.4:1);
 saveMemory();
 function saveMemory(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(memory))}catch{}}
 function todayData(){if(!memory.days[TODAY]) memory.days[TODAY]=blankDay(); return memory.days[TODAY];}
@@ -50095,7 +50221,7 @@ function setDirtLevel(level){
 }
 memory.currentDirtLevel=computeDirtLevel();
 if(gap>=2)updateAffinity(Math.min(1.1,.28+gap*.08),'return');
-if(previousOpenedAt){const elapsedHours=Math.max(0,(Date.now()-new Date(previousOpenedAt).getTime())/36e5); updateAffinityForElapsed(elapsedHours); saveMemory();}
+if(previousOpenedAt){const elapsedHours=Math.max(0,(Date.now()-new Date(previousOpenedAt).getTime())/36e5); updateAffinityForElapsed(elapsedHours); updateLifeParamsForElapsed(elapsedHours,'open_elapsed'); saveMemory();}
 
 
 function sanitizePetName(name){
@@ -50363,7 +50489,7 @@ const food={exists:false,eaten:false,noticed:false,placedAt:0,target:new THREE.V
 
 const STATES={IDLE:'idle',WALK:'walk',SLEEP:'sleep',HAPPY:'happy',SHY:'shy',TIRED:'tired',CURIOUS:'curious',TO_FOOD:'to_food',EAT:'eat'};
 const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,hopT:0,hopProfile:null,hopFrom:0,hopTo:0,hopY:0,hopSquash:0,hopTailLag:0,lastTailRotY:0,tailTurnLag:0,tailTipLagX:0,tailTipLagY:0,tailTipVX:0,tailTipVY:0,lastTouch:Date.now(),touchTimes:[],touchPoint:null,lastUserTouchPoint:null,lastHit:null,breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
-function randIdleDelay(){return (2.8+Math.random()*3.6)*nativeMotion('idleDelay',1)*nativeNoise(11,.18)}
+function randIdleDelay(){const active=1-(lifeParam('activity',50)-50)*.004; return (2.8+Math.random()*3.6)*nativeMotion('idleDelay',1)*nativeNoise(11,.18)*clamp(active,.82,1.18)}
 function lerp(a,b,t){return a+(b-a)*t}
 function smooth01(t){return t*t*(3-2*t)}
 function angleDelta(a,b){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
@@ -50539,6 +50665,16 @@ function primaryDefaultVoiceChance(context,quietState){
   if(quietState)return .10;
   return .16;
 }
+function lifeVoicePool(context){
+  const l=memory.lifeParams||{}, pool=[];
+  if((l.loneliness||0)>62)pool.push('むぅ……','む……','むぅ…');
+  if((l.comfort||0)>66)pool.push('むぅ。','む〜','むぅ〜');
+  if((l.activity||0)>66&&!['sleeping','dust','weak'].includes(context))pool.push('む！','む、む','むきゅ');
+  if((l.curiosity||0)>66&&!['sleeping','dust'].includes(context))pool.push('むぅ？','むっ','むきゅ？');
+  if((l.condition||100)<42)pool.push('む……','むぅ…','む……ん');
+  if((l.memoryDepth||0)>62)pool.push('むぅ。','むふ…','むぅ…');
+  return pool;
+}
 function resolveVoiceContext(context='idle'){
   const dirt=memory.currentDirtLevel||computeDirtLevel(), state=memory.state||{}, requested=VOICE_CONTEXT_ALIASES[context]||context;
   if(requested==='wash')return requested;
@@ -50580,8 +50716,9 @@ function selectVoice(context='idle',opts={}){
   if(primaryChance&&(!opts.noRepeat||lastVoiceText!==PRIMARY_DEFAULT_VOICE)&&Math.random()<primaryChance)return PRIMARY_DEFAULT_VOICE;
   const base=(VOICE_POOLS[stateContext]||VOICE_POOLS.idle).slice();
   const trait=TRAIT_VOICES[nativeTraitDef.id]||[];
+  const life=lifeVoicePool(stateContext);
   const widePool=!quietState&&context!=='startup'&&Math.random()<.07?COMMON_VOICES:[];
-  return chooseVoiceFromPool(base.concat(trait,widePool).filter(isPrimaryMuuVoice),!!opts.noRepeat);
+  return chooseVoiceFromPool(base.concat(trait,life,widePool).filter(isPrimaryMuuVoice),!!opts.noRepeat);
 }
 function showVoice(text,dur=1200){lastVoiceText=text; say(localizeVoice(text),dur);}
 function pickVoice(context='idle'){return selectVoice(context);}
@@ -50657,6 +50794,7 @@ function applyTouchReaction(result,kind,recent,tolerance){
     SM.tailTipVY+=.018*intensity*(1+affinityNorm()*.16);
     if(SM.current!==STATES.TIRED)setState(STATES.HAPPY);
     sayVoice(result.isCore&&Math.random()<.42?'liked_touch_core':'liked_touch',1050+intensity*220,1,touchVoice);
+    lifeEvent('liked_touch',1+intensity);
     saveMemory();
     return {handled:true};
   }
@@ -50667,6 +50805,7 @@ function applyTouchReaction(result,kind,recent,tolerance){
     SM.tailTipVX*=.55;
     if(intensity>.46||recent>=Math.max(3,Math.round(tolerance*.72)))setState(STATES.SHY);
     sayVoice(result.isCore&&Math.random()<.42?'disliked_touch_core':'disliked_touch',1000+intensity*180,1,touchVoice);
+    lifeEvent('disliked_touch',1+intensity);
     saveMemory();
     return {handled:true};
   }
@@ -50675,7 +50814,7 @@ function applyTouchReaction(result,kind,recent,tolerance){
 addEventListener('pointermove',e=>{updatePointer(e); if(!isUiTarget(e)) checkHit();});
 addEventListener('pointerdown',e=>{updatePointer(e); if(isUiTarget(e)) return; e.preventDefault(); if(!checkHit()) return; SM.touchPoint=getTouchPointOnMuu(e); SM.petting=true; SM.petStart=Date.now(); SM.lastTouch=Date.now();});
 addEventListener('pointerup',e=>{if(!SM.petting) return; updatePointer(e); e.preventDefault(); const dur=Date.now()-SM.petStart; SM.petting=false; SM.lastTouch=Date.now(); onMuuTouched(dur,SM.touchPoint); SM.touchPoint=null;}); addEventListener('pointercancel',()=>{SM.petting=false; SM.touchPoint=null;});
-function recordTouch(kind){const d=todayData(); d.touches++; d.lastInteractionAt=new Date().toISOString(); if(kind==='tap'){d.taps++; memory.state.trust=clampMemory(memory.state.trust+.002); memory.traits.curiosity=clampMemory(memory.traits.curiosity+.002);} if(kind==='pet'){d.pets++; memory.state.trust=clampMemory(memory.state.trust+.006); memory.state.mood=clampMemory(memory.state.mood+.004); memory.traits.calmness=clampMemory(memory.traits.calmness+.003);} memory.totals.touched++; saveMemory(); const now=Date.now(); SM.touchTimes.push(now); SM.touchTimes=SM.touchTimes.filter(t=>now-t<15000); return SM.touchTimes.length;}
+function recordTouch(kind){const d=todayData(); d.touches++; d.lastInteractionAt=new Date().toISOString(); if(kind==='tap'){d.taps++; memory.state.trust=clampMemory(memory.state.trust+.002); memory.traits.curiosity=clampMemory(memory.traits.curiosity+.002);} if(kind==='pet'){d.pets++; memory.state.trust=clampMemory(memory.state.trust+.006); memory.state.mood=clampMemory(memory.state.mood+.004); memory.traits.calmness=clampMemory(memory.traits.calmness+.003);} lifeEvent('touch',kind==='pet'?1.15:1); memory.totals.touched++; saveMemory(); const now=Date.now(); SM.touchTimes.push(now); SM.touchTimes=SM.touchTimes.filter(t=>now-t<15000); return SM.touchTimes.length;}
 function onMuuTouched(duration,touchPoint){updateLastUserTouchPoint(touchPoint); const kind=duration<260?'tap':'pet'; const recent=recordTouch(kind), tolerance=Math.max(3,Math.round(8*nativeMotion('touchTolerance',1))), touchVoice={force:true,noRepeat:true,cooldown:0}, zoneResult=evaluateTouchZone(touchPoint||{mode:'screenApprox',bodyPart:'body',x:0,y:.5,z:.55}); const zoneReaction=applyTouchReaction(zoneResult,kind,recent,tolerance); if(zoneReaction.handled)return; updateAffinity(kind==='pet'?.34:.2,'calm_touch'); if(SM.current===STATES.TIRED){sayVoice('sleepy',1100,1,touchVoice); saveMemory(); return;} if(recent>=tolerance){setState(nativeTraitDef.id==='pouty'?STATES.SHY:STATES.TIRED); sayVoice('moody',1100,1,touchVoice); saveMemory(); return;} if(kind==='pet'&&nativeMotion('touchWarmth',1)>.75){setState(STATES.HAPPY); sayVoice(affinityNorm()>.62?'attached':'happy',1150,1,touchVoice); saveMemory(); return;} if(recent>=Math.max(3,Math.round(5*nativeMotion('touchTolerance',1)))){setState(STATES.SHY); sayVoice('moody',1100,1,touchVoice); saveMemory(); return;} setState(nativeMotion('touchWarmth',1)<.7?STATES.CURIOUS:STATES.HAPPY); sayVoice(affinityNorm()>.7?'attached':affinityNorm()<.22?'distant':(SM.current===STATES.CURIOUS?'curious':'touch'),1100,1,touchVoice); saveMemory();}
 
 function placeFood(type='normal'){
@@ -50684,7 +50823,7 @@ function placeFood(type='normal'){
   setFoodType(type); food.type=type; food.reaction=computeFoodReaction(type); food.exists=true; food.eaten=false; food.noticed=false; food.placedAt=Date.now(); foodGroup.position.set(0,0,1.75); foodGroup.visible=true; foodGroup.position.set(0,0,1.75); for(const k of kibbles) k.visible=true; sayVoice('food',900,hunger.isHungry?.86:.66); todayData().foodPlaced++; memory.totals.foodPlaced++; memory.lastFoodAt=new Date().toISOString(); memory.food.hasFood=true; memory.food.placedAt=new Date(food.placedAt).toISOString(); memory.food.lastReaction=food.reaction; memory.food.updatedAt=new Date().toISOString(); if(food.reaction==='rush')todayData().foodRush++; saveMemory(); closeFoodMenu(); document.getElementById('food-btn').classList.add('placed'); const foodDelay=nativeMotion('foodDelay',1)*nativeNoise(23,.16)*hunger.delay; if(food.reaction==='rush'){setTimeout(()=>{if(food.exists&&!food.eaten){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.82);}},240*foodDelay);} else if(food.reaction==='approach'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,hunger.isHungry?.7:.5);}},(1200+Math.random()*1300)*foodDelay);} else if(food.reaction==='wait'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){setState(STATES.CURIOUS); sayVoice(hunger.isFull?'full':'curious',1100,.55);}},(1500+Math.random()*1600)*foodDelay); setTimeout(()=>{if(food.exists&&!food.eaten&&Math.random()<clamp(.65*nativeMotion('foodNotice',1)*hunger.notice,0,.92)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,hunger.isHungry?.72:.54);}},(7000+Math.random()*4000)*foodDelay);}
 }
 function clearFood(){food.exists=false; food.eaten=false; food.noticed=false; foodGroup.visible=false; memory.food.hasFood=false; memory.food.updatedAt=new Date().toISOString(); saveMemory(); document.getElementById('food-btn').classList.remove('placed'); closeFoodMenu && closeFoodMenu();}
-function eatFood(){if(!food.exists || food.eaten) return; food.eaten=true; for(const k of kibbles) k.visible=false; todayData().foodEaten++; memory.totals.foodEaten++; setHungerLevel(.7+seededUnit(memory.nativeTrait.seed,71)*1.4,{fed:true}); updateAffinity(.62+seededUnit(memory.nativeTrait.seed,79)*.52,'food'); memory.state.appetite=clampMemory(memory.state.appetite+.004); memory.state.trust=clampMemory(memory.state.trust+.003); memory.state.mood=clampMemory(memory.state.mood+.004); memory.lastAteAt=new Date().toISOString(); memory.food.lastAteAt=memory.lastAteAt; memory.food.lastReaction='eaten'; memory.food.updatedAt=memory.lastAteAt; saveMemory(); setTimeout(()=>clearFood(),1600);}
+function eatFood(){if(!food.exists || food.eaten) return; food.eaten=true; for(const k of kibbles) k.visible=false; todayData().foodEaten++; memory.totals.foodEaten++; setHungerLevel(.7+seededUnit(memory.nativeTrait.seed,71)*1.4,{fed:true}); updateAffinity(.62+seededUnit(memory.nativeTrait.seed,79)*.52,'food'); lifeEvent('food',nativeTraitDef.id==='foodie'?1.25:1); memory.state.appetite=clampMemory(memory.state.appetite+.004); memory.state.trust=clampMemory(memory.state.trust+.003); memory.state.mood=clampMemory(memory.state.mood+.004); memory.lastAteAt=new Date().toISOString(); memory.food.lastAteAt=memory.lastAteAt; memory.food.lastReaction='eaten'; memory.food.updatedAt=memory.lastAteAt; saveMemory(); setTimeout(()=>clearFood(),1600);}
 
 
 
@@ -50739,6 +50878,7 @@ function washMuu(e){
   const beforeDirt=memory.currentDirtLevel||computeDirtLevel();
   setDirtLevel(2);
   updateAffinity(.55+(beforeDirt>=5?.42:.18)+(beforeDirt>=10?.35:0),'wash');
+  lifeEvent('wash',beforeDirt>=5?1.3:1);
   applyDirtVisual();
   spawnWashBubbles();
   if(nativeMotion('washBounce',1)>1.15)setState(STATES.HAPPY);
@@ -50764,7 +50904,7 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
   if(food.exists && !food.eaten && !food.noticed){ const waitSec=(Date.now()-food.placedAt)/1000; if(waitSec>2.2*nativeMotion('foodDelay',1)*hunger.delay && [STATES.IDLE,STATES.CURIOUS].includes(SM.current)){ if(Math.random()<clamp(0.02*nativeMotion('foodNotice',1)*hunger.notice,0,.09)){ food.noticed=true; setState(STATES.TO_FOOD);} } if(waitSec>90){ todayData().foodIgnored++; memory.totals.foodIgnored++; setHungerLevel((memory.hunger?.level||0)+.35); memory.traits.shyness=clampMemory(memory.traits.shyness+.002); memory.food.lastIgnoredAt=new Date().toISOString(); memory.food.lastReaction='ignored'; memory.food.updatedAt=memory.food.lastIgnoredAt; saveMemory(); clearFood(); } }
   switch(SM.current){
     case STATES.IDLE:
-      if(SM.t>SM.nextIdleAction){ const r=Math.random(), walkChance=.42*nativeMotion('walkFreq',1), curiousChance=walkChance+.26*nativeMotion('near',1); if(food.exists && !food.eaten && Math.random()<clamp(.65*nativeMotion('foodNotice',1)*hunger.notice,0,.94)){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<walkChance && dirt<9){ setState(STATES.WALK);} else if(r<curiousChance && dirt<10){ setState(STATES.CURIOUS);} else if(idleSec>50/nativeMotion('sleepChance',1)){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
+      if(SM.t>SM.nextIdleAction){ const r=Math.random(), activityBoost=clamp(.9+(lifeParam('activity',50)-50)*.006,.72,1.22), curiosityBoost=clamp(.9+(lifeParam('curiosity',50)-50)*.007,.72,1.26), walkChance=.42*nativeMotion('walkFreq',1)*activityBoost, curiousChance=walkChance+.26*nativeMotion('near',1)*curiosityBoost; if(food.exists && !food.eaten && Math.random()<clamp(.65*nativeMotion('foodNotice',1)*hunger.notice,0,.94)){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<walkChance && dirt<9){ setState(STATES.WALK);} else if(r<curiousChance && dirt<10){ setState(STATES.CURIOUS);} else if(idleSec>50/nativeMotion('sleepChance',1)){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
       break;
     case STATES.WALK:
     case STATES.TO_FOOD:{
@@ -50819,7 +50959,7 @@ function tickAnimations(dt){const st=SM.current, dirt=memory.currentDirtLevel||c
   eyeRShine.scale.setScalar(lerp(eyeRShine.scale.x, st===STATES.SLEEP || st===STATES.TIRED ? 0.1 : 1, .12)); 
 }
 
-let last=null; function loop(now){const dt=last?Math.min((now-last)/1000,.05):.016; last=now; tickStateMachine(dt); tickAnimations(dt); applyDirtVisual(); renderer.render(scene,camera); requestAnimationFrame(loop);} setInterval(()=>{memory.currentDirtLevel=computeDirtLevel(); if(memory.growth)memory.growth.maxStage=108; memory.lastSeenAt=new Date().toISOString(); saveMemory();},30000); requestAnimationFrame(loop);
+let last=null; function loop(now){const dt=last?Math.min((now-last)/1000,.05):.016; last=now; tickStateMachine(dt); tickAnimations(dt); applyDirtVisual(); renderer.render(scene,camera); requestAnimationFrame(loop);} setInterval(()=>{memory.currentDirtLevel=computeDirtLevel(); memory.age=normalizeAge(memory.age,memory); updateLifeParamsForElapsed(.008,'idle_tick'); lifeEvent('idle',1); if(memory.growth)memory.growth.maxStage=108; memory.lastSeenAt=new Date().toISOString(); if([STATES.IDLE,STATES.CURIOUS].includes(SM.current))sayVoice('idle',1200,clamp(.08+(lifeParam('activity',50)-50)*.0015-(lifeParam('condition',80)<42?.025:0),.035,.14)); saveMemory();},30000); requestAnimationFrame(loop);
 
 const diary=document.getElementById('diary'), diaryDate=document.getElementById('diary-date'), diaryBody=document.getElementById('diary-body'); let diaryIdx=memory.diaryIndex||0;
 function hiraganaNumber(n){const nums=['ぜろ','いち','に','さん','よん','ご','ろく','なな','はち','きゅう','じゅう']; if(n<=10)return nums[n]; if(n<20)return 'じゅう'+nums[n-10]; const t=Math.floor(n/10),o=n%10; return nums[t]+'じゅう'+(o?nums[o]:'');}
@@ -51650,6 +51790,18 @@ const DIARY_TEXTS=[
     "text": "ちいさくまるまって、\nへやのようすをみていた。\n\nこわいわけではなく、\nまだなれているとちゅう。"
   }
 ];
+DIARY_TEXTS.push(
+  {id:'hira_life_lonely_001',tags:['quiet','life_lonely','distant'],text:'けはいを まっていた。\n\nながい しずけさのなかで、\nみみだけが すこし うごいた。'},
+  {id:'hira_life_comfort_001',tags:['quiet','life_comfort','attached'],text:'そばの あたりが、\nすこし あたたかかった。\n\nからだが ほどける おとがした。'},
+  {id:'hira_life_activity_001',tags:['life_activity','curious'],text:'ちいさく はねた。\n\nりゆうはないけど、\nからだが かるかった。'},
+  {id:'hira_life_curiosity_001',tags:['life_curiosity','curious'],text:'みえないものを おいかけた。\n\nつかまらなかったけど、\nみているのは すきだった。'},
+  {id:'hira_life_condition_001',tags:['quiet','life_condition','dirty'],text:'からだが すこし おもかった。\n\nきょうは しずかにして、\nまるく いた。'},
+  {id:'hira_life_season_001',tags:['quiet','life_season'],text:'きせつの けはいがした。\n\nひかりの さわりかたが、\nすこしだけ ちがった。'},
+  {id:'hira_life_memory_001',tags:['quiet','life_memory','touched'],text:'ふれられた ところを、\nすこし おぼえている。\n\nきのうの けはいも、\nまだ のこっている。'},
+  {id:'hira_age_birthday_001',tags:['quiet','birthday'],text:'きょうは うまれたひ。\n\nからだの まるみが、\nすこし しずかだった。'},
+  {id:'hira_age_birthday_002',tags:['quiet','birthday','life_memory'],text:'うまれてからの じかんが、\nまるく なった。\n\nなにも ひからないけど、\nけはいだけが のこった。'},
+  {id:'hira_age_near_birthday_001',tags:['quiet','near_birthday','life_memory'],text:'ひとまわり した けはいがある。\n\nきのうより すこし、\nからだが おぼえている。'}
+);
 function tagScore(tags, tag, value){return tags.includes(tag)?value:0;}
 function diaryContext(key,d){
   d=d||todayData();
@@ -51662,7 +51814,10 @@ function diaryContext(key,d){
   const returnedAfterDays=d.returnedAfterDays||0;
   const washedToday=!!(memory.lastWashedAt && memory.lastWashedAt.slice(0,10)===TODAY);
   const affinity=affinityNorm();
-  return {hunger,dirt,affinity,touchesToday,touchesTotal,foodPlacedToday,foodEatenToday,returnedAfterDays,washedToday,slept:!!d.slept};
+  const life=memory.lifeParams||{};
+  const age=memory.age||{};
+  const nearBirthday=age.birthdayMonth&&age.birthdayDay&&Math.abs(daysBetween(TODAY,`${new Date().getFullYear()}-${String(age.birthdayMonth).padStart(2,'0')}-${String(age.birthdayDay).padStart(2,'0')}`))<=3;
+  return {hunger,dirt,affinity,life,age,nearBirthday,touchesToday,touchesTotal,foodPlacedToday,foodEatenToday,returnedAfterDays,washedToday,slept:!!d.slept};
 }
 function diaryWeight(entry,ctx){
   const tags=entry.tags||[];
@@ -51688,6 +51843,16 @@ function diaryWeight(entry,ctx){
   if(ctx.slept) w+=tagScore(tags,'sleepy',7);
   if(ctx.affinity>.72) w+=tagScore(tags,'attached',9);
   else if(ctx.affinity<.24) w+=tagScore(tags,'distant',8);
+  const life=ctx.life||{};
+  if((life.loneliness||0)>62)w+=tagScore(tags,'life_lonely',12)+tagScore(tags,'quiet',1.2);
+  if((life.comfort||0)>66)w+=tagScore(tags,'life_comfort',10)+tagScore(tags,'attached',2);
+  if((life.activity||0)>66)w+=tagScore(tags,'life_activity',9)+tagScore(tags,'curious',2);
+  if((life.curiosity||0)>66)w+=tagScore(tags,'life_curiosity',10)+tagScore(tags,'curious',3);
+  if((life.condition||100)<42)w+=tagScore(tags,'life_condition',11)+tagScore(tags,'quiet',2);
+  if(life.seasonSense&&life.seasonSense!=='neutral')w+=tagScore(tags,'life_season',3);
+  if((life.memoryDepth||0)>58)w+=tagScore(tags,'life_memory',10);
+  if(ctx.age&&ctx.age.isBirthdayToday)w+=tagScore(tags,'birthday',18);
+  else if(ctx.nearBirthday)w+=tagScore(tags,'near_birthday',4);
 
   if(memory.lastDiaryId && entry.id===memory.lastDiaryId) w*=.08;
   return Math.max(.05,w);
@@ -51719,14 +51884,21 @@ document.getElementById('diary-dot').addEventListener('click',(event)=>{
   memory.diaryIndex=diaryIdx;
   todayData().diaryRead++;
   memory.totals.diaryRead++;
+  lifeEvent('diary',1);
   saveMemory();
 });
 diary.addEventListener('click',()=>diary.classList.remove('open'));
-function muuDayNumber(){const born=memory.bornAt||memory.livingSince||TODAY; return Math.max(1,daysBetween(born,TODAY)+1);}
+function muuDayNumber(){return memory.age&&Number.isFinite(memory.age.daysAlive)?memory.age.daysAlive:daysAliveFromBirthDate(memoryBirthDate(memory));}
 const dayCount=document.getElementById('day-count'); function updateDayCount(){dayCount.textContent=`${muuDayNumber()}にちめ`;} updateDayCount();
 const karteBtn=document.getElementById('karte-btn'), kartePanel=document.getElementById('karte-panel'), karteBody=document.getElementById('karte-body'), karteTitle=document.getElementById('karte-title'), karteClose=document.getElementById('karte-close');
 function karteIsJa(){return VOICE_LOCALE==='ja'}
 function karteDayLabel(){return karteIsJa()?`${muuDayNumber()}にちめ`:`day ${muuDayNumber()}`}
+function karteAgeLabel(){
+  const years=memory.age&&Number.isFinite(memory.age.years)?memory.age.years:0;
+  if(karteIsJa())return `${years}さい`;
+  return years===1?'1 year old':`${years} years old`;
+}
+function karteBirthdayLabel(){return memory.age&&memory.age.isBirthdayToday?(karteIsJa()?'きょうは うまれたひ':'birthday today'):''}
 function karteDateParts(now=new Date()){
   const h=now.getHours(), m=String(now.getMinutes()).padStart(2,'0');
   if(karteIsJa())return {date:`${now.getMonth()+1}がつ${now.getDate()}にち`,time:`${h}:${m}`};
@@ -51822,6 +51994,27 @@ function natureKartePhrase(){
   };
   return (karteIsJa()?ja:en)[nativeTraitDef.id]||(karteIsJa()?'しずかに いる':'quiet');
 }
+function lifeKartePhrase(){
+  const l=memory.lifeParams||{};
+  if(karteIsJa()){
+    if((l.condition||100)<38)return 'からだが すこし おもい';
+    if((l.loneliness||0)>64)return 'すこし けはいを まっていた';
+    if((l.comfort||0)>68)return 'おちついている';
+    if((l.activity||0)>68)return 'からだが かるい';
+    if((l.curiosity||0)>68)return 'なにかを みている';
+    if((l.memoryDepth||0)>62)return 'すこし おぼえている';
+    if(l.seasonSense&&l.seasonSense!=='neutral')return 'きせつの けはいが ある';
+    return natureKartePhrase();
+  }
+  if((l.condition||100)<38)return 'a little heavy';
+  if((l.loneliness||0)>64)return 'waiting quietly';
+  if((l.comfort||0)>68)return 'calm';
+  if((l.activity||0)>68)return 'body feels light';
+  if((l.curiosity||0)>68)return 'watching something';
+  if((l.memoryDepth||0)>62)return 'remembers a little';
+  if(l.seasonSense&&l.seasonSense!=='neutral')return 'a hint of season';
+  return natureKartePhrase();
+}
 function bondKartePhrase(){
   const n=affinityNorm();
   if(karteIsJa()){
@@ -51841,7 +52034,7 @@ function bondKartePhrase(){
 }
 function karteLines(){
   return [
-    growthKartePhrase(),stateKartePhrase(),moodKartePhrase(),hungerKartePhrase(),dirtKartePhrase(),natureKartePhrase(),bondKartePhrase()
+    growthKartePhrase(),stateKartePhrase(),moodKartePhrase(),hungerKartePhrase(),dirtKartePhrase(),lifeKartePhrase(),bondKartePhrase()
   ];
 }
 function renderKarte(){
@@ -51851,7 +52044,8 @@ function renderKarte(){
   karteBtn.setAttribute('title',karteLabel);
   const parts=karteDateParts();
   const lines=karteLines().map(line=>`<div class="karte-line">${line}</div>`).join('');
-  karteBody.innerHTML=`<div class="karte-date">${parts.date}</div><div class="karte-time">${parts.time}</div><div class="karte-day">${karteDayLabel()}</div><div class="karte-lines">${lines}</div>`;
+  const birthday=karteBirthdayLabel();
+  karteBody.innerHTML=`<div class="karte-date">${parts.date}</div><div class="karte-time">${parts.time}</div><div class="karte-day">${karteDayLabel()}</div><div class="karte-age">${karteAgeLabel()}</div>${birthday?`<div class="karte-birthday">${birthday}</div>`:''}<div class="karte-lines">${lines}</div>`;
 }
 function setKarteOpen(open){
   renderKarte();
@@ -51867,7 +52061,7 @@ setTimeout(()=>{if(memory.living) sayVoice('idle',1300,.38); setState(STATES.CUR
 
 scheduleStartupVoice();
 
-window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction,hungerFoodProfile,setHungerLevel,updateHungerForElapsed,affinityLevel,affinityNorm,updateAffinity,getAffinityDistanceBias,updateLastUserTouchPoint,chooseIdleTargetByAffinity,applyAffinityToMovement};
+window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction,hungerFoodProfile,setHungerLevel,updateHungerForElapsed,affinityLevel,affinityNorm,updateAffinity,getAffinityDistanceBias,updateLastUserTouchPoint,chooseIdleTargetByAffinity,applyAffinityToMovement,lifeParam,adjustLifeParams,updateLifeParamsForElapsed,lifeEvent,normalizeAge,calculateAgeYears,daysAliveFromBirthDate};
 </script>
 </body>
 </html>
