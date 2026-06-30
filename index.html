@@ -75,6 +75,19 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 .muu-bubble{position:fixed;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.82);box-shadow:0 0 0 1px rgba(255,255,255,.72) inset,0 0 12px rgba(226,244,255,.36);pointer-events:none;z-index:20;animation:muuBubbleRise 1.8s ease-out forwards}
 @keyframes muuBubbleRise{0%{opacity:0;transform:translate(-50%,-50%) scale(.55)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-170px) scale(1.25)}}
 
+#karte-btn{position:fixed;right:20px;bottom:20px;z-index:12;border:0;background:rgba(255,255,255,.38);color:rgba(112,99,89,.42);font-size:10px;letter-spacing:.12em;padding:5px 7px;border-radius:999px;cursor:none;font-family:inherit;box-shadow:0 8px 22px rgba(120,90,60,.04);transition:opacity .25s,background .25s,transform .25s;opacity:.72}
+#karte-btn:hover{opacity:.9;background:rgba(255,255,255,.58);transform:translateY(-1px)}
+#karte-panel{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(255,255,255,.10);opacity:0;pointer-events:none;transition:opacity .28s;color:rgba(73,64,56,.70);letter-spacing:.03em}
+#karte-panel.open{opacity:1;pointer-events:auto}
+#karte-head,#karte-close{display:none}
+#karte-body{width:min(330px,calc(100vw - 48px));max-height:calc(100vh - 96px);overflow:auto;background:rgba(255,255,255,.78);border:1px solid rgba(150,130,112,.11);border-radius:18px;box-shadow:0 20px 56px rgba(90,70,52,.10);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:28px 26px 30px;text-align:center}
+.karte-date{font-size:16px;line-height:1.7;color:rgba(61,54,48,.72);letter-spacing:.04em}
+.karte-time{margin-top:2px;font-size:11px;line-height:1.7;color:rgba(86,76,68,.48);letter-spacing:.06em}
+.karte-day{margin-top:5px;font-size:13px;line-height:1.8;color:rgba(73,64,56,.58);letter-spacing:.05em}
+.karte-lines{display:grid;gap:12px;margin-top:22px}
+.karte-line{font-size:12px;line-height:1.9;color:rgba(65,57,50,.66);letter-spacing:.04em}
+@media (max-width:600px){#karte-panel{padding:20px}#karte-body{width:min(310px,calc(100vw - 40px));padding:26px 23px 28px}.karte-lines{gap:11px}}
+
 
 #pet-name{
   position:fixed;
@@ -127,6 +140,8 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 </div>
 <div id="food-btn" aria-label="ごはん" title="ごはん"><span class="bowl"></span></div>
 <div id="wash-btn" aria-label="あらう" title="あらう"><span class="bubble-icon"></span></div>
+<button id="karte-btn" type="button">かるて</button>
+<div id="karte-panel" aria-hidden="true"><div id="karte-head"><span id="karte-title">かるて</span><button id="karte-close" type="button">×</button></div><div id="karte-body"></div></div>
 <script>
 /**
  * @license
@@ -50578,7 +50593,7 @@ function smallVoice(){return pickVoice('idle');}
 function scheduleStartupVoice(){const delay=800+Math.random()*1000; setTimeout(()=>sayVoice(startupVoiceContext(),1250,1,{force:true,cooldown:3600,noRepeat:true}),delay);}
 
 const cursor=document.getElementById('cursor'); const raycaster=new THREE.Raycaster(); const mouse2=new THREE.Vector2(); const interactables=[headMesh,body,belly];
-function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#food-btn,#wash-btn,#pet-name,#food-menu,.food-choice'));}
+function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#food-btn,#wash-btn,#pet-name,#food-menu,.food-choice,#karte-btn,#karte-panel'));}
 function updatePointer(e){SM.hasPointer=true; SM.pointerType=e.pointerType||'mouse'; SM.mx=e.clientX; SM.my=e.clientY; mouse2.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1); if(SM.pointerType==='touch'){cursor.style.opacity='0'}else{cursor.style.opacity='1'; cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px';}}
 function checkHit(){if(!SM.hasPointer) return false; raycaster.setFromCamera(mouse2,camera); const hits=raycaster.intersectObjects(interactables,false); SM.lastHit=hits[0]||null; SM.nearMuu=hits.length>0; return SM.nearMuu;}
 function bodyPartForHit(object){if(object===headMesh)return 'head'; if(object===body||object===belly)return 'body'; return 'body';}
@@ -51704,7 +51719,145 @@ document.getElementById('diary-dot').addEventListener('click',(event)=>{
   saveMemory();
 });
 diary.addEventListener('click',()=>diary.classList.remove('open'));
-const dayCount=document.getElementById('day-count'); function updateDayCount(){const born=memory.bornAt||TODAY; dayCount.textContent=`${Math.max(1,daysBetween(born,TODAY)+1)}にちめ`;} updateDayCount();
+function muuDayNumber(){const born=memory.bornAt||memory.livingSince||TODAY; return Math.max(1,daysBetween(born,TODAY)+1);}
+const dayCount=document.getElementById('day-count'); function updateDayCount(){dayCount.textContent=`${muuDayNumber()}にちめ`;} updateDayCount();
+const karteBtn=document.getElementById('karte-btn'), kartePanel=document.getElementById('karte-panel'), karteBody=document.getElementById('karte-body'), karteTitle=document.getElementById('karte-title'), karteClose=document.getElementById('karte-close');
+function karteIsJa(){return VOICE_LOCALE==='ja'}
+function karteDayLabel(){return karteIsJa()?`${muuDayNumber()}にちめ`:`day ${muuDayNumber()}`}
+function karteDateParts(now=new Date()){
+  const h=now.getHours(), m=String(now.getMinutes()).padStart(2,'0');
+  if(karteIsJa())return {date:`${now.getMonth()+1}がつ${now.getDate()}にち`,time:`${h}:${m}`};
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return {date:`${months[now.getMonth()]} ${now.getDate()}`,time:`${h}:${m}`};
+}
+function phraseFromList(list,index){return list[Math.max(0,Math.min(list.length-1,index))]}
+function growthKartePhrase(){
+  const stage=memory.growth&&Number.isFinite(memory.growth.stage)?memory.growth.stage:1;
+  if(karteIsJa()){
+    if(stage<=8)return 'まだ ちいさい';
+    if(stage<=36)return 'すこし からだが なじんできた';
+    if(stage<=76)return 'ねむっているあいだに すこし かわっている';
+    return 'かたちの おくが うごいている';
+  }
+  if(stage<=8)return 'still small';
+  if(stage<=36)return 'the body is settling in';
+  if(stage<=76)return 'slowly changing in sleep';
+  return 'something inside the shape is moving';
+}
+function stateKartePhrase(){
+  const dirt=memory.currentDirtLevel||computeDirtLevel();
+  if(karteIsJa()){
+    if(dirt>=10)return 'ほこりを かぶって まるまっている';
+    if(dirt>=7)return 'ほこりを かぶっている';
+    if(SM.current===STATES.SLEEP)return 'まるまって ねむっている';
+    if(SM.current===STATES.TIRED||memory.state.sleepiness>.62)return 'ねむそう';
+    if(SM.current===STATES.WALK||SM.current===STATES.CURIOUS)return 'すこし そわそわしている';
+    if(SM.current===STATES.TO_FOOD||SM.current===STATES.EAT)return 'ごはんの けはいを みている';
+    return 'しずかに いる';
+  }
+  if(dirt>=10)return 'curled under dust';
+  if(dirt>=7)return 'covered in dust';
+  if(SM.current===STATES.SLEEP)return 'curled and sleeping';
+  if(SM.current===STATES.TIRED||memory.state.sleepiness>.62)return 'a little sleepy';
+  if(SM.current===STATES.WALK||SM.current===STATES.CURIOUS)return 'a little restless';
+  if(SM.current===STATES.TO_FOOD||SM.current===STATES.EAT)return 'noticing food';
+  return 'quiet';
+}
+function moodKartePhrase(){
+  const mood=memory.state&&Number.isFinite(memory.state.mood)?memory.state.mood:.5;
+  if(karteIsJa()){
+    if(SM.current===STATES.SHY||nativeTraitDef.id==='pouty')return 'すこし むっとしている';
+    if(nativeTraitDef.id==='awkwardly_affectionate'&&affinityNorm()>.45)return 'うまく よろこべない';
+    if(mood>.62||SM.current===STATES.HAPPY)return 'ほどけている';
+    if(affinityNorm()<.24)return 'まだ きょりを はかっている';
+    return 'おだやか';
+  }
+  if(SM.current===STATES.SHY||nativeTraitDef.id==='pouty')return 'a little grumpy';
+  if(nativeTraitDef.id==='awkwardly_affectionate'&&affinityNorm()>.45)return 'not good at showing joy';
+  if(mood>.62||SM.current===STATES.HAPPY)return 'softening';
+  if(affinityNorm()<.24)return 'measuring the distance';
+  return 'calm';
+}
+function hungerKartePhrase(){
+  const h=memory.hunger&&Number.isFinite(memory.hunger.level)?memory.hunger.level:((memory.state.hunger||.5)*10);
+  const justAte=memory.hunger&&memory.hunger.lastFedAt&&(Date.now()-new Date(memory.hunger.lastFedAt).getTime()<90*60000);
+  if(karteIsJa()){
+    if(justAte)return 'たべたあとで すこし ねむい';
+    if(h>=7)return 'ごはんに きづきやすい';
+    if(h>=4)return 'すこし ごはんの けはいを まっている';
+    return 'おなかは おちついている';
+  }
+  if(justAte)return 'just ate and a little sleepy';
+  if(h>=7)return 'notices food easily';
+  if(h>=4)return 'waiting for a hint of food';
+  return 'settled';
+}
+function dirtKartePhrase(){
+  const dirt=memory.currentDirtLevel||computeDirtLevel();
+  const justWashed=memory.lastWashedAt&&(Date.now()-new Date(memory.lastWashedAt).getTime()<90*60000);
+  if(karteIsJa()){
+    if(justWashed&&dirt<=2)return 'あらわれて すこし かるい';
+    if(dirt<=2)return 'きれい';
+    if(dirt<=4)return 'すこし よごれている';
+    if(dirt<=6)return 'ほこりが のっている';
+    if(dirt<=9)return 'からだが すこし おもい';
+    return 'ほこりに まるまっている';
+  }
+  if(justWashed&&dirt<=2)return 'lighter after washing';
+  if(dirt<=2)return 'clean';
+  if(dirt<=4)return 'a little dusty';
+  if(dirt<=6)return 'covered in dust';
+  if(dirt<=9)return 'body feels heavy';
+  return 'curled in dust';
+}
+function natureKartePhrase(){
+  const ja={
+    affectionate:'ちかくに きやすい',solitary:'ひとりの じかんも すき',gentle:'ゆっくり うごく',restless:'すこし そわそわしやすい',timid:'すこし こわがり',foodie:'ごはんに よく きづく',sleepy:'ねむりに ひっぱられやすい',cleanly:'きれいに なると ほっとする',pouty:'むっとしながら そばにいる',curious:'しらないものを みている',energetic:'からだが かるい',awkwardly_affectionate:'すなおに よろこぶのが へた'
+  };
+  const en={
+    affectionate:'comes closer easily',solitary:'likes time alone too',gentle:'moves slowly',restless:'gets a little restless',timid:'a little timid',foodie:'notices food easily',sleepy:'pulled toward sleep',cleanly:'relaxes after being cleaned',pouty:'stays close while grumpy',curious:'watches unknown things',energetic:'light in the body',awkwardly_affectionate:'not good at showing affection'
+  };
+  return (karteIsJa()?ja:en)[nativeTraitDef.id]||(karteIsJa()?'しずかに いる':'quiet');
+}
+function bondKartePhrase(){
+  const n=affinityNorm();
+  if(karteIsJa()){
+    if(n<.18)return 'まだ すこし はなれている';
+    if(n<.36)return 'きょりを はかっている';
+    if(n<.58)return 'すこし ちかくに いる';
+    if(n<.76)return 'そばに いるのが ふつうに なってきた';
+    if(n<.9)return 'ふれられると ほどけやすい';
+    return 'ちかくで ねむりたがる';
+  }
+  if(n<.18)return 'still distant';
+  if(n<.36)return 'measuring the distance';
+  if(n<.58)return 'getting closer';
+  if(n<.76)return 'being nearby feels normal';
+  if(n<.9)return 'relaxes when touched';
+  return 'wants to sleep nearby';
+}
+function karteLines(){
+  return [
+    growthKartePhrase(),stateKartePhrase(),moodKartePhrase(),hungerKartePhrase(),dirtKartePhrase(),natureKartePhrase(),bondKartePhrase()
+  ];
+}
+function renderKarte(){
+  karteTitle.textContent=karteIsJa()?'かるて':'karte';
+  karteBtn.textContent=karteIsJa()?'かるて':'karte';
+  const parts=karteDateParts();
+  const lines=karteLines().map(line=>`<div class="karte-line">${line}</div>`).join('');
+  karteBody.innerHTML=`<div class="karte-date">${parts.date}</div><div class="karte-time">${parts.time}</div><div class="karte-day">${karteDayLabel()}</div><div class="karte-lines">${lines}</div>`;
+}
+function setKarteOpen(open){
+  renderKarte();
+  kartePanel.classList.toggle('open',open);
+  kartePanel.setAttribute('aria-hidden',open?'false':'true');
+}
+renderKarte();
+karteBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setKarteOpen(!kartePanel.classList.contains('open'));});
+if(karteClose)karteClose.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setKarteOpen(false);});
+kartePanel.addEventListener('click',()=>setKarteOpen(false));
+addEventListener('pointerdown',e=>{if(kartePanel.classList.contains('open')&&!e.target.closest('#karte-panel,#karte-btn'))setKarteOpen(false);});
 setTimeout(()=>{if(memory.living) sayVoice('idle',1300,.38); setState(STATES.CURIOUS);},2400);
 
 scheduleStartupVoice();
