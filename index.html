@@ -45,8 +45,10 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 #cursor{position:fixed;width:7px;height:7px;background:#cfc9c4;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s,opacity .2s;z-index:99;opacity:1}
 #cursor.near{width:15px;height:15px;background:#b9b0aa}
 #cursor.pet{width:21px;height:21px;background:#d8bcaf}
-#diary-dot{position:fixed;bottom:24px;left:calc(50% - 60px);top:auto;right:auto;width:26px;height:26px;background:#f2d9dd;border-radius:50%;cursor:none;z-index:12;transition:background .3s,transform .3s,opacity .3s;opacity:.92;box-shadow:0 7px 18px rgba(160,110,120,.10)}
-#diary-dot:hover{background:#e8c5cc;transform:scale(1.08);opacity:1}
+#diary-dot{position:fixed;bottom:23px;left:calc(50% - 76px);top:auto;right:auto;width:34px;height:32px;background:transparent;border-radius:0;cursor:none;z-index:12;transition:transform .3s,opacity .3s;opacity:.76}
+#diary-dot::before{content:'';position:absolute;left:10px;top:10px;width:14px;height:14px;background:rgba(231,143,185,.52);border-radius:4px 4px 2px 4px;transform:rotate(-45deg);box-shadow:0 7px 16px rgba(180,105,135,.08)}
+#diary-dot::after{content:'';position:absolute;left:9px;top:5px;width:14px;height:14px;border-radius:50%;background:rgba(231,143,185,.52);box-shadow:6px 6px 0 rgba(231,143,185,.52)}
+#diary-dot:hover{transform:scale(1.07);opacity:.92}
 #diary{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .7s}
 #diary.open{opacity:1;pointer-events:all}
 #diary-close{position:static;margin:28px auto 0;width:34px;height:34px;display:none;align-items:center;justify-content:center;font-size:26px;line-height:1;color:#c9b7b7;cursor:none;transition:color .2s,transform .2s;border-radius:50%;font-weight:300}
@@ -78,11 +80,11 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 .muu-bubble{position:fixed;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.82);box-shadow:0 0 0 1px rgba(255,255,255,.72) inset,0 0 12px rgba(226,244,255,.36);pointer-events:none;z-index:20;animation:muuBubbleRise 1.8s ease-out forwards}
 @keyframes muuBubbleRise{0%{opacity:0;transform:translate(-50%,-50%) scale(.55)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-170px) scale(1.25)}}
 
-#karte-btn{position:fixed;right:20px;bottom:20px;z-index:12;width:28px;height:28px;border:0;background:rgba(255,255,255,.38);color:rgba(112,99,89,.42);padding:0;border-radius:50%;cursor:none;font-family:inherit;box-shadow:0 8px 22px rgba(120,90,60,.04);transition:opacity .25s,background .25s,transform .25s;opacity:.72;display:grid;place-items:center}
+#karte-btn{position:fixed;right:clamp(56px,calc(25vw - 34px),300px);bottom:18px;z-index:12;width:42px;height:42px;border:0;background:rgba(255,255,255,.38);color:rgba(112,99,89,.42);padding:0;border-radius:50%;cursor:none;font-family:inherit;box-shadow:0 8px 22px rgba(120,90,60,.04);transition:opacity .25s,background .25s,transform .25s;opacity:.72;display:grid;place-items:center}
 #karte-btn:hover{opacity:.9;background:rgba(255,255,255,.58);transform:translateY(-1px)}
-#karte-btn .karte-icon{position:relative;display:block;width:13px;height:16px;border:1.4px solid rgba(112,99,89,.40);border-radius:3px;background:rgba(255,255,255,.22)}
-#karte-btn .karte-icon::before{content:'';position:absolute;left:3px;right:3px;top:4px;height:1.2px;border-radius:999px;background:rgba(112,99,89,.34);box-shadow:0 4px 0 rgba(112,99,89,.28),0 8px 0 rgba(112,99,89,.20)}
-#karte-btn .karte-icon::after{content:'';position:absolute;right:-1.4px;top:-1.4px;width:5px;height:5px;border-left:1.4px solid rgba(112,99,89,.32);border-bottom:1.4px solid rgba(112,99,89,.32);border-radius:0 3px 0 2px;background:rgba(255,255,255,.52)}
+#karte-btn .karte-icon{position:relative;display:block;width:19px;height:23px;border:1.6px solid rgba(112,99,89,.42);border-radius:4px;background:rgba(255,255,255,.22)}
+#karte-btn .karte-icon::before{content:'';position:absolute;left:4px;right:4px;top:6px;height:1.4px;border-radius:999px;background:rgba(112,99,89,.34);box-shadow:0 5px 0 rgba(112,99,89,.28),0 10px 0 rgba(112,99,89,.20)}
+#karte-btn .karte-icon::after{content:'';position:absolute;right:-1.6px;top:-1.6px;width:7px;height:7px;border-left:1.6px solid rgba(112,99,89,.32);border-bottom:1.6px solid rgba(112,99,89,.32);border-radius:0 4px 0 2px;background:rgba(255,255,255,.52)}
 #karte-panel{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(255,255,255,.10);opacity:0;pointer-events:none;transition:opacity .28s;color:rgba(73,64,56,.70);letter-spacing:.03em}
 #karte-panel.open{opacity:1;pointer-events:auto}
 #karte-head,#karte-close{display:none}
