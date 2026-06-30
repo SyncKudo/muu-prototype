@@ -51,8 +51,7 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 #diary-inner{max-width:320px;padding:0 24px;text-align:left}
 #diary-date{font-size:10px;color:#c7bfb9;letter-spacing:.2em;margin-bottom:24px}
 #diary-body{font-size:16px;color:#5c5650;line-height:2.18;font-weight:300;white-space:pre-line;letter-spacing:.02em}
-#live-btn{position:fixed;bottom:26px;left:26px;font-size:9px;color:#d5ccc6;letter-spacing:.14em;cursor:none;z-index:10;transition:color .3s}
-#live-btn:hover{color:#a89f99}
+#day-count{position:fixed;bottom:20px;left:20px;font-size:10px;color:rgba(130,116,106,.34);letter-spacing:.08em;z-index:10;pointer-events:none;user-select:none}
 #food-btn{position:fixed;left:calc(50% - 15px);right:auto;bottom:22px;width:34px;height:32px;cursor:none;z-index:12;display:flex;align-items:flex-end;justify-content:center;transition:transform .25s,opacity .25s;opacity:.92}
 #food-btn:hover{transform:translateY(-1px) scale(1.08);opacity:1}
 #food-btn:active{transform:scale(.96)}
@@ -117,7 +116,7 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 <div id="speech"></div>
 <div id="diary-dot"></div>
 <div id="diary"><div id="diary-inner"><div id="diary-date"></div><div id="diary-body"></div><div id="diary-close">×</div></div></div>
-<div id="live-btn">いっしょにくらす</div>
+<div id="day-count">1にちめ</div>
 
 <div id="food-menu" aria-label="food choices">
   <button class="food-choice" data-food="normal" data-shape="round" style="--c:#c9ad8d" title="ふつう"></button>
@@ -50456,7 +50455,7 @@ function smallVoice(){return pickVoice('idle');}
 function scheduleStartupVoice(){const delay=800+Math.random()*1000; setTimeout(()=>sayVoice(startupVoiceContext(),1250,1,{force:true,cooldown:3600,noRepeat:true}),delay);}
 
 const cursor=document.getElementById('cursor'); const raycaster=new THREE.Raycaster(); const mouse2=new THREE.Vector2(); const interactables=[headMesh,body,belly];
-function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#live-btn,#food-btn,#wash-btn,#pet-name,#food-menu,.food-choice'));}
+function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#food-btn,#wash-btn,#pet-name,#food-menu,.food-choice'));}
 function updatePointer(e){SM.hasPointer=true; SM.pointerType=e.pointerType||'mouse'; SM.mx=e.clientX; SM.my=e.clientY; mouse2.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1); if(SM.pointerType==='touch'){cursor.style.opacity='0'}else{cursor.style.opacity='1'; cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px';}}
 function checkHit(){if(!SM.hasPointer) return false; raycaster.setFromCamera(mouse2,camera); const hits=raycaster.intersectObjects(interactables,false); SM.lastHit=hits[0]||null; SM.nearMuu=hits.length>0; return SM.nearMuu;}
 function bodyPartForHit(object){if(object===headMesh)return 'head'; if(object===body||object===belly)return 'body'; return 'body';}
@@ -51530,7 +51529,7 @@ document.getElementById('diary-dot').addEventListener('click',(event)=>{
   saveMemory();
 });
 diary.addEventListener('click',()=>diary.classList.remove('open'));
-const liveBtn=document.getElementById('live-btn'); function updateLiveButton(){liveBtn.textContent=memory.living?'暮らしている':'一緒に暮らす'} updateLiveButton(); liveBtn.addEventListener('click',()=>{ if(!memory.living){ memory.living=true; memory.livingSince=TODAY; todayData().movedIn=true; saveMemory(); updateLiveButton(); setState(STATES.CURIOUS); sayVoice('curious',1400,.9,{force:true}); return;} setState(STATES.CURIOUS); sayVoice('curious',1200,.6);});
+const dayCount=document.getElementById('day-count'); function updateDayCount(){const born=memory.bornAt||TODAY; dayCount.textContent=`${Math.max(1,daysBetween(born,TODAY)+1)}にちめ`;} updateDayCount();
 setTimeout(()=>{if(memory.living) sayVoice('idle',1300,.38); setState(STATES.CURIOUS);},2400);
 
 scheduleStartupVoice();
