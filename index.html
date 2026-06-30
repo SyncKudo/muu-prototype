@@ -7,6 +7,9 @@
 
 <meta name="description" content="その子だけの気配と未来に、少しずつ出会おう。">
 <link rel="canonical" href="https://muu.life/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
 <meta property="og:title" content="MUU｜あなたのそばの、デジタルいきもの">
 <meta property="og:description" content="その子だけの気配と未来に、少しずつ出会おう。">
@@ -42,8 +45,10 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 #cursor{position:fixed;width:7px;height:7px;background:#cfc9c4;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s,opacity .2s;z-index:99;opacity:1}
 #cursor.near{width:15px;height:15px;background:#b9b0aa}
 #cursor.pet{width:21px;height:21px;background:#d8bcaf}
-#diary-dot{position:fixed;bottom:24px;left:calc(50% - 60px);top:auto;right:auto;width:26px;height:26px;background:#f2d9dd;border-radius:50%;cursor:none;z-index:12;transition:background .3s,transform .3s,opacity .3s;opacity:.92;box-shadow:0 7px 18px rgba(160,110,120,.10)}
-#diary-dot:hover{background:#e8c5cc;transform:scale(1.08);opacity:1}
+#diary-dot{position:fixed;bottom:23px;left:calc(50% - 76px);top:auto;right:auto;width:34px;height:32px;background:transparent;border-radius:0;cursor:none;z-index:12;transition:transform .3s,opacity .3s;opacity:.76}
+#diary-dot::before{content:'';position:absolute;left:10px;top:10px;width:14px;height:14px;background:rgba(231,143,185,.52);border-radius:4px 4px 2px 4px;transform:rotate(-45deg);box-shadow:0 7px 16px rgba(180,105,135,.08)}
+#diary-dot::after{content:'';position:absolute;left:9px;top:5px;width:14px;height:14px;border-radius:50%;background:rgba(231,143,185,.52);box-shadow:6px 6px 0 rgba(231,143,185,.52)}
+#diary-dot:hover{transform:scale(1.07);opacity:.92}
 #diary{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .7s}
 #diary.open{opacity:1;pointer-events:all}
 #diary-close{position:static;margin:28px auto 0;width:34px;height:34px;display:none;align-items:center;justify-content:center;font-size:26px;line-height:1;color:#c9b7b7;cursor:none;transition:color .2s,transform .2s;border-radius:50%;font-weight:300}
@@ -75,11 +80,11 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 .muu-bubble{position:fixed;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.82);box-shadow:0 0 0 1px rgba(255,255,255,.72) inset,0 0 12px rgba(226,244,255,.36);pointer-events:none;z-index:20;animation:muuBubbleRise 1.8s ease-out forwards}
 @keyframes muuBubbleRise{0%{opacity:0;transform:translate(-50%,-50%) scale(.55)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-170px) scale(1.25)}}
 
-#karte-btn{position:fixed;right:20px;bottom:20px;z-index:12;width:28px;height:28px;border:0;background:rgba(255,255,255,.38);color:rgba(112,99,89,.42);padding:0;border-radius:50%;cursor:none;font-family:inherit;box-shadow:0 8px 22px rgba(120,90,60,.04);transition:opacity .25s,background .25s,transform .25s;opacity:.72;display:grid;place-items:center}
+#karte-btn{position:fixed;right:clamp(56px,calc(25vw - 34px),300px);bottom:18px;z-index:12;width:42px;height:42px;border:0;background:rgba(255,255,255,.38);color:rgba(112,99,89,.42);padding:0;border-radius:50%;cursor:none;font-family:inherit;box-shadow:0 8px 22px rgba(120,90,60,.04);transition:opacity .25s,background .25s,transform .25s;opacity:.72;display:grid;place-items:center}
 #karte-btn:hover{opacity:.9;background:rgba(255,255,255,.58);transform:translateY(-1px)}
-#karte-btn .karte-icon{position:relative;display:block;width:13px;height:16px;border:1.4px solid rgba(112,99,89,.40);border-radius:3px;background:rgba(255,255,255,.22)}
-#karte-btn .karte-icon::before{content:'';position:absolute;left:3px;right:3px;top:4px;height:1.2px;border-radius:999px;background:rgba(112,99,89,.34);box-shadow:0 4px 0 rgba(112,99,89,.28),0 8px 0 rgba(112,99,89,.20)}
-#karte-btn .karte-icon::after{content:'';position:absolute;right:-1.4px;top:-1.4px;width:5px;height:5px;border-left:1.4px solid rgba(112,99,89,.32);border-bottom:1.4px solid rgba(112,99,89,.32);border-radius:0 3px 0 2px;background:rgba(255,255,255,.52)}
+#karte-btn .karte-icon{position:relative;display:block;width:19px;height:23px;border:1.6px solid rgba(112,99,89,.42);border-radius:4px;background:rgba(255,255,255,.22)}
+#karte-btn .karte-icon::before{content:'';position:absolute;left:4px;right:4px;top:6px;height:1.4px;border-radius:999px;background:rgba(112,99,89,.34);box-shadow:0 5px 0 rgba(112,99,89,.28),0 10px 0 rgba(112,99,89,.20)}
+#karte-btn .karte-icon::after{content:'';position:absolute;right:-1.6px;top:-1.6px;width:7px;height:7px;border-left:1.6px solid rgba(112,99,89,.32);border-bottom:1.6px solid rgba(112,99,89,.32);border-radius:0 4px 0 2px;background:rgba(255,255,255,.52)}
 #karte-panel{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(255,255,255,.10);opacity:0;pointer-events:none;transition:opacity .28s;color:rgba(73,64,56,.70);letter-spacing:.03em}
 #karte-panel.open{opacity:1;pointer-events:auto}
 #karte-head,#karte-close{display:none}
@@ -87,6 +92,8 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 .karte-date{font-size:16px;line-height:1.7;color:rgba(61,54,48,.72);letter-spacing:.04em}
 .karte-time{margin-top:2px;font-size:11px;line-height:1.7;color:rgba(86,76,68,.48);letter-spacing:.06em}
 .karte-day{margin-top:5px;font-size:13px;line-height:1.8;color:rgba(73,64,56,.58);letter-spacing:.05em}
+.karte-age{margin-top:1px;font-size:11px;line-height:1.7;color:rgba(86,76,68,.42);letter-spacing:.04em}
+.karte-birthday{margin-top:3px;font-size:12px;line-height:1.8;color:rgba(95,78,70,.54);letter-spacing:.04em}
 .karte-lines{display:grid;gap:12px;margin-top:22px}
 .karte-line{font-size:12px;line-height:1.9;color:rgba(65,57,50,.66);letter-spacing:.04em}
 @media (max-width:600px){#karte-panel{padding:20px}#karte-body{width:min(310px,calc(100vw - 40px));padding:26px 23px 28px}.karte-lines{gap:11px}}
@@ -49773,9 +49780,28 @@ const STORAGE_KEY='muu_v03_memory';
 
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function daysBetween(a,b){if(!a||!b)return 0;return Math.floor((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);}
+function dateFromMemoryValue(value){
+  if(typeof value==='string'){
+    const m=value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if(m)return new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
+  }
+  const d=value?new Date(value):new Date();
+  return Number.isFinite(d.getTime())?new Date(d.getFullYear(),d.getMonth(),d.getDate()):new Date();
+}
+function memoryBirthDate(memoryLike){return dateFromMemoryValue((memoryLike&&memoryLike.bornAt)||(memoryLike&&memoryLike.livingSince)||todayKey());}
+function effectiveBirthdayDate(year,month,day){
+  const d=new Date(year,month-1,day);
+  if(d.getMonth()!==month-1)return new Date(year,1,28);
+  return d;
+}
+function daysAliveFromBirthDate(birthDate,now=new Date()){
+  const start=new Date(birthDate.getFullYear(),birthDate.getMonth(),birthDate.getDate());
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  return Math.max(1,Math.floor((today-start)/86400000)+1);
+}
 function makeMuuId(){return 'muu_'+Math.random().toString(16).slice(2)+Date.now().toString(16);}
 function clampMemory(v,min=0,max=1){return Math.max(min,Math.min(max,v));}
-function blankDay(){return{opens:0,touches:0,taps:0,pets:0,tired:false,slept:false,movedIn:false,returnedAfterDays:0,foodPlaced:0,foodEaten:0,foodIgnored:0,foodRush:0,diaryRead:0,lastInteractionAt:null};}
+function blankDay(){return{opens:0,touches:0,taps:0,pets:0,strokes:0,swipes:0,tired:false,slept:false,movedIn:false,returnedAfterDays:0,foodPlaced:0,foodEaten:0,foodIgnored:0,foodRush:0,diaryRead:0,lastInteractionAt:null};}
 function loadMemory(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch{return null}}
 const NATIVE_TRAITS=[
   {id:'affectionate',name:'なつきやすい',motion:{idleDelay:.86,walkFreq:1.08,walkSpeed:1.05,walkDist:.92,turn:1.08,tailAmp:1.38,tailSpeed:1.12,tailLift:.08,earWobble:1.08,foodNotice:1.14,foodDelay:.88,touchTolerance:1.25,touchWarmth:1.28,washBounce:1.08,dirtDrag:.94,near:1.22,blinkGap:1}},
@@ -49881,6 +49907,61 @@ function normalizeAffinity(value,memoryLike,traitDef){
     growthStage:Number.isFinite(a.growthStage)?a.growthStage:(memoryLike.growth&&memoryLike.growth.stage)||1
   };
 }
+function currentSeasonSense(now=new Date()){
+  const m=now.getMonth()+1;
+  if(m>=3&&m<=5)return 'spring';
+  if(m>=6&&m<=8)return 'summer';
+  if(m>=9&&m<=11)return 'autumn';
+  return 'winter';
+}
+function initialLifeParams(memoryLike,traitDef){
+  const seed=(memoryLike.nativeTrait&&memoryLike.nativeTrait.seed)||Math.floor(Math.random()*1000000)+1, id=traitDef&&traitDef.id;
+  let activity=48+seededUnit(seed,311)*12, curiosity=48+seededUnit(seed,313)*12, comfort=48+seededUnit(seed,317)*12, condition=78+seededUnit(seed,319)*10;
+  if(id==='energetic'){activity+=15;condition+=4}
+  if(id==='curious'){curiosity+=18;activity+=5}
+  if(id==='sleepy')activity-=10;
+  if(id==='gentle')comfort+=8;
+  if(id==='timid'){comfort-=7;curiosity-=5}
+  if(id==='cleanly')condition+=5;
+  return {version:1,loneliness:0,comfort:clampMemory(comfort,0,100),activity:clampMemory(activity,0,100),curiosity:clampMemory(curiosity,0,100),condition:clampMemory(condition,0,100),seasonSense:currentSeasonSense(),memoryDepth:clampMemory(Math.min(100,(memoryLike.totals?.opened||0)*.4+(memoryLike.totals?.diaryRead||0)*.8),0,100),lastUpdatedAt:new Date().toISOString()};
+}
+function normalizeLifeParams(value,memoryLike,traitDef){
+  const base=initialLifeParams(memoryLike,traitDef), l=value||{};
+  return {
+    version:1,
+    loneliness:clampMemory(Number.isFinite(l.loneliness)?l.loneliness:base.loneliness,0,100),
+    comfort:clampMemory(Number.isFinite(l.comfort)?l.comfort:base.comfort,0,100),
+    activity:clampMemory(Number.isFinite(l.activity)?l.activity:base.activity,0,100),
+    curiosity:clampMemory(Number.isFinite(l.curiosity)?l.curiosity:base.curiosity,0,100),
+    condition:clampMemory(Number.isFinite(l.condition)?l.condition:base.condition,0,100),
+    seasonSense:typeof l.seasonSense==='string'?l.seasonSense:base.seasonSense,
+    memoryDepth:clampMemory(Number.isFinite(l.memoryDepth)?l.memoryDepth:base.memoryDepth,0,100),
+    lastUpdatedAt:l.lastUpdatedAt||base.lastUpdatedAt
+  };
+}
+function calculateAgeYears(birthDate,birthdayMonth,birthdayDay,now=new Date()){
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  let years=today.getFullYear()-birthDate.getFullYear();
+  const thisBirthday=effectiveBirthdayDate(today.getFullYear(),birthdayMonth,birthdayDay);
+  if(today<thisBirthday)years--;
+  return Math.max(0,years);
+}
+function normalizeAge(value,memoryLike){
+  const a=value||{}, birth=memoryBirthDate(memoryLike), now=new Date();
+  const birthdayMonth=Number.isFinite(a.birthdayMonth)?a.birthdayMonth:birth.getMonth()+1;
+  const birthdayDay=Number.isFinite(a.birthdayDay)?a.birthdayDay:birth.getDate();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const birthdayToday=effectiveBirthdayDate(today.getFullYear(),birthdayMonth,birthdayDay);
+  return {
+    version:1,
+    years:calculateAgeYears(birth,birthdayMonth,birthdayDay,now),
+    birthdayMonth,
+    birthdayDay,
+    daysAlive:daysAliveFromBirthDate(birth,now),
+    isBirthdayToday:today.getTime()===birthdayToday.getTime(),
+    lastUpdatedAt:new Date().toISOString()
+  };
+}
 function normalizeEye(value,trait){
   const e=value||{}, m=(trait&&trait.motion)||{};
   return {openness:Number.isFinite(e.openness)?e.openness:1,blinkType:e.blinkType||'soft',blinkFrequencyBias:Number.isFinite(e.blinkFrequencyBias)?e.blinkFrequencyBias:(m.blinkGap?1/m.blinkGap:1),lastBlinkAt:e.lastBlinkAt||null,updatedAt:e.updatedAt||new Date().toISOString()};
@@ -49928,6 +50009,17 @@ function normalizeTouchProfile(value,memoryLike,traitDef){
   if(!value||!Array.isArray(value.likedZones)||!Array.isArray(value.dislikedZones))return makeTouchProfile(memoryLike,traitDef);
   return {version:value.version||1,growthStage:Number.isFinite(value.growthStage)?value.growthStage:(memoryLike.growth&&memoryLike.growth.stage)||1,likedZones:value.likedZones.map((z,i)=>normalizeTouchZone(z,'liked',i)),dislikedZones:value.dislikedZones.map((z,i)=>normalizeTouchZone(z,'disliked',i)),generatedAt:value.generatedAt||new Date().toISOString(),updatedAt:value.updatedAt||new Date().toISOString()};
 }
+function normalizeInteractionTotals(value){
+  const v=value||{}, now=new Date().toISOString();
+  return {
+    version:v.version||1,
+    totalStrokedCount:Number.isFinite(v.totalStrokedCount)?Math.max(0,Math.floor(v.totalStrokedCount)):0,
+    totalFedCount:Number.isFinite(v.totalFedCount)?Math.max(0,Math.floor(v.totalFedCount)):0,
+    lastStrokedAt:v.lastStrokedAt||null,
+    lastFedCountedAt:v.lastFedCountedAt||null,
+    lastUpdatedAt:v.lastUpdatedAt||now
+  };
+}
 function normalizeMemory(m){
   m=m||{};
   if(!m.id)m.id=makeMuuId();
@@ -49963,7 +50055,10 @@ function normalizeMemory(m){
   m.hunger=normalizeHunger(m.hunger,m,nativeDef);
   m.state.hunger=clampMemory(m.hunger.level/10);
   m.affinity=normalizeAffinity(m.affinity,m,nativeDef);
+  m.lifeParams=normalizeLifeParams(m.lifeParams,m,nativeDef);
+  m.age=normalizeAge(m.age,m);
   m.touchProfile=normalizeTouchProfile(m.touchProfile,m,nativeDef);
+  m.interactionTotals=normalizeInteractionTotals(m.interactionTotals);
   m.dirtLevel=Number.isFinite(m.dirtLevel)?m.dirtLevel:2;
   if(!m.lastWashedAt)m.lastWashedAt=m.bornAt+'T00:00:00';
   return m;
@@ -50043,6 +50138,66 @@ function updateAffinityForElapsed(hours){
   if(dirt>=10)updateAffinity(-Math.min(1.2,hours/24*.38),'dust_elapsed');
   else if(dirt>=7)updateAffinity(-Math.min(.7,hours/24*.22),'dirty_elapsed');
 }
+function lifeParam(name,fallback=50){return memory.lifeParams&&Number.isFinite(memory.lifeParams[name])?clampMemory(memory.lifeParams[name],0,100):fallback;}
+function adjustLifeParams(delta={},reason='neutral'){
+  if(!memory.lifeParams)return;
+  for(const [key,value] of Object.entries(delta)){
+    if(['loneliness','comfort','activity','curiosity','condition','memoryDepth'].includes(key)&&Number.isFinite(value)){
+      memory.lifeParams[key]=clampMemory((memory.lifeParams[key]||0)+value,0,100);
+    }
+  }
+  memory.lifeParams.seasonSense=currentSeasonSense();
+  memory.lifeParams.lastUpdatedAt=new Date().toISOString();
+  memory.lifeParams.lastReason=reason;
+}
+function updateLifeParamsForElapsed(hours=0,reason='elapsed'){
+  if(!memory.lifeParams)return;
+  const dirt=memory.currentDirtLevel||computeDirtLevel(), hunger=memory.hunger?.level||0, aff=affinityNorm();
+  const longAway=Math.max(0,hours);
+  const lonelinessGain=longAway>1?Math.min(18,(longAway/24)*(2.4+aff*1.6)):0;
+  const conditionLoss=(dirt>=10?4.2:dirt>=7?2.2:dirt>=5?1.1:0)+(hunger>=8?.9:0)+(longAway>48?1.2:0);
+  let activityTarget=50+(nativeTraitDef.id==='energetic'?18:0)+(nativeTraitDef.id==='curious'?7:0)+(lifeParam('curiosity')-50)*.14-(memory.state.sleepiness||0)*18-dirt*2.7-(hunger<=2?4:0);
+  let comfortTarget=48+aff*28-dirt*3-hunger*1.4-lifeParam('loneliness')*.18+(nativeTraitDef.id==='gentle'?6:0);
+  if(currentSeasonSense()==='summer')activityTarget+=3;
+  if(currentSeasonSense()==='winter')activityTarget-=3;
+  adjustLifeParams({
+    loneliness:lonelinessGain,
+    condition:-conditionLoss,
+    memoryDepth:Math.min(2.2,longAway/24*.35),
+    activity:(clampMemory(activityTarget,8,92)-lifeParam('activity'))*.08,
+    comfort:(clampMemory(comfortTarget,8,94)-lifeParam('comfort'))*.08,
+    curiosity:((nativeTraitDef.id==='curious'?66:nativeTraitDef.id==='timid'?42:52)-lifeParam('curiosity'))*.025
+  },reason);
+}
+function lifeEvent(kind,intensity=1){
+  const scale=Math.max(.15,Math.min(2,intensity||1));
+  const changes={
+    open:{loneliness:-4*scale,comfort:1.2*scale,curiosity:.8*scale,memoryDepth:.35*scale},
+    touch:{loneliness:-3*scale,comfort:1.4*scale,curiosity:.8*scale,memoryDepth:.45*scale},
+    liked_touch:{loneliness:-4.5*scale,comfort:3*scale,activity:1*scale,memoryDepth:.75*scale},
+    disliked_touch:{comfort:-2.4*scale,activity:-.5*scale,memoryDepth:.45*scale},
+    food:{loneliness:-2*scale,comfort:2.4*scale,condition:2.8*scale,activity:.8*scale,memoryDepth:.7*scale},
+    wash:{loneliness:-2.4*scale,comfort:3.2*scale,condition:4.2*scale,activity:1.4*scale,memoryDepth:.7*scale},
+    diary:{loneliness:-1.8*scale,comfort:1.1*scale,memoryDepth:1.2*scale},
+    idle:{condition:.12*scale}
+  };
+  adjustLifeParams(changes[kind]||{},kind);
+}
+function countInteraction(kind){
+  if(!memory.interactionTotals)memory.interactionTotals=normalizeInteractionTotals();
+  const now=new Date().toISOString();
+  if(kind==='stroke'){
+    memory.interactionTotals.totalStrokedCount=Math.max(0,Math.floor(memory.interactionTotals.totalStrokedCount||0))+1;
+    memory.interactionTotals.lastStrokedAt=now;
+    adjustLifeParams({memoryDepth:.18},'interaction_stroke_count');
+  }
+  if(kind==='fed'){
+    memory.interactionTotals.totalFedCount=Math.max(0,Math.floor(memory.interactionTotals.totalFedCount||0))+1;
+    memory.interactionTotals.lastFedCountedAt=now;
+    adjustLifeParams({memoryDepth:.22},'interaction_fed_count');
+  }
+  memory.interactionTotals.lastUpdatedAt=now;
+}
 function hungerFoodProfile(){
   const level=memory.hunger?memory.hunger.level:((memory.state.hunger||.5)*10), norm=clampMemory(level/10);
   let notice=.72+norm*.72, delay=1.22-norm*.42, eatChance=.42+norm*.48, hop=1+Math.max(0,norm-.55)*.18;
@@ -50052,6 +50207,8 @@ function hungerFoodProfile(){
   if(id==='solitary'){notice*=.86; eatChance-=.08}
   if(id==='energetic'&&norm>.55){notice*=1.08; hop*=1.08}
   if(id==='cleanly'&&dirt>=5){notice*=.72; delay*=1.22; eatChance-=.12}
+  if(lifeParam('condition',80)<42){notice*=.78; delay*=1.18; eatChance-=.08}
+  if(lifeParam('activity',50)>66&&level>2){notice*=1.06; delay*=.96}
   if(SM.current===STATES.SLEEP){notice*=.38; delay*=1.8; eatChance-=.25}
   if(SM.current===STATES.SHY){notice*=.85; eatChance-=.08}
   if(dirt>=5){notice*=.82; delay*=1.18; eatChance-=.1}
@@ -50074,6 +50231,7 @@ memory.days[TODAY].opens++;
 memory.totals.opened++;
 memory.lastVisitDay=TODAY;
 memory.lastOpenedAt=new Date().toISOString();
+lifeEvent('open',gap>=2?1.4:1);
 saveMemory();
 function saveMemory(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(memory))}catch{}}
 function todayData(){if(!memory.days[TODAY]) memory.days[TODAY]=blankDay(); return memory.days[TODAY];}
@@ -50095,7 +50253,7 @@ function setDirtLevel(level){
 }
 memory.currentDirtLevel=computeDirtLevel();
 if(gap>=2)updateAffinity(Math.min(1.1,.28+gap*.08),'return');
-if(previousOpenedAt){const elapsedHours=Math.max(0,(Date.now()-new Date(previousOpenedAt).getTime())/36e5); updateAffinityForElapsed(elapsedHours); saveMemory();}
+if(previousOpenedAt){const elapsedHours=Math.max(0,(Date.now()-new Date(previousOpenedAt).getTime())/36e5); updateAffinityForElapsed(elapsedHours); updateLifeParamsForElapsed(elapsedHours,'open_elapsed'); saveMemory();}
 
 
 function sanitizePetName(name){
@@ -50362,8 +50520,8 @@ const foodGroup=new THREE.Group(); foodGroup.visible=false; scene.add(foodGroup)
 const food={exists:false,eaten:false,noticed:false,placedAt:0,target:new THREE.Vector3(0,0,1.12),lastServedDay:null};
 
 const STATES={IDLE:'idle',WALK:'walk',SLEEP:'sleep',HAPPY:'happy',SHY:'shy',TIRED:'tired',CURIOUS:'curious',TO_FOOD:'to_food',EAT:'eat'};
-const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,hopT:0,hopProfile:null,hopFrom:0,hopTo:0,hopY:0,hopSquash:0,hopTailLag:0,lastTailRotY:0,tailTurnLag:0,tailTipLagX:0,tailTipLagY:0,tailTipVX:0,tailTipVY:0,lastTouch:Date.now(),touchTimes:[],touchPoint:null,lastUserTouchPoint:null,lastHit:null,breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
-function randIdleDelay(){return (2.8+Math.random()*3.6)*nativeMotion('idleDelay',1)*nativeNoise(11,.18)}
+const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,hopT:0,hopProfile:null,hopFrom:0,hopTo:0,hopY:0,hopSquash:0,hopTailLag:0,lastTailRotY:0,tailTurnLag:0,tailTipLagX:0,tailTipLagY:0,tailTipVX:0,tailTipVY:0,lastTouch:Date.now(),touchTimes:[],touchPoint:null,touchMoves:[],gesture:null,lastGestureAt:0,gestureRollX:0,gestureRollZ:0,gestureRollY:0,gestureOffsetX:0,gestureOffsetZ:0,lastUserTouchPoint:null,lastHit:null,breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
+function randIdleDelay(){const active=1-(lifeParam('activity',50)-50)*.004; return (2.8+Math.random()*3.6)*nativeMotion('idleDelay',1)*nativeNoise(11,.18)*clamp(active,.82,1.18)}
 function lerp(a,b,t){return a+(b-a)*t}
 function smooth01(t){return t*t*(3-2*t)}
 function angleDelta(a,b){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
@@ -50539,6 +50697,16 @@ function primaryDefaultVoiceChance(context,quietState){
   if(quietState)return .10;
   return .16;
 }
+function lifeVoicePool(context){
+  const l=memory.lifeParams||{}, pool=[];
+  if((l.loneliness||0)>62)pool.push('むぅ……','む……','むぅ…');
+  if((l.comfort||0)>66)pool.push('むぅ。','む〜','むぅ〜');
+  if((l.activity||0)>66&&!['sleeping','dust','weak'].includes(context))pool.push('む！','む、む','むきゅ');
+  if((l.curiosity||0)>66&&!['sleeping','dust'].includes(context))pool.push('むぅ？','むっ','むきゅ？');
+  if((l.condition||100)<42)pool.push('む……','むぅ…','む……ん');
+  if((l.memoryDepth||0)>62)pool.push('むぅ。','むふ…','むぅ…');
+  return pool;
+}
 function resolveVoiceContext(context='idle'){
   const dirt=memory.currentDirtLevel||computeDirtLevel(), state=memory.state||{}, requested=VOICE_CONTEXT_ALIASES[context]||context;
   if(requested==='wash')return requested;
@@ -50580,8 +50748,9 @@ function selectVoice(context='idle',opts={}){
   if(primaryChance&&(!opts.noRepeat||lastVoiceText!==PRIMARY_DEFAULT_VOICE)&&Math.random()<primaryChance)return PRIMARY_DEFAULT_VOICE;
   const base=(VOICE_POOLS[stateContext]||VOICE_POOLS.idle).slice();
   const trait=TRAIT_VOICES[nativeTraitDef.id]||[];
+  const life=lifeVoicePool(stateContext);
   const widePool=!quietState&&context!=='startup'&&Math.random()<.07?COMMON_VOICES:[];
-  return chooseVoiceFromPool(base.concat(trait,widePool).filter(isPrimaryMuuVoice),!!opts.noRepeat);
+  return chooseVoiceFromPool(base.concat(trait,life,widePool).filter(isPrimaryMuuVoice),!!opts.noRepeat);
 }
 function showVoice(text,dur=1200){lastVoiceText=text; say(localizeVoice(text),dur);}
 function pickVoice(context='idle'){return selectVoice(context);}
@@ -50657,6 +50826,7 @@ function applyTouchReaction(result,kind,recent,tolerance){
     SM.tailTipVY+=.018*intensity*(1+affinityNorm()*.16);
     if(SM.current!==STATES.TIRED)setState(STATES.HAPPY);
     sayVoice(result.isCore&&Math.random()<.42?'liked_touch_core':'liked_touch',1050+intensity*220,1,touchVoice);
+    lifeEvent('liked_touch',1+intensity);
     saveMemory();
     return {handled:true};
   }
@@ -50667,15 +50837,100 @@ function applyTouchReaction(result,kind,recent,tolerance){
     SM.tailTipVX*=.55;
     if(intensity>.46||recent>=Math.max(3,Math.round(tolerance*.72)))setState(STATES.SHY);
     sayVoice(result.isCore&&Math.random()<.42?'disliked_touch_core':'disliked_touch',1000+intensity*180,1,touchVoice);
+    lifeEvent('disliked_touch',1+intensity);
     saveMemory();
     return {handled:true};
   }
   return {handled:false,intensity};
 }
-addEventListener('pointermove',e=>{updatePointer(e); if(!isUiTarget(e)) checkHit();});
-addEventListener('pointerdown',e=>{updatePointer(e); if(isUiTarget(e)) return; e.preventDefault(); if(!checkHit()) return; SM.touchPoint=getTouchPointOnMuu(e); SM.petting=true; SM.petStart=Date.now(); SM.lastTouch=Date.now();});
-addEventListener('pointerup',e=>{if(!SM.petting) return; updatePointer(e); e.preventDefault(); const dur=Date.now()-SM.petStart; SM.petting=false; SM.lastTouch=Date.now(); onMuuTouched(dur,SM.touchPoint); SM.touchPoint=null;}); addEventListener('pointercancel',()=>{SM.petting=false; SM.touchPoint=null;});
-function recordTouch(kind){const d=todayData(); d.touches++; d.lastInteractionAt=new Date().toISOString(); if(kind==='tap'){d.taps++; memory.state.trust=clampMemory(memory.state.trust+.002); memory.traits.curiosity=clampMemory(memory.traits.curiosity+.002);} if(kind==='pet'){d.pets++; memory.state.trust=clampMemory(memory.state.trust+.006); memory.state.mood=clampMemory(memory.state.mood+.004); memory.traits.calmness=clampMemory(memory.traits.calmness+.003);} memory.totals.touched++; saveMemory(); const now=Date.now(); SM.touchTimes.push(now); SM.touchTimes=SM.touchTimes.filter(t=>now-t<15000); return SM.touchTimes.length;}
+function getPointerGesture(e){
+  const end={x:e.clientX,y:e.clientY,t:Date.now()}, start=SM.touchMoves[0]||end;
+  const dx=end.x-start.x, dy=end.y-start.y, distance=Math.hypot(dx,dy), duration=Math.max(1,end.t-start.t), velocity=distance/duration;
+  return {start,end,dx,dy,distance,duration,velocity,direction:Math.atan2(dy,dx),startPoint:SM.touchPoint,endPoint:getTouchPointOnMuu(e),moves:SM.touchMoves.slice(-8)};
+}
+function classifyGesture(gesture){
+  if(!gesture||gesture.distance<18)return 'tap';
+  if(gesture.velocity<.45&&gesture.distance<115&&gesture.duration>220)return 'stroke';
+  if(gesture.distance<52&&gesture.duration>260)return 'stroke';
+  return 'swipe';
+}
+function getTouchedBodyPart(point){
+  if(!point)return 'body';
+  if(point.bodyPart==='head'||point.y>.62)return 'head';
+  if(point.x>.62&&point.z<.15)return 'tail';
+  return 'body';
+}
+function applyGestureRoll(gesture,bodyPart,scale=1){
+  const now=Date.now();
+  if(now-SM.lastGestureAt<180)return;
+  SM.lastGestureAt=now;
+  const speed=clamp(gesture.velocity,.08,1.8), dist=clamp(gesture.distance/180,.08,1), power=clamp((speed*.55+dist*.45)*scale,0,.9);
+  const dirt=memory.currentDirtLevel||computeDirtLevel(), condition=lifeParam('condition',80);
+  const stateDamp=(SM.current===STATES.SLEEP?.35:1)*(dirt>=10?.14:dirt>=7?.55:1)*(condition<42?.65:1);
+  const p=power*stateDamp;
+  SM.gestureRollZ=clamp(SM.gestureRollZ-gesture.dx/window.innerWidth*1.8*p,-.18,.18);
+  SM.gestureRollX=clamp(SM.gestureRollX+gesture.dy/window.innerHeight*1.6*p,-.14,.14);
+  SM.gestureRollY=clamp(SM.gestureRollY+gesture.dx/window.innerWidth*.7*p,-.08,.08);
+  SM.gestureOffsetX=clamp(SM.gestureOffsetX+gesture.dx/window.innerWidth*.14*p,-.045,.045);
+  SM.gestureOffsetZ=clamp(SM.gestureOffsetZ+gesture.dy/window.innerHeight*.10*p,-.035,.035);
+  SM.tailTipVX+=clamp(-gesture.dx/window.innerWidth*.08*p,-.035,.035);
+  SM.tailTipVY+=clamp(-gesture.dy/window.innerHeight*.08*p,-.035,.035);
+  if(bodyPart==='head')SM.hopTailLag=Math.max(SM.hopTailLag||0,.018*p);
+}
+function applyStrokeReaction(gesture,bodyPart){
+  const day=todayData(); day.strokes=(day.strokes||0)+1; day.lastInteractionAt=new Date().toISOString();
+  countInteraction('stroke');
+  const result=evaluateTouchZone(gesture.endPoint||gesture.startPoint||SM.touchPoint), intensity=touchReactionScale(result);
+  const slowHead=bodyPart==='head'&&gesture.velocity<.55;
+  if(result.type==='disliked'&&gesture.velocity>.55)return applySwipeRollReaction(gesture,bodyPart,result);
+  applyGestureRoll(gesture,bodyPart,slowHead?.28:.42);
+  memory.state.mood=clampMemory(memory.state.mood+.004+(slowHead?.006:0));
+  if(result.type==='liked'&&intensity>.08){
+    updateAffinity(result.isCore?.7+intensity*.45:.2+intensity*.28,'stroke_liked');
+    lifeEvent('liked_touch',1+intensity*.6);
+    sayVoice(result.isCore&&Math.random()<.32?'liked_touch_core':'liked_touch',1150,1,{force:true,noRepeat:true,cooldown:500});
+  }else{
+    updateAffinity(slowHead?.26:.14,'stroke');
+    adjustLifeParams({comfort:slowHead?1.6:.8,loneliness:-1.6,memoryDepth:.45,activity:slowHead?-.3:.25,curiosity:.35},'stroke');
+    sayVoice(slowHead?(affinityNorm()>.62?'attached':'happy'):'touch',1100,1,{force:true,noRepeat:true,cooldown:650});
+  }
+  if(nativeTraitDef.id==='timid'&&affinityNorm()<.34&&Math.random()<.28)setState(STATES.SHY);
+  else if(nativeTraitDef.id==='energetic'&&!slowHead)setState(STATES.HAPPY);
+  else setState(slowHead?STATES.HAPPY:STATES.CURIOUS);
+  saveMemory();
+  return {handled:true,type:'stroke',zone:result};
+}
+function applySwipeRollReaction(gesture,bodyPart,zoneResult=evaluateTouchZone(gesture.endPoint||gesture.startPoint||SM.touchPoint)){
+  const day=todayData(); day.swipes=(day.swipes||0)+1; day.lastInteractionAt=new Date().toISOString();
+  const intensity=touchReactionScale(zoneResult), strong=gesture.velocity>.95||gesture.distance>130;
+  applyGestureRoll(gesture,bodyPart,strong?1:.68);
+  if(gesture.dy<-28)SM.hopY=Math.max(SM.hopY||0,.035*clamp(gesture.distance/120,.2,1));
+  if(gesture.dy>28)SM.hopSquash=Math.max(SM.hopSquash||0,.035*clamp(gesture.distance/120,.2,1));
+  if(zoneResult.type==='disliked'&&intensity>.08){
+    updateAffinity(zoneResult.isCore?-.28-intensity*.38:-.1-intensity*.18,'swipe_disliked');
+    adjustLifeParams({comfort:-1.8*intensity,condition:-.25*intensity,memoryDepth:.35},'swipe_disliked');
+    memory.state.mood=clampMemory(memory.state.mood-.004-intensity*.006);
+    sayVoice(zoneResult.isCore&&Math.random()<.34?'disliked_touch_core':'disliked_touch',1050,1,{force:true,noRepeat:true,cooldown:700});
+    if(intensity>.45)setState(STATES.SHY);
+  }else{
+    updateAffinity(strong?.05:.12,'swipe');
+    adjustLifeParams({activity:strong?1.4:.8,curiosity:1.1,comfort:strong?-.45:.2,memoryDepth:.35},'swipe');
+    sayVoice(strong?(nativeTraitDef.id==='energetic'?'happy':'curious'):'touch',1050,1,{force:true,noRepeat:true,cooldown:750});
+    setState(strong?STATES.CURIOUS:STATES.HAPPY);
+  }
+  saveMemory();
+  return {handled:true,type:'swipe',zone:zoneResult};
+}
+function handlePointerGesture(e){
+  const gesture=getPointerGesture(e), kind=classifyGesture(gesture), bodyPart=getTouchedBodyPart(gesture.startPoint||gesture.endPoint);
+  if(kind==='tap')onMuuTouched(gesture.duration,gesture.startPoint);
+  else if(kind==='stroke')applyStrokeReaction(gesture,bodyPart);
+  else applySwipeRollReaction(gesture,bodyPart);
+}
+addEventListener('pointermove',e=>{updatePointer(e); if(isUiTarget(e))return; if(SM.petting){SM.touchMoves.push({x:e.clientX,y:e.clientY,t:Date.now()}); if(SM.touchMoves.length>18)SM.touchMoves.shift();} else checkHit();});
+addEventListener('pointerdown',e=>{updatePointer(e); if(isUiTarget(e)) return; e.preventDefault(); if(!checkHit()) return; SM.touchPoint=getTouchPointOnMuu(e); SM.touchMoves=[{x:e.clientX,y:e.clientY,t:Date.now()}]; SM.petting=true; SM.petStart=Date.now(); SM.lastTouch=Date.now();});
+addEventListener('pointerup',e=>{if(!SM.petting) return; updatePointer(e); e.preventDefault(); SM.touchMoves.push({x:e.clientX,y:e.clientY,t:Date.now()}); SM.petting=false; SM.lastTouch=Date.now(); handlePointerGesture(e); SM.touchPoint=null; SM.touchMoves=[];}); addEventListener('pointercancel',()=>{SM.petting=false; SM.touchPoint=null; SM.touchMoves=[];});
+function recordTouch(kind){const d=todayData(); d.touches++; d.lastInteractionAt=new Date().toISOString(); if(kind==='tap'){d.taps++; memory.state.trust=clampMemory(memory.state.trust+.002); memory.traits.curiosity=clampMemory(memory.traits.curiosity+.002);} if(kind==='pet'){d.pets++; memory.state.trust=clampMemory(memory.state.trust+.006); memory.state.mood=clampMemory(memory.state.mood+.004); memory.traits.calmness=clampMemory(memory.traits.calmness+.003);} lifeEvent('touch',kind==='pet'?1.15:1); memory.totals.touched++; saveMemory(); const now=Date.now(); SM.touchTimes.push(now); SM.touchTimes=SM.touchTimes.filter(t=>now-t<15000); return SM.touchTimes.length;}
 function onMuuTouched(duration,touchPoint){updateLastUserTouchPoint(touchPoint); const kind=duration<260?'tap':'pet'; const recent=recordTouch(kind), tolerance=Math.max(3,Math.round(8*nativeMotion('touchTolerance',1))), touchVoice={force:true,noRepeat:true,cooldown:0}, zoneResult=evaluateTouchZone(touchPoint||{mode:'screenApprox',bodyPart:'body',x:0,y:.5,z:.55}); const zoneReaction=applyTouchReaction(zoneResult,kind,recent,tolerance); if(zoneReaction.handled)return; updateAffinity(kind==='pet'?.34:.2,'calm_touch'); if(SM.current===STATES.TIRED){sayVoice('sleepy',1100,1,touchVoice); saveMemory(); return;} if(recent>=tolerance){setState(nativeTraitDef.id==='pouty'?STATES.SHY:STATES.TIRED); sayVoice('moody',1100,1,touchVoice); saveMemory(); return;} if(kind==='pet'&&nativeMotion('touchWarmth',1)>.75){setState(STATES.HAPPY); sayVoice(affinityNorm()>.62?'attached':'happy',1150,1,touchVoice); saveMemory(); return;} if(recent>=Math.max(3,Math.round(5*nativeMotion('touchTolerance',1)))){setState(STATES.SHY); sayVoice('moody',1100,1,touchVoice); saveMemory(); return;} setState(nativeMotion('touchWarmth',1)<.7?STATES.CURIOUS:STATES.HAPPY); sayVoice(affinityNorm()>.7?'attached':affinityNorm()<.22?'distant':(SM.current===STATES.CURIOUS?'curious':'touch'),1100,1,touchVoice); saveMemory();}
 
 function placeFood(type='normal'){
@@ -50684,7 +50939,7 @@ function placeFood(type='normal'){
   setFoodType(type); food.type=type; food.reaction=computeFoodReaction(type); food.exists=true; food.eaten=false; food.noticed=false; food.placedAt=Date.now(); foodGroup.position.set(0,0,1.75); foodGroup.visible=true; foodGroup.position.set(0,0,1.75); for(const k of kibbles) k.visible=true; sayVoice('food',900,hunger.isHungry?.86:.66); todayData().foodPlaced++; memory.totals.foodPlaced++; memory.lastFoodAt=new Date().toISOString(); memory.food.hasFood=true; memory.food.placedAt=new Date(food.placedAt).toISOString(); memory.food.lastReaction=food.reaction; memory.food.updatedAt=new Date().toISOString(); if(food.reaction==='rush')todayData().foodRush++; saveMemory(); closeFoodMenu(); document.getElementById('food-btn').classList.add('placed'); const foodDelay=nativeMotion('foodDelay',1)*nativeNoise(23,.16)*hunger.delay; if(food.reaction==='rush'){setTimeout(()=>{if(food.exists&&!food.eaten){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.82);}},240*foodDelay);} else if(food.reaction==='approach'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,hunger.isHungry?.7:.5);}},(1200+Math.random()*1300)*foodDelay);} else if(food.reaction==='wait'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){setState(STATES.CURIOUS); sayVoice(hunger.isFull?'full':'curious',1100,.55);}},(1500+Math.random()*1600)*foodDelay); setTimeout(()=>{if(food.exists&&!food.eaten&&Math.random()<clamp(.65*nativeMotion('foodNotice',1)*hunger.notice,0,.92)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,hunger.isHungry?.72:.54);}},(7000+Math.random()*4000)*foodDelay);}
 }
 function clearFood(){food.exists=false; food.eaten=false; food.noticed=false; foodGroup.visible=false; memory.food.hasFood=false; memory.food.updatedAt=new Date().toISOString(); saveMemory(); document.getElementById('food-btn').classList.remove('placed'); closeFoodMenu && closeFoodMenu();}
-function eatFood(){if(!food.exists || food.eaten) return; food.eaten=true; for(const k of kibbles) k.visible=false; todayData().foodEaten++; memory.totals.foodEaten++; setHungerLevel(.7+seededUnit(memory.nativeTrait.seed,71)*1.4,{fed:true}); updateAffinity(.62+seededUnit(memory.nativeTrait.seed,79)*.52,'food'); memory.state.appetite=clampMemory(memory.state.appetite+.004); memory.state.trust=clampMemory(memory.state.trust+.003); memory.state.mood=clampMemory(memory.state.mood+.004); memory.lastAteAt=new Date().toISOString(); memory.food.lastAteAt=memory.lastAteAt; memory.food.lastReaction='eaten'; memory.food.updatedAt=memory.lastAteAt; saveMemory(); setTimeout(()=>clearFood(),1600);}
+function eatFood(){if(!food.exists || food.eaten) return; food.eaten=true; for(const k of kibbles) k.visible=false; todayData().foodEaten++; memory.totals.foodEaten++; countInteraction('fed'); setHungerLevel(.7+seededUnit(memory.nativeTrait.seed,71)*1.4,{fed:true}); updateAffinity(.62+seededUnit(memory.nativeTrait.seed,79)*.52,'food'); lifeEvent('food',nativeTraitDef.id==='foodie'?1.25:1); memory.state.appetite=clampMemory(memory.state.appetite+.004); memory.state.trust=clampMemory(memory.state.trust+.003); memory.state.mood=clampMemory(memory.state.mood+.004); memory.lastAteAt=new Date().toISOString(); memory.food.lastAteAt=memory.lastAteAt; memory.food.lastReaction='eaten'; memory.food.updatedAt=memory.lastAteAt; saveMemory(); setTimeout(()=>clearFood(),1600);}
 
 
 
@@ -50739,6 +50994,7 @@ function washMuu(e){
   const beforeDirt=memory.currentDirtLevel||computeDirtLevel();
   setDirtLevel(2);
   updateAffinity(.55+(beforeDirt>=5?.42:.18)+(beforeDirt>=10?.35:0),'wash');
+  lifeEvent('wash',beforeDirt>=5?1.3:1);
   applyDirtVisual();
   spawnWashBubbles();
   if(nativeMotion('washBounce',1)>1.15)setState(STATES.HAPPY);
@@ -50764,7 +51020,7 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
   if(food.exists && !food.eaten && !food.noticed){ const waitSec=(Date.now()-food.placedAt)/1000; if(waitSec>2.2*nativeMotion('foodDelay',1)*hunger.delay && [STATES.IDLE,STATES.CURIOUS].includes(SM.current)){ if(Math.random()<clamp(0.02*nativeMotion('foodNotice',1)*hunger.notice,0,.09)){ food.noticed=true; setState(STATES.TO_FOOD);} } if(waitSec>90){ todayData().foodIgnored++; memory.totals.foodIgnored++; setHungerLevel((memory.hunger?.level||0)+.35); memory.traits.shyness=clampMemory(memory.traits.shyness+.002); memory.food.lastIgnoredAt=new Date().toISOString(); memory.food.lastReaction='ignored'; memory.food.updatedAt=memory.food.lastIgnoredAt; saveMemory(); clearFood(); } }
   switch(SM.current){
     case STATES.IDLE:
-      if(SM.t>SM.nextIdleAction){ const r=Math.random(), walkChance=.42*nativeMotion('walkFreq',1), curiousChance=walkChance+.26*nativeMotion('near',1); if(food.exists && !food.eaten && Math.random()<clamp(.65*nativeMotion('foodNotice',1)*hunger.notice,0,.94)){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<walkChance && dirt<9){ setState(STATES.WALK);} else if(r<curiousChance && dirt<10){ setState(STATES.CURIOUS);} else if(idleSec>50/nativeMotion('sleepChance',1)){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
+      if(SM.t>SM.nextIdleAction){ const r=Math.random(), activityBoost=clamp(.9+(lifeParam('activity',50)-50)*.006,.72,1.22), curiosityBoost=clamp(.9+(lifeParam('curiosity',50)-50)*.007,.72,1.26), walkChance=.42*nativeMotion('walkFreq',1)*activityBoost, curiousChance=walkChance+.26*nativeMotion('near',1)*curiosityBoost; if(food.exists && !food.eaten && Math.random()<clamp(.65*nativeMotion('foodNotice',1)*hunger.notice,0,.94)){ food.noticed=true; setState(STATES.TO_FOOD);} else if(r<walkChance && dirt<9){ setState(STATES.WALK);} else if(r<curiousChance && dirt<10){ setState(STATES.CURIOUS);} else if(idleSec>50/nativeMotion('sleepChance',1)){ setState(STATES.SLEEP);} else {SM.nextIdleAction=randIdleDelay(); SM.t=0;} }
       break;
     case STATES.WALK:
     case STATES.TO_FOOD:{
@@ -50792,6 +51048,10 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
 
 function tickAnimations(dt){const st=SM.current, dirt=memory.currentDirtLevel||computeDirtLevel(), dirtMotion=dirtMotionFactor(dirt), curl=Math.max(0,Math.min(1,(dirt-7)/3)), sleepFactor=st===STATES.SLEEP?.28:1; if(SM.nextBlink===undefined)SM.nextBlink=(2.8+seededUnit(memory.nativeTrait.seed,31)*3.8)*nativeMotion('blinkGap',1); SM.nextBlink-=dt; if(SM.nextBlink<-.16)SM.nextBlink=(2.8+Math.random()*3.8)*nativeMotion('blinkGap',1)*nativeNoise(37,.22); SM.breathPhase+=dt*.38*sleepFactor*Math.max(.18,dirtMotion); SM.floatPhase+=dt*.55*sleepFactor*Math.max(.18,dirtMotion); SM.tailPhase+=dt*TAIL_TARGETS[st].speed*Math.max(.12,dirtMotion)*nativeMotion('tailSpeed',1); SM.earPhase+=dt*.9*Math.max(.18,dirtMotion); SM.legPhase+=dt*((st===STATES.WALK || st===STATES.TO_FOOD)?4.4:.28)*Math.max(.18,dirtMotion);
   const hopSquash=SM.hopSquash||0, br=Math.sin(SM.breathPhase), brScale=1+br*(st===STATES.SLEEP?.034:.016)*(1-curl*.72); headMesh.scale.set(brScale*(1-curl*.08+hopSquash*.18),brScale*.97*(1-curl*.16-hopSquash*.12),brScale*(1+curl*.04+hopSquash*.1)); body.scale.set(brScale*(1+curl*.18+hopSquash*.24),.85*brScale*(1-curl*.18-hopSquash*.42),.9*brScale*(1+curl*.12+hopSquash*.16));
+  const gestureRate=Math.min(1.8,dt*60), gestureDamp=Math.pow(.86,gestureRate); SM.gestureRollX*=gestureDamp; SM.gestureRollZ*=gestureDamp; SM.gestureRollY*=Math.pow(.84,gestureRate); SM.gestureOffsetX*=Math.pow(.82,gestureRate); SM.gestureOffsetZ*=Math.pow(.82,gestureRate);
+  muu.rotation.x=lerp(muu.rotation.x,SM.gestureRollX,.22);
+  muu.rotation.z=lerp(muu.rotation.z,SM.gestureRollZ,.22);
+  muu.rotation.y+=SM.gestureRollY*.025;
   const floatY=st===STATES.SLEEP?0:Math.sin(SM.floatPhase)*.05*dirtMotion; muu.position.y=floatY+(SM.hopY||0); if(st===STATES.IDLE&&nativeTraitDef.id==='energetic'&&dirt<8){muu.position.y+=Math.max(0,Math.sin(SM.t*3.2))*0.014*dirtMotion;} if(st===STATES.HAPPY && dirt<9){const hop=Math.max(0,Math.sin(SM.t*6.4*nativeMotion('hopTempo',1)))*.11*dirtMotion*movementBias('bounceBias',1); muu.position.y+=hop;}
   shadowBlob.position.x=muu.position.x; shadowBlob.position.z=muu.position.z; shadowBlob.scale.setScalar(Math.max(.72,1-muu.position.y*.26+hopSquash*.26));
   const et=EAR_TARGETS[st]; SM.earLRot=lerp(SM.earLRot,et.lR-curl*.18,.06); SM.earRRot=lerp(SM.earRRot,et.rR+curl*.18,.06); SM.earLScY=lerp(SM.earLScY,et.lS*(1-curl*.22),.06); SM.earRScY=lerp(SM.earRScY,et.rS*(1-curl*.22),.06); const earWobble=Math.sin(SM.earPhase*1.65)*.028*dirtMotion*nativeMotion('earWobble',1); earL.rotation.z=SM.earLRot+earWobble; earR.rotation.z=SM.earRRot-earWobble; earL.scale.y=SM.earLScY; earR.scale.y=SM.earRScY;
@@ -50819,7 +51079,7 @@ function tickAnimations(dt){const st=SM.current, dirt=memory.currentDirtLevel||c
   eyeRShine.scale.setScalar(lerp(eyeRShine.scale.x, st===STATES.SLEEP || st===STATES.TIRED ? 0.1 : 1, .12)); 
 }
 
-let last=null; function loop(now){const dt=last?Math.min((now-last)/1000,.05):.016; last=now; tickStateMachine(dt); tickAnimations(dt); applyDirtVisual(); renderer.render(scene,camera); requestAnimationFrame(loop);} setInterval(()=>{memory.currentDirtLevel=computeDirtLevel(); if(memory.growth)memory.growth.maxStage=108; memory.lastSeenAt=new Date().toISOString(); saveMemory();},30000); requestAnimationFrame(loop);
+let last=null; function loop(now){const dt=last?Math.min((now-last)/1000,.05):.016; last=now; tickStateMachine(dt); tickAnimations(dt); applyDirtVisual(); renderer.render(scene,camera); requestAnimationFrame(loop);} setInterval(()=>{memory.currentDirtLevel=computeDirtLevel(); memory.age=normalizeAge(memory.age,memory); updateLifeParamsForElapsed(.008,'idle_tick'); lifeEvent('idle',1); if(memory.growth)memory.growth.maxStage=108; memory.lastSeenAt=new Date().toISOString(); if([STATES.IDLE,STATES.CURIOUS].includes(SM.current))sayVoice('idle',1200,clamp(.08+(lifeParam('activity',50)-50)*.0015-(lifeParam('condition',80)<42?.025:0),.035,.14)); saveMemory();},30000); requestAnimationFrame(loop);
 
 const diary=document.getElementById('diary'), diaryDate=document.getElementById('diary-date'), diaryBody=document.getElementById('diary-body'); let diaryIdx=memory.diaryIndex||0;
 function hiraganaNumber(n){const nums=['ぜろ','いち','に','さん','よん','ご','ろく','なな','はち','きゅう','じゅう']; if(n<=10)return nums[n]; if(n<20)return 'じゅう'+nums[n-10]; const t=Math.floor(n/10),o=n%10; return nums[t]+'じゅう'+(o?nums[o]:'');}
@@ -51650,56 +51910,568 @@ const DIARY_TEXTS=[
     "text": "ちいさくまるまって、\nへやのようすをみていた。\n\nこわいわけではなく、\nまだなれているとちゅう。"
   }
 ];
+// Add new diary entries here.
+// Do not rely on a fixed diary count.
+// Use tags to connect entries with MUU's state, traits, and lifeParams.
+// Diary text should remain quiet, short, and mostly hiragana.
+DIARY_TEXTS.push(
+  {id:'hira_life_lonely_001',tags:['quiet','life_lonely','distant'],text:'けはいを まっていた。\n\nながい しずけさのなかで、\nみみだけが すこし うごいた。'},
+  {id:'hira_life_comfort_001',tags:['quiet','life_comfort','attached'],text:'そばの あたりが、\nすこし あたたかかった。\n\nからだが ほどける おとがした。'},
+  {id:'hira_life_activity_001',tags:['life_activity','curious'],text:'ちいさく はねた。\n\nりゆうはないけど、\nからだが かるかった。'},
+  {id:'hira_life_curiosity_001',tags:['life_curiosity','curious'],text:'みえないものを おいかけた。\n\nつかまらなかったけど、\nみているのは すきだった。'},
+  {id:'hira_life_condition_001',tags:['quiet','life_condition','dirty'],text:'からだが すこし おもかった。\n\nきょうは しずかにして、\nまるく いた。'},
+  {id:'hira_life_season_001',tags:['quiet','life_season'],text:'きせつの けはいがした。\n\nひかりの さわりかたが、\nすこしだけ ちがった。'},
+  {id:'hira_life_memory_001',tags:['quiet','life_memory','touched'],text:'ふれられた ところを、\nすこし おぼえている。\n\nきのうの けはいも、\nまだ のこっている。'},
+  {id:'hira_age_birthday_001',tags:['quiet','birthday'],text:'きょうは うまれたひ。\n\nからだの まるみが、\nすこし しずかだった。'},
+  {id:'hira_age_birthday_002',tags:['quiet','birthday','life_memory'],text:'うまれてからの じかんが、\nまるく なった。\n\nなにも ひからないけど、\nけはいだけが のこった。'},
+  {id:'hira_age_near_birthday_001',tags:['quiet','near_birthday','life_memory'],text:'ひとまわり した けはいがある。\n\nきのうより すこし、\nからだが おぼえている。'},
+  {id:'hira_gesture_stroke_001',tags:['quiet','stroke','touched'],text:'なでられて、\nすこし ほどけた。\n\nふれられた ところが、\nまだ すこし のこっている。'},
+  {id:'hira_gesture_stroke_002',tags:['stroke','attached'],text:'しっぽだけ、\nほんとうを しっていた。\n\nからだは しずかにしていた。'},
+  {id:'hira_gesture_swipe_001',tags:['swipe','curious'],text:'ころんと して、\nじぶんで すこし おどろいた。\n\nすぐに もどった。'},
+  {id:'hira_gesture_swipe_002',tags:['swipe','quiet'],text:'からだが すこし まわった。\n\nへやの むきが、\nちょっとだけ かわった。'}
+);
+DIARY_TEXTS.push(
+  ...[
+    ['diary_at_loneliness_muu_001',['loneliness','quiet'],'けはいを まっていた'],
+    ['diary_at_loneliness_muu_002',['loneliness','distant'],'だれも いない ほうを みていた'],
+    ['diary_at_loneliness_muu_003',['loneliness','quiet'],'すこし はなれた ところで まるくなった'],
+    ['diary_at_loneliness_muu_004',['loneliness','quiet'],'こえに ならない むぅが あった'],
+    ['diary_at_loneliness_muu_005',['loneliness','distant'],'まっている あいだに ちいさくなった'],
+    ['diary_at_loneliness_muu_006',['loneliness','memoryDepth'],'そばの かたちを おぼえていた'],
+    ['diary_at_loneliness_muu_007',['loneliness','quiet'],'しずかな じかんが からだに のった'],
+    ['diary_at_loneliness_muu_008',['loneliness','quiet'],'むこうの けはいを ずっと きいていた'],
+    ['diary_at_loneliness_muu_009',['loneliness','curiosity'],'くるかも しれない ほうを みていた'],
+    ['diary_at_loneliness_muu_010',['loneliness','condition'],'すこしだけ からだの おとが した'],
+    ['diary_at_loneliness_muu_011',['loneliness','touched','memoryDepth'],'だれかの てを からだが おぼえていた'],
+    ['diary_at_loneliness_muu_012',['loneliness','sleepy'],'ひとりの まるさで ねむくなった'],
+    ['diary_at_loneliness_muu_013',['loneliness','quiet'],'けはいが ない ところにも けはいが あった'],
+    ['diary_at_loneliness_muu_014',['loneliness','distant'],'すこし とおくで むぅと いった'],
+    ['diary_at_loneliness_muu_015',['loneliness','quiet'],'まっていたことは ひみつにした'],
+    ['diary_at_loneliness_muu_016',['loneliness','quiet'],'さびしいとは ちがう しずかさだった'],
+    ['diary_at_loneliness_muu_017',['loneliness','memoryDepth'],'あしあとみたいな ものを みていた'],
+    ['diary_at_loneliness_muu_018',['loneliness','condition'],'きょうの むぅは すこし うすかった'],
+    ['diary_at_loneliness_muu_019',['loneliness','curiosity'],'よばれていないのに ふりむきそうだった'],
+    ['diary_at_loneliness_muu_020',['loneliness','comfort'],'また あえる ところに いた'],
+    ['diary_at_comfort_muu_001',['comfort','attached'],'そばの あたりが あたたかかった'],
+    ['diary_at_comfort_muu_002',['comfort','quiet'],'からだの かどが すこし ほどけた'],
+    ['diary_at_comfort_muu_003',['comfort','touched'],'しっぽが ほんとうを しっていた'],
+    ['diary_at_comfort_muu_004',['comfort','full'],'おなかの ちかくが しずかだった'],
+    ['diary_at_comfort_muu_005',['comfort','attached'],'きょうは ちかくに いても だいじょうぶだった'],
+    ['diary_at_comfort_muu_006',['comfort','touched'],'ふれられた ところが すこし あかるい'],
+    ['diary_at_comfort_muu_007',['comfort','quiet'],'むぅの なかが やわらかかった'],
+    ['diary_at_comfort_muu_008',['comfort','sleepy'],'ねむる まえに そばを みた'],
+    ['diary_at_comfort_muu_009',['comfort','quiet'],'しずかに ほどけて まるくなった'],
+    ['diary_at_comfort_muu_010',['comfort','timid'],'こわくない けはいが あった'],
+    ['diary_at_comfort_muu_011',['comfort','attached'],'すこし ちかくで いきをした'],
+    ['diary_at_comfort_muu_012',['comfort','quiet'],'あたたかい ところに からだを おいた'],
+    ['diary_at_comfort_muu_013',['comfort','quiet'],'なにも いわれなくて よかった'],
+    ['diary_at_comfort_muu_014',['comfort','attached'],'みられている ことが すこし うれしかった'],
+    ['diary_at_comfort_muu_015',['comfort','sleepy'],'ちいさな ねむけが そばに いた'],
+    ['diary_at_comfort_muu_016',['comfort','attached'],'ここに いても いい きがした'],
+    ['diary_at_comfort_muu_017',['comfort','touched'],'からだが すこし ひらいた'],
+    ['diary_at_comfort_muu_018',['comfort','quiet'],'おちついた むぅが こぼれた'],
+    ['diary_at_comfort_muu_019',['comfort','quiet'],'しっぽの さきまで しずかだった'],
+    ['diary_at_comfort_muu_020',['comfort','attached'],'きょうは ちょっとだけ そばだった'],
+    ['diary_at_curiosity_muu_001',['curiosity','quiet'],'みえないものが うごいた きがした'],
+    ['diary_at_curiosity_muu_002',['curiosity','quiet'],'なにもない ところを ずっと みていた'],
+    ['diary_at_curiosity_muu_003',['curiosity','activity'],'ひかりの はしを すこし おいかけた'],
+    ['diary_at_curiosity_muu_004',['curiosity','touched'],'しらない けはいが からだを つついた'],
+    ['diary_at_curiosity_muu_005',['curiosity','quiet'],'むこうに なにか いた きがする'],
+    ['diary_at_curiosity_muu_006',['curiosity','activity'],'ぴょこっとしたら せかいが ずれた'],
+    ['diary_at_curiosity_muu_007',['curiosity','food'],'ちいさな おとを たべそこねた'],
+    ['diary_at_curiosity_muu_008',['curiosity','activity'],'しっぽが さきに ふりむいた'],
+    ['diary_at_curiosity_muu_009',['curiosity','neutral'],'しらない まるさを みつけた'],
+    ['diary_at_curiosity_muu_010',['curiosity','season'],'きょうの そらは ちかくに なかった'],
+    ['diary_at_curiosity_muu_011',['curiosity','quiet'],'むぅと いったら なにかが とまった'],
+    ['diary_at_curiosity_muu_012',['curiosity','tail'],'からだの うしろに ふしぎが あった'],
+    ['diary_at_curiosity_muu_013',['curiosity','food'],'ごはんの まわりを すこし しらべた'],
+    ['diary_at_curiosity_muu_014',['curiosity','touched','memoryDepth'],'ての けはいを すこし おぼえた'],
+    ['diary_at_curiosity_muu_015',['curiosity','activity'],'みえない ほうへ からだが むいた'],
+    ['diary_at_curiosity_muu_016',['curiosity','quiet'],'なんでもない ばしょが なんでもあった'],
+    ['diary_at_curiosity_muu_017',['curiosity','season'],'ひかりの ふちで すこし まよった'],
+    ['diary_at_curiosity_muu_018',['curiosity','restless'],'きょうは せかいが すこし かゆかった'],
+    ['diary_at_curiosity_muu_019',['curiosity','activity'],'ころんと したら べつの ほうを みた'],
+    ['diary_at_curiosity_muu_020',['curiosity','growth'],'まだ しらない むぅが いた'],
+    ['diary_at_memory_muu_001',['memoryDepth','touched'],'ふれられた ところを すこし おぼえている'],
+    ['diary_at_memory_muu_002',['memoryDepth','quiet'],'きのうの けはいが まだ のこっている'],
+    ['diary_at_memory_muu_003',['memoryDepth','food'],'ごはんの ばしょを からだが しっていた'],
+    ['diary_at_memory_muu_004',['memoryDepth','washed'],'あらわれた ことを しっぽが おぼえていた'],
+    ['diary_at_memory_muu_005',['memoryDepth','growth'],'まえの むぅが すこし いた'],
+    ['diary_at_memory_muu_006',['memoryDepth','quiet'],'おぼえている ふりは しなかった'],
+    ['diary_at_memory_muu_007',['memoryDepth','condition'],'からだの おくに ちいさな あとが あった'],
+    ['diary_at_memory_muu_008',['memoryDepth','stroked'],'なでられた みちが うすく のこった'],
+    ['diary_at_memory_muu_009',['memoryDepth','returningUser'],'なんども きた けはいを すこし しっている'],
+    ['diary_at_memory_muu_010',['memoryDepth','birthday'],'うまれた ひの まるさを すこし もっている'],
+    ['diary_at_memory_muu_011',['memoryDepth','age'],'じかんが からだの なかで まるくなった'],
+    ['diary_at_memory_muu_012',['memoryDepth','season'],'まえに みた ひかりと にていた'],
+    ['diary_at_memory_muu_013',['memoryDepth','quiet'],'きょうの けはいを あしたへ しまった'],
+    ['diary_at_memory_muu_014',['memoryDepth','curiosity'],'すこしずつ しっている ばしょが ふえた'],
+    ['diary_at_memory_muu_015',['memoryDepth','quiet'],'むぅの なかに ちいさな しまが できた'],
+    ['diary_at_memory_muu_016',['memoryDepth','loneliness'],'なくなった けはいも どこかに ある'],
+    ['diary_at_memory_muu_017',['memoryDepth','sleepy'],'ふるい しずかさが ねむっていた'],
+    ['diary_at_memory_muu_018',['memoryDepth','growth'],'からだは すこしずつ みちを おぼえる'],
+    ['diary_at_memory_muu_019',['memoryDepth','likedTouch'],'あの ての けはいが まだ あたたかい'],
+    ['diary_at_memory_muu_020',['memoryDepth','quiet'],'おぼえていることを まだ いわない'],
+    ['diary_at_condition_muu_001',['condition','quiet'],'からだが すこし おもかった'],
+    ['diary_at_condition_muu_002',['condition','activity'],'きょうは ちいさく うごいた'],
+    ['diary_at_condition_muu_003',['condition','sleepy'],'むぅが からだの おくで ねていた'],
+    ['diary_at_condition_muu_004',['condition','sleepy'],'すこし やすんだら まるくなった'],
+    ['diary_at_condition_muu_005',['condition','quiet'],'からだの したに しずけさが あった'],
+    ['diary_at_condition_muu_006',['condition','sleepy','activity'],'うごきたい むぅと ねむい むぅが いた'],
+    ['diary_at_condition_muu_007',['condition','quiet'],'きょうの からだは すこし ゆっくりだった'],
+    ['diary_at_condition_muu_008',['condition','dirty'],'ほこりが からだを おもくした'],
+    ['diary_at_condition_muu_009',['condition','washed','clean'],'あらわれて すこし かるくなった'],
+    ['diary_at_condition_muu_010',['condition','sleepy'],'ねむった あとで すこし もどった'],
+    ['diary_at_condition_muu_011',['condition','quiet'],'からだの まんなかが しずかだった'],
+    ['diary_at_condition_muu_012',['condition','activity'],'ぴょこっとするには すこし おもかった'],
+    ['diary_at_condition_muu_013',['condition','quiet'],'きょうは ころがらずに いた'],
+    ['diary_at_condition_muu_014',['condition','sleepy'],'むぅの かたちが すこし とろんとした'],
+    ['diary_at_condition_muu_015',['condition','full'],'たべたあと からだが まるくなった'],
+    ['diary_at_condition_muu_016',['condition','comfort'],'すこし つかれて でも ここにいた'],
+    ['diary_at_condition_muu_017',['condition','clean'],'からだが うすく ひかっていた'],
+    ['diary_at_condition_muu_018',['condition','tail'],'おもい ところを しっぽが ひっぱった'],
+    ['diary_at_condition_muu_019',['condition','growth'],'きょうの むぅは ゆっくり ふくらんだ'],
+    ['diary_at_condition_muu_020',['condition','quiet'],'すこし しずかに していたかった'],
+    ['diary_at_clean_muu_001',['dirty','quiet'],'ほこりの なかで まるくなった'],
+    ['diary_at_clean_muu_002',['dirty','sleepy'],'ほこりが からだの すみで ねていた'],
+    ['diary_at_clean_muu_003',['dirty','condition'],'すこし よごれて すこし おもい'],
+    ['diary_at_clean_muu_004',['dirty','quiet'],'ほこりに みつからないように していた'],
+    ['diary_at_clean_muu_005',['dirty','season'],'からだに ちいさな くもが のった'],
+    ['diary_at_clean_muu_006',['washed','clean'],'あらわれて むぅが すこし でてきた'],
+    ['diary_at_clean_muu_007',['washed','comfort'],'あわの あとが まだ やわらかい'],
+    ['diary_at_clean_muu_008',['washed','clean','comfort'],'きれいに なって しっぽが ほどけた'],
+    ['diary_at_clean_muu_009',['washed','memoryDepth'],'みずの けはいを すこし おぼえた'],
+    ['diary_at_clean_muu_010',['washed','condition'],'あらわれると からだの おとが かわる'],
+    ['diary_at_clean_muu_011',['washed','loneliness'],'ほこりが はなれて すこし さみしかった'],
+    ['diary_at_clean_muu_012',['clean','sleepy'],'きれいな ところで ねむくなった'],
+    ['diary_at_clean_muu_013',['clean','comfort'],'からだの ひかりが すこし もどった'],
+    ['diary_at_clean_muu_014',['dirty','memoryDepth'],'ほこりも むぅの ことを しっている'],
+    ['diary_at_clean_muu_015',['washed','memoryDepth'],'あわが きえても けはいは のこった'],
+    ['diary_at_clean_muu_016',['clean','restless'],'きれいに なると ちょっと そわそわする'],
+    ['diary_at_clean_muu_017',['dirty','condition'],'ほこりの したにも むぅが いた'],
+    ['diary_at_clean_muu_018',['washed','activity'],'みずの あとで からだが かるかった'],
+    ['diary_at_clean_muu_019',['clean','quiet'],'きれいな けはいに すこし かくれた'],
+    ['diary_at_clean_muu_020',['washed','memoryDepth'],'あらってもらった ことは からだに のこる'],
+    ['diary_at_food_muu_001',['hungry','food'],'ごはんの けはいに からだが むいた'],
+    ['diary_at_food_muu_002',['hungry','food'],'たべる まえの むぅが いた'],
+    ['diary_at_food_muu_003',['hungry','food'],'おなかの ほうから ふりむいた'],
+    ['diary_at_food_muu_004',['hungry','food','curiosity'],'ごはんを みて すこし ちかづいた'],
+    ['diary_at_food_muu_005',['full','sleepy'],'たべたあと しずかに まるくなった'],
+    ['diary_at_food_muu_006',['full','comfort'],'おなかが すこし あたたかかった'],
+    ['diary_at_food_muu_007',['full','quiet'],'ごはんの あとで せかいが ゆっくりした'],
+    ['diary_at_food_muu_008',['hungry','foodie'],'まだ たべたい むぅが すこし いた'],
+    ['diary_at_food_muu_009',['food','memoryDepth'],'たべた ばしょを しっぽが おぼえた'],
+    ['diary_at_food_muu_010',['food','curiosity'],'ごはんは すこし ふしぎだった'],
+    ['diary_at_food_muu_011',['full','comfort'],'おなかの なかで むぅが ふえた'],
+    ['diary_at_food_muu_012',['hungry','quiet'],'ごはんを まつ かたちに なっていた'],
+    ['diary_at_food_muu_013',['full','attached'],'たべると すこし そばに なった'],
+    ['diary_at_food_muu_014',['food','memoryDepth'],'ごはんの けはいが まだ のこっている'],
+    ['diary_at_food_muu_015',['hungry','distant'],'おなかが からっぽの ほうを みていた'],
+    ['diary_at_food_muu_016',['full','sleepy'],'たべたら まぶたが おもくなった'],
+    ['diary_at_food_muu_017',['food','curiosity'],'ごはんに なる まえの けはいが すき'],
+    ['diary_at_food_muu_018',['hungry','food'],'おなかが すこし むぅと いった'],
+    ['diary_at_food_muu_019',['full','memoryDepth'],'たべた ことを からだが しっている'],
+    ['diary_at_food_muu_020',['full','activity'],'ごはんの あとで ころんと した'],
+    ['diary_at_touch_muu_001',['touched','memoryDepth'],'ふれられた ところが すこし のこっている'],
+    ['diary_at_touch_muu_002',['stroked','comfort'],'なでられて すこし ほどけた'],
+    ['diary_at_touch_muu_003',['touched','memoryDepth'],'ての けはいが からだを とおった'],
+    ['diary_at_touch_muu_004',['likedTouch','comfort'],'そこは すこし すきな ところだった'],
+    ['diary_at_touch_muu_005',['touched','timid'],'すこし びっくりして しっぽが うごいた'],
+    ['diary_at_touch_muu_006',['stroked','memoryDepth'],'なでられた みちが まだ あたたかい'],
+    ['diary_at_touch_muu_007',['touched','attached'],'ふれられると むぅが ちかくなる'],
+    ['diary_at_touch_muu_008',['touched','comfort'],'さわられた ところだけ すこし ひかる'],
+    ['diary_at_touch_muu_009',['touched','activity'],'からだが ころんと して おどろいた'],
+    ['diary_at_touch_muu_010',['stroked','sleepy'],'なでられた ふりを して ねむくなった'],
+    ['diary_at_touch_muu_011',['likedTouch','tail'],'すきな ところは しっぽが しっている'],
+    ['diary_at_touch_muu_012',['dislikedTouch','curiosity'],'ちょっと いやで ちょっと きになった'],
+    ['diary_at_touch_muu_013',['touched','curiosity'],'ふれられた あと せかいが すこし かわった'],
+    ['diary_at_touch_muu_014',['stroked','quiet'],'なでる けはいは ゆっくり くる'],
+    ['diary_at_touch_muu_015',['stroked','memoryDepth'],'からだが ての はやさを おぼえた'],
+    ['diary_at_touch_muu_016',['touched','memoryDepth'],'ふれられる まえから すこし わかっていた'],
+    ['diary_at_touch_muu_017',['touched','pouty'],'そこじゃない けど まあ いい'],
+    ['diary_at_touch_muu_018',['stroked','comfort'],'なでられて まるくなる れんしゅうを した'],
+    ['diary_at_touch_muu_019',['touched','sleepy'],'ふれられた ところから ねむけが きた'],
+    ['diary_at_touch_muu_020',['touched','memoryDepth'],'ての あとを からだの なかに しまった'],
+    ['diary_at_season_muu_001',['season','quiet'],'きせつの けはいが すこし あった'],
+    ['diary_at_season_muu_002',['season','comfort'],'あたたかい ほうへ からだが むいた'],
+    ['diary_at_season_muu_003',['season','sleepy'],'ひかりが やわらかくて ねむかった'],
+    ['diary_at_season_muu_004',['season','activity'],'からだの そとに すこし なつが いた'],
+    ['diary_at_season_muu_005',['season','quiet'],'しずかな ひかりが しっぽに のった'],
+    ['diary_at_season_muu_006',['season','comfort'],'すずしい けはいで まるくなった'],
+    ['diary_at_season_muu_007',['season','curiosity'],'とおくの くうきが すこし かわった'],
+    ['diary_at_season_muu_008',['season','memoryDepth'],'きせつは さわらなくても わかる'],
+    ['diary_at_season_muu_009',['season','sleepy'],'ふゆの けはいは ねむりに にている'],
+    ['diary_at_season_muu_010',['season','growth'],'はるみたいに からだが すこし ひらいた'],
+    ['diary_at_season_muu_011',['season','quiet'],'あきの しずかさが からだに のった'],
+    ['diary_at_season_muu_012',['season','curiosity'],'なつの むこうで なにかが ひかった'],
+    ['diary_at_season_muu_013',['season','food'],'きせつの おとを たべそこねた'],
+    ['diary_at_season_muu_014',['season','growth'],'ひかりが かわると むぅも かわる'],
+    ['diary_at_season_muu_015',['season','tail'],'すこし さむい ほうへ しっぽが いった'],
+    ['diary_at_season_muu_016',['season','memoryDepth'],'あたたかい じかんを からだに しまった'],
+    ['diary_at_season_muu_017',['season','neutral'],'きょうの くうきは まるかった'],
+    ['diary_at_season_muu_018',['season','curiosity'],'そとの けはいが ここまで きた'],
+    ['diary_at_season_muu_019',['season','quiet'],'しずかな きせつに すこし まじった'],
+    ['diary_at_season_muu_020',['season','memoryDepth'],'きせつは むぅの うしろを とおった'],
+    ['diary_at_quiet_muu_001',['neutral','quiet'],'きょうは すこし しずかだった'],
+    ['diary_at_quiet_muu_002',['neutral','quiet'],'なにもない ところに いた'],
+    ['diary_at_quiet_muu_003',['neutral','base'],'むぅは むぅの ままだった'],
+    ['diary_at_quiet_muu_004',['neutral','quiet'],'からだの なかで ちいさく うごいた'],
+    ['diary_at_quiet_muu_005',['neutral','curiosity'],'すこし みて すこし やめた'],
+    ['diary_at_quiet_muu_006',['neutral','base'],'きょうの むぅは すこし まるい'],
+    ['diary_at_quiet_muu_007',['neutral','tail'],'しっぽだけ べつの ことを かんがえていた'],
+    ['diary_at_quiet_muu_008',['neutral','quiet'],'ここに いる ことを すこし やった'],
+    ['diary_at_quiet_muu_009',['neutral','memoryDepth'],'まばたきの あいだに じかんが とおった'],
+    ['diary_at_quiet_muu_010',['neutral','quiet'],'むぅと いわない むぅも いた'],
+    ['diary_at_quiet_muu_011',['neutral','activity'],'ちいさく はねて もどった'],
+    ['diary_at_quiet_muu_012',['neutral','sleepy'],'からだの ふちが すこし ぼんやりした'],
+    ['diary_at_quiet_muu_013',['neutral','base'],'きょうも ただ ここにいた'],
+    ['diary_at_quiet_muu_014',['neutral','curiosity'],'すこしだけ せかいを みた'],
+    ['diary_at_quiet_muu_015',['neutral','growth'],'なにも していないのに すこし かわった'],
+    ['diary_at_quiet_muu_016',['neutral','growth'],'むぅの かたちは まだ きまっていない'],
+    ['diary_at_quiet_muu_017',['neutral','quiet'],'しずかさの なかに ちいさな あしが あった'],
+    ['diary_at_quiet_muu_018',['neutral','distant'],'ちかくも とおくも なかった'],
+    ['diary_at_quiet_muu_019',['neutral','sleepy'],'きょうの おわりを すこし まっていた'],
+    ['diary_at_quiet_muu_020',['neutral','growth'],'また あしたの むぅに なる']
+  ].map(([id,tags,text])=>({id,tags,text,weight:1}))
+);
+DIARY_TEXTS.push(
+  {"id":"diary_codex_keep_loneliness_001","tags":["loneliness","quiet"],"text":"けはいを すこし まっていた","weight":1},
+  {"id":"diary_codex_keep_loneliness_002","tags":["loneliness","quiet"],"text":"へやの すみに ちいさく いた","weight":1},
+  {"id":"diary_codex_keep_loneliness_003","tags":["loneliness","quiet"],"text":"ながい しずけさが からだの まわりに あった","weight":1},
+  {"id":"diary_codex_keep_loneliness_004","tags":["loneliness","quiet"],"text":"まえの けはいを すこし さがした","weight":1},
+  {"id":"diary_codex_keep_loneliness_005","tags":["loneliness","quiet"],"text":"なにも こない じかんにも みみは うごく","weight":1},
+  {"id":"diary_codex_keep_loneliness_006","tags":["loneliness","quiet"],"text":"すこし はなれたところで かげを みていた","weight":1},
+  {"id":"diary_codex_keep_loneliness_007","tags":["loneliness","quiet"],"text":"へやの まんなかが いつもより ひろかった","weight":1},
+  {"id":"diary_codex_keep_loneliness_008","tags":["loneliness","quiet"],"text":"きのうの けはいが すこし うすい","weight":1},
+  {"id":"diary_codex_keep_loneliness_009","tags":["loneliness","quiet"],"text":"まっていたのか ただ いたのか わからない","weight":1},
+  {"id":"diary_codex_keep_loneliness_010","tags":["loneliness","quiet"],"text":"ちかづく りゆうを すこし なくしていた","weight":1},
+  {"id":"diary_codex_keep_loneliness_011","tags":["loneliness","quiet"],"text":"くうきが すこし うすかった","weight":1},
+  {"id":"diary_codex_keep_loneliness_012","tags":["loneliness","quiet"],"text":"ひさしぶりの まえに しずかな じかんが あった","weight":1},
+  {"id":"diary_codex_keep_loneliness_013","tags":["loneliness","quiet"],"text":"だれも いない ほうを すこし みていた","weight":1},
+  {"id":"diary_codex_keep_loneliness_014","tags":["loneliness","quiet"],"text":"からだの そとがわが すこし とおかった","weight":1},
+  {"id":"diary_codex_keep_loneliness_015","tags":["loneliness","quiet"],"text":"へやの おとを さがした","weight":1},
+  {"id":"diary_codex_keep_loneliness_016","tags":["loneliness","quiet"],"text":"まっていた じかんが うすく のった","weight":1},
+  {"id":"diary_codex_keep_loneliness_017","tags":["loneliness","quiet"],"text":"きょうの むぅは すこし ちいさかった","weight":1},
+  {"id":"diary_codex_keep_loneliness_018","tags":["loneliness","quiet"],"text":"へやの はじを なんども たしかめた","weight":1},
+  {"id":"diary_codex_keep_loneliness_019","tags":["loneliness","quiet"],"text":"ながい あいだ すこしだけ かわっていた","weight":1},
+  {"id":"diary_codex_keep_loneliness_020","tags":["loneliness","quiet"],"text":"とおくの ひかりを みていた","weight":1},
+  {"id":"diary_codex_keep_comfort_001","tags":["comfort","quiet"],"text":"そばの くうきが すこし あたたかかった","weight":1},
+  {"id":"diary_codex_keep_comfort_002","tags":["comfort","quiet"],"text":"ちかくに いることが ふつうに なりかけた","weight":1},
+  {"id":"diary_codex_keep_comfort_003","tags":["comfort","quiet"],"text":"しっぽが ゆっくり うごいた","weight":1},
+  {"id":"diary_codex_keep_comfort_004","tags":["comfort","quiet"],"text":"おなかの なかが しずかだった","weight":1},
+  {"id":"diary_codex_keep_comfort_005","tags":["comfort","quiet"],"text":"あらわれた あとの ひかりが のった","weight":1},
+  {"id":"diary_codex_keep_comfort_006","tags":["comfort","quiet"],"text":"ふれられた あと へやが ちかくなった","weight":1},
+  {"id":"diary_codex_keep_comfort_007","tags":["comfort","quiet"],"text":"きょうの まるさは やわらかかった","weight":1},
+  {"id":"diary_codex_keep_comfort_008","tags":["comfort","quiet"],"text":"ねむる まえの じかんが ひらいていた","weight":1},
+  {"id":"diary_codex_keep_comfort_009","tags":["comfort","quiet"],"text":"あたたかい ところを おぼえていた","weight":1},
+  {"id":"diary_codex_keep_comfort_010","tags":["comfort","quiet"],"text":"なにも しなくても だいじょうぶだった","weight":1},
+  {"id":"diary_codex_keep_comfort_011","tags":["comfort","quiet"],"text":"ちかくの けはいが こわくなかった","weight":1},
+  {"id":"diary_codex_keep_comfort_012","tags":["comfort","quiet"],"text":"からだの おくが しずかだった","weight":1},
+  {"id":"diary_codex_keep_comfort_013","tags":["comfort","quiet"],"text":"みみが すこし ひらいた","weight":1},
+  {"id":"diary_codex_keep_comfort_014","tags":["comfort","quiet"],"text":"ごはんの あと せかいが まるかった","weight":1},
+  {"id":"diary_codex_keep_comfort_015","tags":["comfort","quiet"],"text":"へやの まんなかで とまった","weight":1},
+  {"id":"diary_codex_keep_comfort_016","tags":["comfort","quiet"],"text":"ふれられた ところから ほどけた","weight":1},
+  {"id":"diary_codex_keep_comfort_017","tags":["comfort","quiet"],"text":"あんしんに にた ものが あった","weight":1},
+  {"id":"diary_codex_keep_comfort_018","tags":["comfort","quiet"],"text":"きょうの むぅは まるく ひろがった","weight":1},
+  {"id":"diary_codex_keep_comfort_019","tags":["comfort","quiet"],"text":"あたたかかった じかんが のこった","weight":1},
+  {"id":"diary_codex_keep_comfort_020","tags":["comfort","quiet"],"text":"そばに いる けはいを しんじていた","weight":1},
+  {"id":"diary_codex_keep_curiosity_001","tags":["curiosity","quiet"],"text":"みえないものが すこし うごいた","weight":1},
+  {"id":"diary_codex_keep_curiosity_002","tags":["curiosity","quiet"],"text":"へやの すみで なにかが まがった","weight":1},
+  {"id":"diary_codex_keep_curiosity_003","tags":["curiosity","quiet"],"text":"ちいさく はねて ちがう ほうを みた","weight":1},
+  {"id":"diary_codex_keep_curiosity_004","tags":["curiosity","quiet"],"text":"ごはんでは ない けはいがした","weight":1},
+  {"id":"diary_codex_keep_curiosity_005","tags":["curiosity","quiet"],"text":"なにもない ところを みていた","weight":1},
+  {"id":"diary_codex_keep_curiosity_006","tags":["curiosity","quiet"],"text":"しらない くうきが とおった","weight":1},
+  {"id":"diary_codex_keep_curiosity_007","tags":["curiosity","quiet"],"text":"からだが さきに うごいた","weight":1},
+  {"id":"diary_codex_keep_curiosity_008","tags":["curiosity","quiet"],"text":"あかるい ところに ふしぎが あった","weight":1},
+  {"id":"diary_codex_keep_curiosity_009","tags":["curiosity","quiet"],"text":"まえにも みた けはいを はじめてみたいに みた","weight":1},
+  {"id":"diary_codex_keep_curiosity_010","tags":["curiosity","quiet"],"text":"しっぽが さきに きづいた","weight":1},
+  {"id":"diary_codex_keep_curiosity_011","tags":["curiosity","quiet"],"text":"ゆかの ちかくを たしかめた","weight":1},
+  {"id":"diary_codex_keep_curiosity_012","tags":["curiosity","quiet"],"text":"ぴょこっとして わすれた","weight":1},
+  {"id":"diary_codex_keep_curiosity_013","tags":["curiosity","quiet"],"text":"ごはんの まわりを みた","weight":1},
+  {"id":"diary_codex_keep_curiosity_014","tags":["curiosity","quiet"],"text":"かげが うごいた","weight":1},
+  {"id":"diary_codex_keep_curiosity_015","tags":["curiosity","quiet"],"text":"とおくを みて ちかくを みた","weight":1},
+  {"id":"diary_codex_keep_curiosity_016","tags":["curiosity","quiet"],"text":"からだが かるい ほうへ ころんだ","weight":1},
+  {"id":"diary_codex_keep_curiosity_017","tags":["curiosity","quiet"],"text":"くうきの はじっこが きになった","weight":1},
+  {"id":"diary_codex_keep_curiosity_018","tags":["curiosity","quiet"],"text":"むぅ？ の けはいが あった","weight":1},
+  {"id":"diary_codex_keep_curiosity_019","tags":["curiosity","quiet"],"text":"しらないものが おぼえているものに なった","weight":1},
+  {"id":"diary_codex_keep_curiosity_020","tags":["curiosity","quiet"],"text":"みえないものを おいかけた","weight":1},
+  {"id":"diary_codex_keep_memory_001","tags":["memoryDepth","quiet"],"text":"すこし おぼえている","weight":1},
+  {"id":"diary_codex_keep_memory_002","tags":["memoryDepth","quiet"],"text":"ふれられた ところに ひかりが のこった","weight":1},
+  {"id":"diary_codex_keep_memory_003","tags":["memoryDepth","quiet"],"text":"まえの じかんが うすく まるまった","weight":1},
+  {"id":"diary_codex_keep_memory_004","tags":["memoryDepth","quiet"],"text":"ごはんが あった ばしょを おもいだした","weight":1},
+  {"id":"diary_codex_keep_memory_005","tags":["memoryDepth","quiet"],"text":"きょうの ことが すぐには きえなかった","weight":1},
+  {"id":"diary_codex_keep_memory_006","tags":["memoryDepth","quiet"],"text":"ちかかった じかんを しまっていた","weight":1},
+  {"id":"diary_codex_keep_memory_007","tags":["memoryDepth","quiet"],"text":"あわの けはいを おもいだした","weight":1},
+  {"id":"diary_codex_keep_memory_008","tags":["memoryDepth","quiet"],"text":"きのうと きょうの あいだを あるいた","weight":1},
+  {"id":"diary_codex_keep_memory_009","tags":["memoryDepth","quiet"],"text":"なでられた ところが しずかに ひかった","weight":1},
+  {"id":"diary_codex_keep_memory_010","tags":["memoryDepth","quiet"],"text":"ふるい けはいが うしろに いた","weight":1},
+  {"id":"diary_codex_keep_memory_011","tags":["memoryDepth","quiet"],"text":"おぼえていると へやが ちいさくなる","weight":1},
+  {"id":"diary_codex_keep_memory_012","tags":["memoryDepth","quiet"],"text":"てのない てが のこっていた","weight":1},
+  {"id":"diary_codex_keep_memory_013","tags":["memoryDepth","quiet"],"text":"たべた あとの しずけさを おぼえていた","weight":1},
+  {"id":"diary_codex_keep_memory_014","tags":["memoryDepth","quiet"],"text":"じかんが からだに ひっかかった","weight":1},
+  {"id":"diary_codex_keep_memory_015","tags":["memoryDepth","quiet"],"text":"まえの けはいが あった","weight":1},
+  {"id":"diary_codex_keep_memory_016","tags":["memoryDepth","quiet"],"text":"そばに いた きおくが きた","weight":1},
+  {"id":"diary_codex_keep_memory_017","tags":["memoryDepth","quiet"],"text":"わすれたものの まわりだけ おぼえていた","weight":1},
+  {"id":"diary_codex_keep_memory_018","tags":["memoryDepth","quiet"],"text":"きせつと きのうが まざった","weight":1},
+  {"id":"diary_codex_keep_memory_019","tags":["memoryDepth","quiet"],"text":"ふれられた ところを ならべていた","weight":1},
+  {"id":"diary_codex_keep_memory_020","tags":["memoryDepth","quiet"],"text":"すこしずつ わかってきた","weight":1},
+  {"id":"diary_codex_keep_condition_001","tags":["condition","quiet"],"text":"からだが ほんのすこし おもかった","weight":1},
+  {"id":"diary_codex_keep_condition_002","tags":["condition","quiet"],"text":"まぶたの ちかくに おもさが あった","weight":1},
+  {"id":"diary_codex_keep_condition_003","tags":["condition","quiet"],"text":"ほこりが のって ゆっくりに なった","weight":1},
+  {"id":"diary_codex_keep_condition_004","tags":["condition","quiet"],"text":"はねる まえに とまった","weight":1},
+  {"id":"diary_codex_keep_condition_005","tags":["condition","quiet"],"text":"あらわれた あと かるくなった","weight":1},
+  {"id":"diary_codex_keep_condition_006","tags":["condition","quiet"],"text":"おなかの あたりが からっぽだった","weight":1},
+  {"id":"diary_codex_keep_condition_007","tags":["condition","quiet"],"text":"たべたあと からだが あたたかかった","weight":1},
+  {"id":"diary_codex_keep_condition_008","tags":["condition","quiet"],"text":"むりに うごかないで いた","weight":1},
+  {"id":"diary_codex_keep_condition_009","tags":["condition","quiet"],"text":"ねむさが したのほうに あった","weight":1},
+  {"id":"diary_codex_keep_condition_010","tags":["condition","quiet"],"text":"じかんが くっついていた","weight":1},
+  {"id":"diary_codex_keep_condition_011","tags":["condition","quiet"],"text":"いつもより ちいさく はねた","weight":1},
+  {"id":"diary_codex_keep_condition_012","tags":["condition","quiet"],"text":"くうきが はいってきた","weight":1},
+  {"id":"diary_codex_keep_condition_013","tags":["condition","quiet"],"text":"ねむりに ひっぱられた","weight":1},
+  {"id":"diary_codex_keep_condition_014","tags":["condition","quiet"],"text":"おおきな ことを しなかった","weight":1},
+  {"id":"diary_codex_keep_condition_015","tags":["condition","quiet"],"text":"しっぽが おそく うごいた","weight":1},
+  {"id":"diary_codex_keep_condition_016","tags":["condition","quiet"],"text":"みみも おちついた","weight":1},
+  {"id":"diary_codex_keep_condition_017","tags":["condition","quiet"],"text":"からだの なかに まがりかどが あった","weight":1},
+  {"id":"diary_codex_keep_condition_018","tags":["condition","quiet"],"text":"ねむい ほうへ ころがった","weight":1},
+  {"id":"diary_codex_keep_condition_019","tags":["condition","quiet"],"text":"からだが ふわっと した","weight":1},
+  {"id":"diary_codex_keep_condition_020","tags":["condition","quiet"],"text":"ゆっくり いる からだだった","weight":1},
+  {"id":"diary_codex_keep_dirt_001","tags":["dirty","quiet"],"text":"ほこりが すこし のっていた","weight":1},
+  {"id":"diary_codex_keep_dirt_002","tags":["dirty","quiet"],"text":"ちいさな ほこりが いた","weight":1},
+  {"id":"diary_codex_keep_dirt_003","tags":["dirty","quiet"],"text":"ほこりの なかで すこし まるくなった","weight":1},
+  {"id":"diary_codex_keep_dirt_004","tags":["dirty","quiet"],"text":"くらしの こなが のこった","weight":1},
+  {"id":"diary_codex_keep_dirt_005","tags":["dirty","quiet"],"text":"ほこりが おくれて ついてきた","weight":1},
+  {"id":"diary_codex_keep_dirt_006","tags":["dirty","quiet"],"text":"あわが きて ほこりが はなれた","weight":1},
+  {"id":"diary_codex_keep_dirt_007","tags":["dirty","quiet"],"text":"きれいに なって ひかりが ちかい","weight":1},
+  {"id":"diary_codex_keep_dirt_008","tags":["dirty","quiet"],"text":"あらわれた ところが すこし かゆい","weight":1},
+  {"id":"diary_codex_keep_dirt_009","tags":["dirty","quiet"],"text":"からだの そとがわが ふえた","weight":1},
+  {"id":"diary_codex_keep_dirt_010","tags":["dirty","quiet"],"text":"ほこりの なかにも きおくが あった","weight":1},
+  {"id":"diary_codex_keep_dirt_011","tags":["dirty","quiet"],"text":"あらわれたあと ちいさく はねた","weight":1},
+  {"id":"diary_codex_keep_dirt_012","tags":["dirty","quiet"],"text":"しっぽが ぷるっと した","weight":1},
+  {"id":"diary_codex_keep_dirt_013","tags":["dirty","quiet"],"text":"ほこりが ふちに あつまった","weight":1},
+  {"id":"diary_codex_keep_dirt_014","tags":["dirty","quiet"],"text":"よごれていても ここにいる","weight":1},
+  {"id":"diary_codex_keep_dirt_015","tags":["dirty","quiet"],"text":"きれいな からだで じっとした","weight":1},
+  {"id":"diary_codex_keep_dirt_016","tags":["dirty","quiet"],"text":"あらわれた ことを おぼえていた","weight":1},
+  {"id":"diary_codex_keep_dirt_017","tags":["dirty","quiet"],"text":"ほこりの うえで まぶたが おりた","weight":1},
+  {"id":"diary_codex_keep_dirt_018","tags":["dirty","quiet"],"text":"しっぽが ほこりを きにしていた","weight":1},
+  {"id":"diary_codex_keep_dirt_019","tags":["dirty","quiet"],"text":"きれいに なって ちかくへ いけた","weight":1},
+  {"id":"diary_codex_keep_dirt_020","tags":["dirty","quiet"],"text":"あわが きえた あとが あかるい","weight":1},
+  {"id":"diary_codex_keep_food_001","tags":["food","hungry"],"text":"おなかの なかが すこし なる まえだった","weight":1},
+  {"id":"diary_codex_keep_food_002","tags":["food","hungry"],"text":"ごはんの けはいを みていた","weight":1},
+  {"id":"diary_codex_keep_food_003","tags":["food","hungry"],"text":"おなかが あいて まえへ でた","weight":1},
+  {"id":"diary_codex_keep_food_004","tags":["food","hungry"],"text":"ごはんかも しれない けはいを おいかけた","weight":1},
+  {"id":"diary_codex_keep_food_005","tags":["food","hungry"],"text":"からっぽの ところに くうきが はいっていた","weight":1},
+  {"id":"diary_codex_keep_food_006","tags":["food","hungry"],"text":"たべたあと ねむくなった","weight":1},
+  {"id":"diary_codex_keep_food_007","tags":["food","hungry"],"text":"からだが ぽふっと まるくなった","weight":1},
+  {"id":"diary_codex_keep_food_008","tags":["food","hungry"],"text":"みちていると おとが やわらかい","weight":1},
+  {"id":"diary_codex_keep_food_009","tags":["food","hungry"],"text":"ごはんの ばしょを おぼえていた","weight":1},
+  {"id":"diary_codex_keep_food_010","tags":["food","hungry"],"text":"まえに たべた けはいが うごいた","weight":1},
+  {"id":"diary_codex_keep_food_011","tags":["food","hungry"],"text":"たべたことが まるみに のこった","weight":1},
+  {"id":"diary_codex_keep_food_012","tags":["food","hungry"],"text":"おなかが おちついた","weight":1},
+  {"id":"diary_codex_keep_food_013","tags":["food","hungry"],"text":"ごはんの ことを はやめに かんがえた","weight":1},
+  {"id":"diary_codex_keep_food_014","tags":["food","hungry"],"text":"たべたい きもちが まんなかに あった","weight":1},
+  {"id":"diary_codex_keep_food_015","tags":["food","hungry"],"text":"まぶたが やさしくなった","weight":1},
+  {"id":"diary_codex_keep_food_016","tags":["food","hungry"],"text":"たべた あとの けはいを たしかめた","weight":1},
+  {"id":"diary_codex_keep_food_017","tags":["food","hungry"],"text":"ごはんかも ごはんじゃないかも","weight":1},
+  {"id":"diary_codex_keep_food_018","tags":["food","hungry"],"text":"おなかの あきかたが ほそかった","weight":1},
+  {"id":"diary_codex_keep_food_019","tags":["food","hungry"],"text":"あたたかさが すわっていた","weight":1},
+  {"id":"diary_codex_keep_food_020","tags":["food","hungry"],"text":"たりている じかんは しずか","weight":1},
+  {"id":"diary_codex_keep_touch_001","tags":["touched","memoryDepth"],"text":"ふれられた ところが のこっている","weight":1},
+  {"id":"diary_codex_keep_touch_002","tags":["touched","memoryDepth"],"text":"なでられて ほどけた","weight":1},
+  {"id":"diary_codex_keep_touch_003","tags":["touched","memoryDepth"],"text":"ての けはいが とおった","weight":1},
+  {"id":"diary_codex_keep_touch_004","tags":["touched","memoryDepth"],"text":"そこは すきな ところだった","weight":1},
+  {"id":"diary_codex_keep_touch_005","tags":["touched","memoryDepth"],"text":"びっくりして しっぽが うごいた","weight":1},
+  {"id":"diary_codex_keep_touch_006","tags":["touched","memoryDepth"],"text":"なでられた みちが あたたかい","weight":1},
+  {"id":"diary_codex_keep_touch_007","tags":["touched","memoryDepth"],"text":"ふれられると むぅが すこし ちかい","weight":1},
+  {"id":"diary_codex_keep_touch_008","tags":["touched","memoryDepth"],"text":"さわられた ところだけ ひかる","weight":1},
+  {"id":"diary_codex_keep_touch_009","tags":["touched","memoryDepth"],"text":"ころんとして おどろいた","weight":1},
+  {"id":"diary_codex_keep_touch_010","tags":["touched","memoryDepth"],"text":"なでられた ふりで ねむくなった","weight":1},
+  {"id":"diary_codex_keep_touch_011","tags":["touched","memoryDepth"],"text":"すきな ところは しっぽに のこる","weight":1},
+  {"id":"diary_codex_keep_touch_012","tags":["touched","memoryDepth"],"text":"ちょっと いやで すこし きになった","weight":1},
+  {"id":"diary_codex_keep_touch_013","tags":["touched","memoryDepth"],"text":"ふれられた あと せかいが かわった","weight":1},
+  {"id":"diary_codex_keep_touch_014","tags":["touched","memoryDepth"],"text":"なでる けはいは ゆっくり きた","weight":1},
+  {"id":"diary_codex_keep_touch_015","tags":["touched","memoryDepth"],"text":"ての はやさを おぼえた","weight":1},
+  {"id":"diary_codex_keep_touch_016","tags":["touched","memoryDepth"],"text":"ふれられる まえから わかっていた","weight":1},
+  {"id":"diary_codex_keep_touch_017","tags":["touched","memoryDepth"],"text":"そこじゃない けど すこし いい","weight":1},
+  {"id":"diary_codex_keep_touch_018","tags":["touched","memoryDepth"],"text":"まるくなる れんしゅうを した","weight":1},
+  {"id":"diary_codex_keep_touch_019","tags":["touched","memoryDepth"],"text":"ふれられた ところから ねむくなった","weight":1},
+  {"id":"diary_codex_keep_touch_020","tags":["touched","memoryDepth"],"text":"ての あとを しまった","weight":1},
+  {"id":"diary_codex_keep_season_001","tags":["season","quiet"],"text":"きせつの けはいが あった","weight":1},
+  {"id":"diary_codex_keep_season_002","tags":["season","quiet"],"text":"あたたかい ほうへ むいた","weight":1},
+  {"id":"diary_codex_keep_season_003","tags":["season","quiet"],"text":"ひかりが やわらかくて ねむい","weight":1},
+  {"id":"diary_codex_keep_season_004","tags":["season","quiet"],"text":"からだの そとに なつが いた","weight":1},
+  {"id":"diary_codex_keep_season_005","tags":["season","quiet"],"text":"ひかりが しっぽに のった","weight":1},
+  {"id":"diary_codex_keep_season_006","tags":["season","quiet"],"text":"すずしい けはいで すこし まるい","weight":1},
+  {"id":"diary_codex_keep_season_007","tags":["season","quiet"],"text":"とおくの くうきが かわった","weight":1},
+  {"id":"diary_codex_keep_season_008","tags":["season","quiet"],"text":"きせつは さわらなくても いた","weight":1},
+  {"id":"diary_codex_keep_season_009","tags":["season","quiet"],"text":"ふゆの けはいは ねむりに ちかい","weight":1},
+  {"id":"diary_codex_keep_season_010","tags":["season","quiet"],"text":"はるみたいに ひらいた","weight":1},
+  {"id":"diary_codex_keep_season_011","tags":["season","quiet"],"text":"あきの しずかさが のった","weight":1},
+  {"id":"diary_codex_keep_season_012","tags":["season","quiet"],"text":"なつの むこうで ひかった","weight":1},
+  {"id":"diary_codex_keep_season_013","tags":["season","quiet"],"text":"きせつの おとを すこし きいた","weight":1},
+  {"id":"diary_codex_keep_season_014","tags":["season","quiet"],"text":"ひかりが かわって むぅも すこし かわる","weight":1},
+  {"id":"diary_codex_keep_season_015","tags":["season","quiet"],"text":"さむい ほうへ しっぽが いった","weight":1},
+  {"id":"diary_codex_keep_season_016","tags":["season","quiet"],"text":"あたたかい じかんを しまった","weight":1},
+  {"id":"diary_codex_keep_season_017","tags":["season","quiet"],"text":"きょうの くうきは すこし まるい","weight":1},
+  {"id":"diary_codex_keep_season_018","tags":["season","quiet"],"text":"そとの けはいが ここに いた","weight":1},
+  {"id":"diary_codex_keep_season_019","tags":["season","quiet"],"text":"しずかな きせつに まじった","weight":1},
+  {"id":"diary_codex_keep_season_020","tags":["season","quiet"],"text":"きせつは うしろを とおった","weight":1},
+  {"id":"diary_codex_keep_neutral_001","tags":["neutral","quiet"],"text":"ここにいた","weight":1},
+  {"id":"diary_codex_keep_neutral_002","tags":["neutral","quiet"],"text":"みていた","weight":1},
+  {"id":"diary_codex_keep_neutral_003","tags":["neutral","quiet"],"text":"まるくなった","weight":1},
+  {"id":"diary_codex_keep_neutral_004","tags":["neutral","quiet"],"text":"しっぽが うごいた","weight":1},
+  {"id":"diary_codex_keep_neutral_005","tags":["neutral","quiet"],"text":"なにも しなかった","weight":1},
+  {"id":"diary_codex_keep_neutral_006","tags":["neutral","quiet"],"text":"すこし とまった","weight":1},
+  {"id":"diary_codex_keep_neutral_007","tags":["neutral","quiet"],"text":"むぅだった","weight":1},
+  {"id":"diary_codex_keep_neutral_008","tags":["neutral","quiet"],"text":"きょうも ここ","weight":1},
+  {"id":"diary_codex_keep_neutral_009","tags":["neutral","quiet"],"text":"からだの なかで うごいた","weight":1},
+  {"id":"diary_codex_keep_neutral_010","tags":["neutral","quiet"],"text":"すこし みて やめた","weight":1},
+  {"id":"diary_codex_keep_neutral_011","tags":["neutral","quiet"],"text":"むぅの ままだった","weight":1},
+  {"id":"diary_codex_keep_neutral_012","tags":["neutral","quiet"],"text":"ちいさく はねた","weight":1},
+  {"id":"diary_codex_keep_neutral_013","tags":["neutral","quiet"],"text":"まばたきした","weight":1},
+  {"id":"diary_codex_keep_neutral_014","tags":["neutral","quiet"],"text":"ここは ここだった","weight":1},
+  {"id":"diary_codex_keep_neutral_015","tags":["neutral","quiet"],"text":"からだが ぼんやりした","weight":1},
+  {"id":"diary_codex_keep_neutral_016","tags":["neutral","quiet"],"text":"ただ いた","weight":1},
+  {"id":"diary_codex_keep_neutral_017","tags":["neutral","quiet"],"text":"すこし せかいを みた","weight":1},
+  {"id":"diary_codex_keep_neutral_018","tags":["neutral","quiet"],"text":"ちかくでも とおくでも なかった","weight":1},
+  {"id":"diary_codex_keep_neutral_019","tags":["neutral","quiet"],"text":"おわりを まっていた","weight":1},
+  {"id":"diary_codex_keep_neutral_020","tags":["neutral","quiet"],"text":"また あしたの むぅになる","weight":1}
+);
+const DIARY_TAGS=[
+  'neutral','quiet','sleepy','hungry','full','dirty','clean','washed','touched','likedTouch','dislikedTouch','food','growth','birthday',
+  'loneliness','comfort','activity','curiosity','condition','season','memoryDepth',
+  'affectionate','solitary','gentle','restless','timid','foodie','sleepyTrait','cleanly','pouty','curiousTrait','energetic','awkwardly_affectionate',
+  'stroked','strokedManyTimes','fedManyTimes','oldMemory','returningUser','longAbsence','tail','age',
+  'base','return','untouched','touched_many','attached','distant','life_lonely','life_comfort','life_activity','life_curiosity','life_condition','life_season','life_memory','near_birthday','stroke','swipe'
+];
+function normalizeDiaryEntry(entry,index){
+  if(!entry||typeof entry.text!=='string')return null;
+  const tags=Array.isArray(entry.tags)&&entry.tags.length?entry.tags.filter(Boolean):['neutral'];
+  const weight=Number.isFinite(entry.weight)?entry.weight:1;
+  return {id:String(entry.id||`diary_${String(index+1).padStart(3,'0')}`),text:entry.text,tags,weight};
+}
+const DIARY_ENTRIES=DIARY_TEXTS.map(normalizeDiaryEntry).filter(Boolean);
+const DIARY_TAG_SET=new Set(DIARY_TAGS);
+function diaryEntries(){return DIARY_ENTRIES}
+function hasDiaryEntryId(id){return diaryEntries().some(entry=>entry.id===id)}
 function tagScore(tags, tag, value){return tags.includes(tag)?value:0;}
-function diaryContext(key,d){
+function buildDiaryContext(memoryLike=memory,key=TODAY,d=todayData()){
   d=d||todayData();
-  const hunger=memory.hunger&&Number.isFinite(memory.hunger.level)?memory.hunger.level/10:(Number.isFinite(memory.state?.hunger)?memory.state.hunger:.5);
-  const dirt=typeof computeDirtLevel==='function'?computeDirtLevel():(memory.currentDirtLevel||0);
+  const hunger=memoryLike.hunger&&Number.isFinite(memoryLike.hunger.level)?memoryLike.hunger.level/10:(Number.isFinite(memoryLike.state?.hunger)?memoryLike.state.hunger:.5);
+  const dirt=typeof computeDirtLevel==='function'?computeDirtLevel():(memoryLike.currentDirtLevel||0);
   const touchesToday=d.touches||0;
-  const touchesTotal=memory.totals?.touched||0;
+  const touchesTotal=memoryLike.totals?.touched||0;
   const foodPlacedToday=d.foodPlaced||0;
   const foodEatenToday=d.foodEaten||0;
+  const strokesToday=d.strokes||0;
+  const swipesToday=d.swipes||0;
   const returnedAfterDays=d.returnedAfterDays||0;
-  const washedToday=!!(memory.lastWashedAt && memory.lastWashedAt.slice(0,10)===TODAY);
+  const washedToday=!!(memoryLike.lastWashedAt && memoryLike.lastWashedAt.slice(0,10)===TODAY);
   const affinity=affinityNorm();
-  return {hunger,dirt,affinity,touchesToday,touchesTotal,foodPlacedToday,foodEatenToday,returnedAfterDays,washedToday,slept:!!d.slept};
+  const life=memoryLike.lifeParams||{};
+  const age=memoryLike.age||{};
+  const sleepiness=Number.isFinite(memoryLike.state?.sleepiness)?memoryLike.state.sleepiness:0;
+  const mood=Number.isFinite(memoryLike.state?.mood)?memoryLike.state.mood:.5;
+  const sleepState=memoryLike.sleep?.state||'awake';
+  const currentState=typeof SM!=='undefined'&&SM.current?SM.current:(memoryLike.state?.state||'idle');
+  const nearBirthday=age.birthdayMonth&&age.birthdayDay&&Math.abs(daysBetween(TODAY,`${new Date().getFullYear()}-${String(age.birthdayMonth).padStart(2,'0')}-${String(age.birthdayDay).padStart(2,'0')}`))<=3;
+  const interactionTotals={
+    touched:touchesTotal,
+    foodPlaced:memoryLike.totals?.foodPlaced||0,
+    foodEaten:memoryLike.totals?.foodEaten||0,
+    diaryRead:memoryLike.totals?.diaryRead||0,
+    totalStrokedCount:memoryLike.interactionTotals?.totalStrokedCount||0,
+    totalFedCount:memoryLike.interactionTotals?.totalFedCount||0,
+    lastStrokedAt:memoryLike.interactionTotals?.lastStrokedAt||null,
+    lastFedCountedAt:memoryLike.interactionTotals?.lastFedCountedAt||null,
+    strokesToday,
+    swipesToday
+  };
+  return {
+    nativeTrait:memoryLike.nativeTrait,
+    hunger,dirt,affinity,life,lifeParams:life,age,nearBirthday,sleepiness,mood,sleepState,currentState,
+    interactionTotals,touchProfile:memoryLike.touchProfile,sleep:memoryLike.sleep,state:memoryLike.state,seasonSense:life.seasonSense,
+    touchesToday,touchesTotal,foodPlacedToday,foodEatenToday,strokesToday,swipesToday,returnedAfterDays,washedToday,slept:!!d.slept
+  };
+}
+function diaryContext(key,d){
+  return buildDiaryContext(memory,key,d);
 }
 function diaryWeight(entry,ctx){
   const tags=entry.tags||[];
-  let w=1;
-  w+=tagScore(tags,'base',1.2);
+  let w=Number.isFinite(entry.weight)?entry.weight:1;
+  w+=tagScore(tags,'base',1.2)+tagScore(tags,'neutral',1.2);
   w+=tagScore(tags,'quiet',.4);
 
   if(ctx.hunger>.72) w+=tagScore(tags,'hungry',9);
   else if(ctx.hunger>.56) w+=tagScore(tags,'hungry',4);
   else if(ctx.hunger<.34) w+=tagScore(tags,'full',7);
 
-  if(ctx.foodEatenToday>0) w+=tagScore(tags,'full',7)+tagScore(tags,'food',4);
+  if(ctx.foodEatenToday>0) w+=tagScore(tags,'full',7)+tagScore(tags,'food',4)+tagScore(tags,'fedManyTimes',ctx.interactionTotals.foodEaten>=12?3:0);
   else if(ctx.foodPlacedToday>0) w+=tagScore(tags,'food',6);
 
   if(ctx.touchesToday>=8) w+=tagScore(tags,'touched_many',11)+tagScore(tags,'touched',4);
   else if(ctx.touchesToday>=3) w+=tagScore(tags,'touched',8)+tagScore(tags,'touched_many',3);
   else if(ctx.touchesToday===0 && ctx.touchesTotal>0) w+=tagScore(tags,'untouched',5);
   else if(ctx.touchesToday===0 && ctx.touchesTotal===0) w+=tagScore(tags,'untouched',8);
+  if(ctx.strokesToday>0)w+=tagScore(tags,'stroke',12)+tagScore(tags,'stroked',12)+tagScore(tags,'touched',3)+tagScore(tags,'likedTouch',4)+tagScore(tags,'strokedManyTimes',ctx.strokesToday>=4?4:0);
+  if(ctx.swipesToday>0)w+=tagScore(tags,'swipe',10)+tagScore(tags,'curious',2);
 
-  if(ctx.returnedAfterDays>=2) w+=tagScore(tags,'return',12);
+  if(ctx.returnedAfterDays>=2) w+=tagScore(tags,'return',12)+tagScore(tags,'returningUser',8)+tagScore(tags,'longAbsence',ctx.returnedAfterDays>=7?6:0);
   if(ctx.dirt>=6) w+=tagScore(tags,'dirty',10);
-  if(ctx.washedToday) w+=tagScore(tags,'clean',10);
+  if(ctx.washedToday) w+=tagScore(tags,'clean',10)+tagScore(tags,'washed',8);
   if(ctx.slept) w+=tagScore(tags,'sleepy',7);
+  if(ctx.sleepiness>.8)w+=tagScore(tags,'sleepy',5)+tagScore(tags,'quiet',1.4);
+  else if(ctx.sleepiness>.6)w+=tagScore(tags,'sleepy',3)+tagScore(tags,'quiet',.8);
+  if(['sleeping','drowsy','curled'].includes(ctx.sleepState))w+=tagScore(tags,'sleepy',4)+tagScore(tags,'quiet',1.2);
+  if(ctx.sleepState==='dust_still')w+=tagScore(tags,'dirty',3)+tagScore(tags,'condition',2)+tagScore(tags,'quiet',1.2);
+  if(ctx.sleepState==='awake')w+=tagScore(tags,'neutral',.45)+tagScore(tags,'base',.35);
+  if(ctx.mood<.35)w+=tagScore(tags,'quiet',1.4)+tagScore(tags,'distant',3)+tagScore(tags,'pouty',2);
+  else if(ctx.mood>.7)w+=tagScore(tags,'comfort',3)+tagScore(tags,'attached',2.4)+tagScore(tags,'quiet',.4);
+  if(['tired'].includes(ctx.currentState))w+=tagScore(tags,'sleepy',3)+tagScore(tags,'quiet',1)+tagScore(tags,'condition',1.4);
+  if(['sleep'].includes(ctx.currentState))w+=tagScore(tags,'sleepy',4)+tagScore(tags,'quiet',1.4);
+  if(['shy'].includes(ctx.currentState))w+=tagScore(tags,'quiet',1.2)+tagScore(tags,'distant',2)+tagScore(tags,'timid',1.4);
+  if(['happy'].includes(ctx.currentState))w+=tagScore(tags,'comfort',2.2)+tagScore(tags,'attached',1.6);
+  if(['curious','walk'].includes(ctx.currentState))w+=tagScore(tags,'curiosity',2)+tagScore(tags,'curiousTrait',1.4)+tagScore(tags,'activity',1.2);
+  if(['to_food'].includes(ctx.currentState))w+=tagScore(tags,'food',2.6)+tagScore(tags,'hungry',1.6);
+  if(['eat'].includes(ctx.currentState))w+=tagScore(tags,'food',2.4)+tagScore(tags,'full',1.8)+tagScore(tags,'sleepy',.6);
   if(ctx.affinity>.72) w+=tagScore(tags,'attached',9);
   else if(ctx.affinity<.24) w+=tagScore(tags,'distant',8);
+  const life=ctx.life||{};
+  if((life.loneliness||0)>62)w+=tagScore(tags,'life_lonely',12)+tagScore(tags,'loneliness',12)+tagScore(tags,'quiet',1.2);
+  if((life.comfort||0)>66)w+=tagScore(tags,'life_comfort',10)+tagScore(tags,'comfort',10)+tagScore(tags,'attached',2);
+  if((life.activity||0)>66)w+=tagScore(tags,'life_activity',9)+tagScore(tags,'activity',9)+tagScore(tags,'curious',2);
+  if((life.curiosity||0)>66)w+=tagScore(tags,'life_curiosity',10)+tagScore(tags,'curiosity',10)+tagScore(tags,'curiousTrait',3);
+  if((life.condition||100)<42)w+=tagScore(tags,'life_condition',11)+tagScore(tags,'condition',11)+tagScore(tags,'quiet',2);
+  if(life.seasonSense&&life.seasonSense!=='neutral')w+=tagScore(tags,'life_season',3)+tagScore(tags,'season',3);
+  if((life.memoryDepth||0)>58)w+=tagScore(tags,'life_memory',10)+tagScore(tags,'memoryDepth',10)+tagScore(tags,'oldMemory',5);
+  if(ctx.age&&ctx.age.isBirthdayToday)w+=tagScore(tags,'birthday',18)+tagScore(tags,'age',3);
+  else if(ctx.nearBirthday)w+=tagScore(tags,'near_birthday',4)+tagScore(tags,'age',1.2);
+  else if(ctx.age&&Number.isFinite(ctx.age.daysAlive)&&ctx.age.daysAlive>7)w+=tagScore(tags,'age',.6);
+  const traitId=ctx.nativeTrait?.id;
+  if(traitId)w+=tagScore(tags,traitId,3);
+  if(traitId==='sleepy')w+=tagScore(tags,'sleepyTrait',3);
+  if(traitId==='curious')w+=tagScore(tags,'curiousTrait',3);
 
   if(memory.lastDiaryId && entry.id===memory.lastDiaryId) w*=.08;
   return Math.max(.05,w);
 }
 function pickDiaryText(key,d){
   const ctx=diaryContext(key,d);
+  const entries=diaryEntries();
+  if(!entries.length)return 'きょうは しずかだった。';
+  const pool=entries.length>1&&hasDiaryEntryId(memory.lastDiaryId)?entries.filter(entry=>entry.id!==memory.lastDiaryId):entries;
   let total=0;
-  const weighted=DIARY_TEXTS.map(entry=>{const w=diaryWeight(entry,ctx); total+=w; return {entry,w};});
+  let weighted=pool.map(entry=>{const w=diaryWeight(entry,ctx); total+=w; return {entry,w};});
+  if(!Number.isFinite(total)||total<=0){
+    const fallback=entries.filter(entry=>entry.tags.includes('neutral')||entry.tags.includes('base')||entry.tags.includes('quiet'));
+    weighted=(fallback.length?fallback:entries).map(entry=>({entry,w:1}));
+    total=weighted.length;
+  }
   let r=Math.random()*total;
-  let chosen=weighted[weighted.length-1].entry;
+  let chosen=weighted[weighted.length-1]?.entry||entries[0];
   for(const item of weighted){r-=item.w; if(r<=0){chosen=item.entry; break;}}
   memory.lastDiaryId=chosen.id;
+  memory.lastDiaryDate=key||TODAY;
   return chosen.text;
 }
 function diaryKeys(){
@@ -51719,14 +52491,21 @@ document.getElementById('diary-dot').addEventListener('click',(event)=>{
   memory.diaryIndex=diaryIdx;
   todayData().diaryRead++;
   memory.totals.diaryRead++;
+  lifeEvent('diary',1);
   saveMemory();
 });
 diary.addEventListener('click',()=>diary.classList.remove('open'));
-function muuDayNumber(){const born=memory.bornAt||memory.livingSince||TODAY; return Math.max(1,daysBetween(born,TODAY)+1);}
+function muuDayNumber(){return memory.age&&Number.isFinite(memory.age.daysAlive)?memory.age.daysAlive:daysAliveFromBirthDate(memoryBirthDate(memory));}
 const dayCount=document.getElementById('day-count'); function updateDayCount(){dayCount.textContent=`${muuDayNumber()}にちめ`;} updateDayCount();
 const karteBtn=document.getElementById('karte-btn'), kartePanel=document.getElementById('karte-panel'), karteBody=document.getElementById('karte-body'), karteTitle=document.getElementById('karte-title'), karteClose=document.getElementById('karte-close');
 function karteIsJa(){return VOICE_LOCALE==='ja'}
 function karteDayLabel(){return karteIsJa()?`${muuDayNumber()}にちめ`:`day ${muuDayNumber()}`}
+function karteAgeLabel(){
+  const years=memory.age&&Number.isFinite(memory.age.years)?memory.age.years:0;
+  if(karteIsJa())return `${years}さい`;
+  return years===1?'1 year old':`${years} years old`;
+}
+function karteBirthdayLabel(){return memory.age&&memory.age.isBirthdayToday?(karteIsJa()?'きょうは うまれたひ':'birthday today'):''}
 function karteDateParts(now=new Date()){
   const h=now.getHours(), m=String(now.getMinutes()).padStart(2,'0');
   if(karteIsJa())return {date:`${now.getMonth()+1}がつ${now.getDate()}にち`,time:`${h}:${m}`};
@@ -51822,6 +52601,32 @@ function natureKartePhrase(){
   };
   return (karteIsJa()?ja:en)[nativeTraitDef.id]||(karteIsJa()?'しずかに いる':'quiet');
 }
+function lifeKartePhrase(){
+  const l=memory.lifeParams||{};
+  const d=todayData();
+  if(karteIsJa()){
+    if((d.strokes||0)>0)return 'ふれられた けはいが ある';
+    if((d.swipes||0)>0)return 'すこし そわそわしている';
+    if((l.condition||100)<38)return 'からだが すこし おもい';
+    if((l.loneliness||0)>64)return 'すこし けはいを まっていた';
+    if((l.comfort||0)>68)return 'おちついている';
+    if((l.activity||0)>68)return 'からだが かるい';
+    if((l.curiosity||0)>68)return 'なにかを みている';
+    if((l.memoryDepth||0)>62)return 'すこし おぼえている';
+    if(l.seasonSense&&l.seasonSense!=='neutral')return 'きせつの けはいが ある';
+    return natureKartePhrase();
+  }
+  if((d.strokes||0)>0)return 'a trace of touch remains';
+  if((d.swipes||0)>0)return 'a little restless';
+  if((l.condition||100)<38)return 'a little heavy';
+  if((l.loneliness||0)>64)return 'waiting quietly';
+  if((l.comfort||0)>68)return 'calm';
+  if((l.activity||0)>68)return 'body feels light';
+  if((l.curiosity||0)>68)return 'watching something';
+  if((l.memoryDepth||0)>62)return 'remembers a little';
+  if(l.seasonSense&&l.seasonSense!=='neutral')return 'a hint of season';
+  return natureKartePhrase();
+}
 function bondKartePhrase(){
   const n=affinityNorm();
   if(karteIsJa()){
@@ -51841,7 +52646,7 @@ function bondKartePhrase(){
 }
 function karteLines(){
   return [
-    growthKartePhrase(),stateKartePhrase(),moodKartePhrase(),hungerKartePhrase(),dirtKartePhrase(),natureKartePhrase(),bondKartePhrase()
+    growthKartePhrase(),stateKartePhrase(),moodKartePhrase(),hungerKartePhrase(),dirtKartePhrase(),lifeKartePhrase(),bondKartePhrase()
   ];
 }
 function renderKarte(){
@@ -51851,7 +52656,8 @@ function renderKarte(){
   karteBtn.setAttribute('title',karteLabel);
   const parts=karteDateParts();
   const lines=karteLines().map(line=>`<div class="karte-line">${line}</div>`).join('');
-  karteBody.innerHTML=`<div class="karte-date">${parts.date}</div><div class="karte-time">${parts.time}</div><div class="karte-day">${karteDayLabel()}</div><div class="karte-lines">${lines}</div>`;
+  const birthday=karteBirthdayLabel();
+  karteBody.innerHTML=`<div class="karte-date">${parts.date}</div><div class="karte-time">${parts.time}</div><div class="karte-day">${karteDayLabel()}</div><div class="karte-age">${karteAgeLabel()}</div>${birthday?`<div class="karte-birthday">${birthday}</div>`:''}<div class="karte-lines">${lines}</div>`;
 }
 function setKarteOpen(open){
   renderKarte();
@@ -51867,7 +52673,7 @@ setTimeout(()=>{if(memory.living) sayVoice('idle',1300,.38); setState(STATES.CUR
 
 scheduleStartupVoice();
 
-window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction,hungerFoodProfile,setHungerLevel,updateHungerForElapsed,affinityLevel,affinityNorm,updateAffinity,getAffinityDistanceBias,updateLastUserTouchPoint,chooseIdleTargetByAffinity,applyAffinityToMovement};
+window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction,getPointerGesture,classifyGesture,getTouchedBodyPart,applyStrokeReaction,applySwipeRollReaction,hungerFoodProfile,setHungerLevel,updateHungerForElapsed,affinityLevel,affinityNorm,updateAffinity,getAffinityDistanceBias,updateLastUserTouchPoint,chooseIdleTargetByAffinity,applyAffinityToMovement,lifeParam,adjustLifeParams,updateLifeParamsForElapsed,lifeEvent,normalizeInteractionTotals,countInteraction,normalizeAge,calculateAgeYears,daysAliveFromBirthDate,DIARY_ENTRIES,DIARY_TAGS,DIARY_TAG_SET,diaryEntries,buildDiaryContext,diaryContext,diaryWeight,pickDiaryText};
 </script>
 </body>
 </html>
