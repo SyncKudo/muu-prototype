@@ -75,8 +75,11 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 .muu-bubble{position:fixed;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.82);box-shadow:0 0 0 1px rgba(255,255,255,.72) inset,0 0 12px rgba(226,244,255,.36);pointer-events:none;z-index:20;animation:muuBubbleRise 1.8s ease-out forwards}
 @keyframes muuBubbleRise{0%{opacity:0;transform:translate(-50%,-50%) scale(.55)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-170px) scale(1.25)}}
 
-#karte-btn{position:fixed;right:20px;bottom:20px;z-index:12;border:0;background:rgba(255,255,255,.38);color:rgba(112,99,89,.42);font-size:10px;letter-spacing:.12em;padding:5px 7px;border-radius:999px;cursor:none;font-family:inherit;box-shadow:0 8px 22px rgba(120,90,60,.04);transition:opacity .25s,background .25s,transform .25s;opacity:.72}
+#karte-btn{position:fixed;right:20px;bottom:20px;z-index:12;width:28px;height:28px;border:0;background:rgba(255,255,255,.38);color:rgba(112,99,89,.42);padding:0;border-radius:50%;cursor:none;font-family:inherit;box-shadow:0 8px 22px rgba(120,90,60,.04);transition:opacity .25s,background .25s,transform .25s;opacity:.72;display:grid;place-items:center}
 #karte-btn:hover{opacity:.9;background:rgba(255,255,255,.58);transform:translateY(-1px)}
+#karte-btn .karte-icon{position:relative;display:block;width:13px;height:16px;border:1.4px solid rgba(112,99,89,.40);border-radius:3px;background:rgba(255,255,255,.22)}
+#karte-btn .karte-icon::before{content:'';position:absolute;left:3px;right:3px;top:4px;height:1.2px;border-radius:999px;background:rgba(112,99,89,.34);box-shadow:0 4px 0 rgba(112,99,89,.28),0 8px 0 rgba(112,99,89,.20)}
+#karte-btn .karte-icon::after{content:'';position:absolute;right:-1.4px;top:-1.4px;width:5px;height:5px;border-left:1.4px solid rgba(112,99,89,.32);border-bottom:1.4px solid rgba(112,99,89,.32);border-radius:0 3px 0 2px;background:rgba(255,255,255,.52)}
 #karte-panel{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(255,255,255,.10);opacity:0;pointer-events:none;transition:opacity .28s;color:rgba(73,64,56,.70);letter-spacing:.03em}
 #karte-panel.open{opacity:1;pointer-events:auto}
 #karte-head,#karte-close{display:none}
@@ -140,7 +143,7 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 </div>
 <div id="food-btn" aria-label="ごはん" title="ごはん"><span class="bowl"></span></div>
 <div id="wash-btn" aria-label="あらう" title="あらう"><span class="bubble-icon"></span></div>
-<button id="karte-btn" type="button">かるて</button>
+<button id="karte-btn" type="button" aria-label="かるて" title="かるて"><span class="karte-icon" aria-hidden="true"></span></button>
 <div id="karte-panel" aria-hidden="true"><div id="karte-head"><span id="karte-title">かるて</span><button id="karte-close" type="button">×</button></div><div id="karte-body"></div></div>
 <script>
 /**
@@ -51843,7 +51846,9 @@ function karteLines(){
 }
 function renderKarte(){
   karteTitle.textContent=karteIsJa()?'かるて':'karte';
-  karteBtn.textContent=karteIsJa()?'かるて':'karte';
+  const karteLabel=karteIsJa()?'かるて':'karte';
+  karteBtn.setAttribute('aria-label',karteLabel);
+  karteBtn.setAttribute('title',karteLabel);
   const parts=karteDateParts();
   const lines=karteLines().map(line=>`<div class="karte-line">${line}</div>`).join('');
   karteBody.innerHTML=`<div class="karte-date">${parts.date}</div><div class="karte-time">${parts.time}</div><div class="karte-day">${karteDayLabel()}</div><div class="karte-lines">${lines}</div>`;
