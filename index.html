@@ -7,6 +7,9 @@
 
 <meta name="description" content="その子だけの気配と未来に、少しずつ出会おう。">
 <link rel="canonical" href="https://muu.life/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
 <meta property="og:title" content="MUU｜あなたのそばの、デジタルいきもの">
 <meta property="og:description" content="その子だけの気配と未来に、少しずつ出会おう。">
@@ -49796,7 +49799,7 @@ function daysAliveFromBirthDate(birthDate,now=new Date()){
 }
 function makeMuuId(){return 'muu_'+Math.random().toString(16).slice(2)+Date.now().toString(16);}
 function clampMemory(v,min=0,max=1){return Math.max(min,Math.min(max,v));}
-function blankDay(){return{opens:0,touches:0,taps:0,pets:0,tired:false,slept:false,movedIn:false,returnedAfterDays:0,foodPlaced:0,foodEaten:0,foodIgnored:0,foodRush:0,diaryRead:0,lastInteractionAt:null};}
+function blankDay(){return{opens:0,touches:0,taps:0,pets:0,strokes:0,swipes:0,tired:false,slept:false,movedIn:false,returnedAfterDays:0,foodPlaced:0,foodEaten:0,foodIgnored:0,foodRush:0,diaryRead:0,lastInteractionAt:null};}
 function loadMemory(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')}catch{return null}}
 const NATIVE_TRAITS=[
   {id:'affectionate',name:'なつきやすい',motion:{idleDelay:.86,walkFreq:1.08,walkSpeed:1.05,walkDist:.92,turn:1.08,tailAmp:1.38,tailSpeed:1.12,tailLift:.08,earWobble:1.08,foodNotice:1.14,foodDelay:.88,touchTolerance:1.25,touchWarmth:1.28,washBounce:1.08,dirtDrag:.94,near:1.22,blinkGap:1}},
@@ -50488,7 +50491,7 @@ const foodGroup=new THREE.Group(); foodGroup.visible=false; scene.add(foodGroup)
 const food={exists:false,eaten:false,noticed:false,placedAt:0,target:new THREE.Vector3(0,0,1.12),lastServedDay:null};
 
 const STATES={IDLE:'idle',WALK:'walk',SLEEP:'sleep',HAPPY:'happy',SHY:'shy',TIRED:'tired',CURIOUS:'curious',TO_FOOD:'to_food',EAT:'eat'};
-const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,hopT:0,hopProfile:null,hopFrom:0,hopTo:0,hopY:0,hopSquash:0,hopTailLag:0,lastTailRotY:0,tailTurnLag:0,tailTipLagX:0,tailTipLagY:0,tailTipVX:0,tailTipVY:0,lastTouch:Date.now(),touchTimes:[],touchPoint:null,lastUserTouchPoint:null,lastHit:null,breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
+const SM={current:STATES.IDLE,t:0,globalT:0,nextIdleAction:5,walkTarget:new THREE.Vector3(),walkStart:new THREE.Vector3(),walkProgress:0,hopT:0,hopProfile:null,hopFrom:0,hopTo:0,hopY:0,hopSquash:0,hopTailLag:0,lastTailRotY:0,tailTurnLag:0,tailTipLagX:0,tailTipLagY:0,tailTipVX:0,tailTipVY:0,lastTouch:Date.now(),touchTimes:[],touchPoint:null,touchMoves:[],gesture:null,lastGestureAt:0,gestureRollX:0,gestureRollZ:0,gestureRollY:0,gestureOffsetX:0,gestureOffsetZ:0,lastUserTouchPoint:null,lastHit:null,breathPhase:0,floatPhase:0,tailPhase:0,earPhase:0,legPhase:0,earLRot:0,earRRot:0,earLScY:1,earRScY:1,tailAmp:.08,tailSpeed:1,tailLift:0,mx:window.innerWidth/2,my:window.innerHeight/2,hasPointer:false,pointerType:'mouse',nearMuu:false,petting:false,petStart:0};
 function randIdleDelay(){const active=1-(lifeParam('activity',50)-50)*.004; return (2.8+Math.random()*3.6)*nativeMotion('idleDelay',1)*nativeNoise(11,.18)*clamp(active,.82,1.18)}
 function lerp(a,b,t){return a+(b-a)*t}
 function smooth01(t){return t*t*(3-2*t)}
@@ -50811,9 +50814,92 @@ function applyTouchReaction(result,kind,recent,tolerance){
   }
   return {handled:false,intensity};
 }
-addEventListener('pointermove',e=>{updatePointer(e); if(!isUiTarget(e)) checkHit();});
-addEventListener('pointerdown',e=>{updatePointer(e); if(isUiTarget(e)) return; e.preventDefault(); if(!checkHit()) return; SM.touchPoint=getTouchPointOnMuu(e); SM.petting=true; SM.petStart=Date.now(); SM.lastTouch=Date.now();});
-addEventListener('pointerup',e=>{if(!SM.petting) return; updatePointer(e); e.preventDefault(); const dur=Date.now()-SM.petStart; SM.petting=false; SM.lastTouch=Date.now(); onMuuTouched(dur,SM.touchPoint); SM.touchPoint=null;}); addEventListener('pointercancel',()=>{SM.petting=false; SM.touchPoint=null;});
+function getPointerGesture(e){
+  const end={x:e.clientX,y:e.clientY,t:Date.now()}, start=SM.touchMoves[0]||end;
+  const dx=end.x-start.x, dy=end.y-start.y, distance=Math.hypot(dx,dy), duration=Math.max(1,end.t-start.t), velocity=distance/duration;
+  return {start,end,dx,dy,distance,duration,velocity,direction:Math.atan2(dy,dx),startPoint:SM.touchPoint,endPoint:getTouchPointOnMuu(e),moves:SM.touchMoves.slice(-8)};
+}
+function classifyGesture(gesture){
+  if(!gesture||gesture.distance<18)return 'tap';
+  if(gesture.velocity<.45&&gesture.distance<115&&gesture.duration>220)return 'stroke';
+  if(gesture.distance<52&&gesture.duration>260)return 'stroke';
+  return 'swipe';
+}
+function getTouchedBodyPart(point){
+  if(!point)return 'body';
+  if(point.bodyPart==='head'||point.y>.62)return 'head';
+  if(point.x>.62&&point.z<.15)return 'tail';
+  return 'body';
+}
+function applyGestureRoll(gesture,bodyPart,scale=1){
+  const now=Date.now();
+  if(now-SM.lastGestureAt<180)return;
+  SM.lastGestureAt=now;
+  const speed=clamp(gesture.velocity,.08,1.8), dist=clamp(gesture.distance/180,.08,1), power=clamp((speed*.55+dist*.45)*scale,0,.9);
+  const dirt=memory.currentDirtLevel||computeDirtLevel(), condition=lifeParam('condition',80);
+  const stateDamp=(SM.current===STATES.SLEEP?.35:1)*(dirt>=10?.14:dirt>=7?.55:1)*(condition<42?.65:1);
+  const p=power*stateDamp;
+  SM.gestureRollZ=clamp(SM.gestureRollZ-gesture.dx/window.innerWidth*1.8*p,-.18,.18);
+  SM.gestureRollX=clamp(SM.gestureRollX+gesture.dy/window.innerHeight*1.6*p,-.14,.14);
+  SM.gestureRollY=clamp(SM.gestureRollY+gesture.dx/window.innerWidth*.7*p,-.08,.08);
+  SM.gestureOffsetX=clamp(SM.gestureOffsetX+gesture.dx/window.innerWidth*.14*p,-.045,.045);
+  SM.gestureOffsetZ=clamp(SM.gestureOffsetZ+gesture.dy/window.innerHeight*.10*p,-.035,.035);
+  SM.tailTipVX+=clamp(-gesture.dx/window.innerWidth*.08*p,-.035,.035);
+  SM.tailTipVY+=clamp(-gesture.dy/window.innerHeight*.08*p,-.035,.035);
+  if(bodyPart==='head')SM.hopTailLag=Math.max(SM.hopTailLag||0,.018*p);
+}
+function applyStrokeReaction(gesture,bodyPart){
+  const day=todayData(); day.strokes=(day.strokes||0)+1; day.lastInteractionAt=new Date().toISOString();
+  const result=evaluateTouchZone(gesture.endPoint||gesture.startPoint||SM.touchPoint), intensity=touchReactionScale(result);
+  const slowHead=bodyPart==='head'&&gesture.velocity<.55;
+  if(result.type==='disliked'&&gesture.velocity>.55)return applySwipeRollReaction(gesture,bodyPart,result);
+  applyGestureRoll(gesture,bodyPart,slowHead?.28:.42);
+  memory.state.mood=clampMemory(memory.state.mood+.004+(slowHead?.006:0));
+  if(result.type==='liked'&&intensity>.08){
+    updateAffinity(result.isCore?.7+intensity*.45:.2+intensity*.28,'stroke_liked');
+    lifeEvent('liked_touch',1+intensity*.6);
+    sayVoice(result.isCore&&Math.random()<.32?'liked_touch_core':'liked_touch',1150,1,{force:true,noRepeat:true,cooldown:500});
+  }else{
+    updateAffinity(slowHead?.26:.14,'stroke');
+    adjustLifeParams({comfort:slowHead?1.6:.8,loneliness:-1.6,memoryDepth:.45,activity:slowHead?-.3:.25,curiosity:.35},'stroke');
+    sayVoice(slowHead?(affinityNorm()>.62?'attached':'happy'):'touch',1100,1,{force:true,noRepeat:true,cooldown:650});
+  }
+  if(nativeTraitDef.id==='timid'&&affinityNorm()<.34&&Math.random()<.28)setState(STATES.SHY);
+  else if(nativeTraitDef.id==='energetic'&&!slowHead)setState(STATES.HAPPY);
+  else setState(slowHead?STATES.HAPPY:STATES.CURIOUS);
+  saveMemory();
+  return {handled:true,type:'stroke',zone:result};
+}
+function applySwipeRollReaction(gesture,bodyPart,zoneResult=evaluateTouchZone(gesture.endPoint||gesture.startPoint||SM.touchPoint)){
+  const day=todayData(); day.swipes=(day.swipes||0)+1; day.lastInteractionAt=new Date().toISOString();
+  const intensity=touchReactionScale(zoneResult), strong=gesture.velocity>.95||gesture.distance>130;
+  applyGestureRoll(gesture,bodyPart,strong?1:.68);
+  if(gesture.dy<-28)SM.hopY=Math.max(SM.hopY||0,.035*clamp(gesture.distance/120,.2,1));
+  if(gesture.dy>28)SM.hopSquash=Math.max(SM.hopSquash||0,.035*clamp(gesture.distance/120,.2,1));
+  if(zoneResult.type==='disliked'&&intensity>.08){
+    updateAffinity(zoneResult.isCore?-.28-intensity*.38:-.1-intensity*.18,'swipe_disliked');
+    adjustLifeParams({comfort:-1.8*intensity,condition:-.25*intensity,memoryDepth:.35},'swipe_disliked');
+    memory.state.mood=clampMemory(memory.state.mood-.004-intensity*.006);
+    sayVoice(zoneResult.isCore&&Math.random()<.34?'disliked_touch_core':'disliked_touch',1050,1,{force:true,noRepeat:true,cooldown:700});
+    if(intensity>.45)setState(STATES.SHY);
+  }else{
+    updateAffinity(strong?.05:.12,'swipe');
+    adjustLifeParams({activity:strong?1.4:.8,curiosity:1.1,comfort:strong?-.45:.2,memoryDepth:.35},'swipe');
+    sayVoice(strong?(nativeTraitDef.id==='energetic'?'happy':'curious'):'touch',1050,1,{force:true,noRepeat:true,cooldown:750});
+    setState(strong?STATES.CURIOUS:STATES.HAPPY);
+  }
+  saveMemory();
+  return {handled:true,type:'swipe',zone:zoneResult};
+}
+function handlePointerGesture(e){
+  const gesture=getPointerGesture(e), kind=classifyGesture(gesture), bodyPart=getTouchedBodyPart(gesture.startPoint||gesture.endPoint);
+  if(kind==='tap')onMuuTouched(gesture.duration,gesture.startPoint);
+  else if(kind==='stroke')applyStrokeReaction(gesture,bodyPart);
+  else applySwipeRollReaction(gesture,bodyPart);
+}
+addEventListener('pointermove',e=>{updatePointer(e); if(isUiTarget(e))return; if(SM.petting){SM.touchMoves.push({x:e.clientX,y:e.clientY,t:Date.now()}); if(SM.touchMoves.length>18)SM.touchMoves.shift();} else checkHit();});
+addEventListener('pointerdown',e=>{updatePointer(e); if(isUiTarget(e)) return; e.preventDefault(); if(!checkHit()) return; SM.touchPoint=getTouchPointOnMuu(e); SM.touchMoves=[{x:e.clientX,y:e.clientY,t:Date.now()}]; SM.petting=true; SM.petStart=Date.now(); SM.lastTouch=Date.now();});
+addEventListener('pointerup',e=>{if(!SM.petting) return; updatePointer(e); e.preventDefault(); SM.touchMoves.push({x:e.clientX,y:e.clientY,t:Date.now()}); SM.petting=false; SM.lastTouch=Date.now(); handlePointerGesture(e); SM.touchPoint=null; SM.touchMoves=[];}); addEventListener('pointercancel',()=>{SM.petting=false; SM.touchPoint=null; SM.touchMoves=[];});
 function recordTouch(kind){const d=todayData(); d.touches++; d.lastInteractionAt=new Date().toISOString(); if(kind==='tap'){d.taps++; memory.state.trust=clampMemory(memory.state.trust+.002); memory.traits.curiosity=clampMemory(memory.traits.curiosity+.002);} if(kind==='pet'){d.pets++; memory.state.trust=clampMemory(memory.state.trust+.006); memory.state.mood=clampMemory(memory.state.mood+.004); memory.traits.calmness=clampMemory(memory.traits.calmness+.003);} lifeEvent('touch',kind==='pet'?1.15:1); memory.totals.touched++; saveMemory(); const now=Date.now(); SM.touchTimes.push(now); SM.touchTimes=SM.touchTimes.filter(t=>now-t<15000); return SM.touchTimes.length;}
 function onMuuTouched(duration,touchPoint){updateLastUserTouchPoint(touchPoint); const kind=duration<260?'tap':'pet'; const recent=recordTouch(kind), tolerance=Math.max(3,Math.round(8*nativeMotion('touchTolerance',1))), touchVoice={force:true,noRepeat:true,cooldown:0}, zoneResult=evaluateTouchZone(touchPoint||{mode:'screenApprox',bodyPart:'body',x:0,y:.5,z:.55}); const zoneReaction=applyTouchReaction(zoneResult,kind,recent,tolerance); if(zoneReaction.handled)return; updateAffinity(kind==='pet'?.34:.2,'calm_touch'); if(SM.current===STATES.TIRED){sayVoice('sleepy',1100,1,touchVoice); saveMemory(); return;} if(recent>=tolerance){setState(nativeTraitDef.id==='pouty'?STATES.SHY:STATES.TIRED); sayVoice('moody',1100,1,touchVoice); saveMemory(); return;} if(kind==='pet'&&nativeMotion('touchWarmth',1)>.75){setState(STATES.HAPPY); sayVoice(affinityNorm()>.62?'attached':'happy',1150,1,touchVoice); saveMemory(); return;} if(recent>=Math.max(3,Math.round(5*nativeMotion('touchTolerance',1)))){setState(STATES.SHY); sayVoice('moody',1100,1,touchVoice); saveMemory(); return;} setState(nativeMotion('touchWarmth',1)<.7?STATES.CURIOUS:STATES.HAPPY); sayVoice(affinityNorm()>.7?'attached':affinityNorm()<.22?'distant':(SM.current===STATES.CURIOUS?'curious':'touch'),1100,1,touchVoice); saveMemory();}
 
@@ -50932,6 +51018,10 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
 
 function tickAnimations(dt){const st=SM.current, dirt=memory.currentDirtLevel||computeDirtLevel(), dirtMotion=dirtMotionFactor(dirt), curl=Math.max(0,Math.min(1,(dirt-7)/3)), sleepFactor=st===STATES.SLEEP?.28:1; if(SM.nextBlink===undefined)SM.nextBlink=(2.8+seededUnit(memory.nativeTrait.seed,31)*3.8)*nativeMotion('blinkGap',1); SM.nextBlink-=dt; if(SM.nextBlink<-.16)SM.nextBlink=(2.8+Math.random()*3.8)*nativeMotion('blinkGap',1)*nativeNoise(37,.22); SM.breathPhase+=dt*.38*sleepFactor*Math.max(.18,dirtMotion); SM.floatPhase+=dt*.55*sleepFactor*Math.max(.18,dirtMotion); SM.tailPhase+=dt*TAIL_TARGETS[st].speed*Math.max(.12,dirtMotion)*nativeMotion('tailSpeed',1); SM.earPhase+=dt*.9*Math.max(.18,dirtMotion); SM.legPhase+=dt*((st===STATES.WALK || st===STATES.TO_FOOD)?4.4:.28)*Math.max(.18,dirtMotion);
   const hopSquash=SM.hopSquash||0, br=Math.sin(SM.breathPhase), brScale=1+br*(st===STATES.SLEEP?.034:.016)*(1-curl*.72); headMesh.scale.set(brScale*(1-curl*.08+hopSquash*.18),brScale*.97*(1-curl*.16-hopSquash*.12),brScale*(1+curl*.04+hopSquash*.1)); body.scale.set(brScale*(1+curl*.18+hopSquash*.24),.85*brScale*(1-curl*.18-hopSquash*.42),.9*brScale*(1+curl*.12+hopSquash*.16));
+  const gestureRate=Math.min(1.8,dt*60), gestureDamp=Math.pow(.86,gestureRate); SM.gestureRollX*=gestureDamp; SM.gestureRollZ*=gestureDamp; SM.gestureRollY*=Math.pow(.84,gestureRate); SM.gestureOffsetX*=Math.pow(.82,gestureRate); SM.gestureOffsetZ*=Math.pow(.82,gestureRate);
+  muu.rotation.x=lerp(muu.rotation.x,SM.gestureRollX,.22);
+  muu.rotation.z=lerp(muu.rotation.z,SM.gestureRollZ,.22);
+  muu.rotation.y+=SM.gestureRollY*.025;
   const floatY=st===STATES.SLEEP?0:Math.sin(SM.floatPhase)*.05*dirtMotion; muu.position.y=floatY+(SM.hopY||0); if(st===STATES.IDLE&&nativeTraitDef.id==='energetic'&&dirt<8){muu.position.y+=Math.max(0,Math.sin(SM.t*3.2))*0.014*dirtMotion;} if(st===STATES.HAPPY && dirt<9){const hop=Math.max(0,Math.sin(SM.t*6.4*nativeMotion('hopTempo',1)))*.11*dirtMotion*movementBias('bounceBias',1); muu.position.y+=hop;}
   shadowBlob.position.x=muu.position.x; shadowBlob.position.z=muu.position.z; shadowBlob.scale.setScalar(Math.max(.72,1-muu.position.y*.26+hopSquash*.26));
   const et=EAR_TARGETS[st]; SM.earLRot=lerp(SM.earLRot,et.lR-curl*.18,.06); SM.earRRot=lerp(SM.earRRot,et.rR+curl*.18,.06); SM.earLScY=lerp(SM.earLScY,et.lS*(1-curl*.22),.06); SM.earRScY=lerp(SM.earRScY,et.rS*(1-curl*.22),.06); const earWobble=Math.sin(SM.earPhase*1.65)*.028*dirtMotion*nativeMotion('earWobble',1); earL.rotation.z=SM.earLRot+earWobble; earR.rotation.z=SM.earRRot-earWobble; earL.scale.y=SM.earLScY; earR.scale.y=SM.earRScY;
@@ -51790,6 +51880,10 @@ const DIARY_TEXTS=[
     "text": "ちいさくまるまって、\nへやのようすをみていた。\n\nこわいわけではなく、\nまだなれているとちゅう。"
   }
 ];
+// Add new diary entries here.
+// Do not rely on a fixed diary count.
+// Use tags to connect entries with MUU's state, traits, and lifeParams.
+// Diary text should remain quiet, short, and mostly hiragana.
 DIARY_TEXTS.push(
   {id:'hira_life_lonely_001',tags:['quiet','life_lonely','distant'],text:'けはいを まっていた。\n\nながい しずけさのなかで、\nみみだけが すこし うごいた。'},
   {id:'hira_life_comfort_001',tags:['quiet','life_comfort','attached'],text:'そばの あたりが、\nすこし あたたかかった。\n\nからだが ほどける おとがした。'},
@@ -51800,71 +51894,125 @@ DIARY_TEXTS.push(
   {id:'hira_life_memory_001',tags:['quiet','life_memory','touched'],text:'ふれられた ところを、\nすこし おぼえている。\n\nきのうの けはいも、\nまだ のこっている。'},
   {id:'hira_age_birthday_001',tags:['quiet','birthday'],text:'きょうは うまれたひ。\n\nからだの まるみが、\nすこし しずかだった。'},
   {id:'hira_age_birthday_002',tags:['quiet','birthday','life_memory'],text:'うまれてからの じかんが、\nまるく なった。\n\nなにも ひからないけど、\nけはいだけが のこった。'},
-  {id:'hira_age_near_birthday_001',tags:['quiet','near_birthday','life_memory'],text:'ひとまわり した けはいがある。\n\nきのうより すこし、\nからだが おぼえている。'}
+  {id:'hira_age_near_birthday_001',tags:['quiet','near_birthday','life_memory'],text:'ひとまわり した けはいがある。\n\nきのうより すこし、\nからだが おぼえている。'},
+  {id:'hira_gesture_stroke_001',tags:['quiet','stroke','touched'],text:'なでられて、\nすこし ほどけた。\n\nふれられた ところが、\nまだ すこし のこっている。'},
+  {id:'hira_gesture_stroke_002',tags:['stroke','attached'],text:'しっぽだけ、\nほんとうを しっていた。\n\nからだは しずかにしていた。'},
+  {id:'hira_gesture_swipe_001',tags:['swipe','curious'],text:'ころんと して、\nじぶんで すこし おどろいた。\n\nすぐに もどった。'},
+  {id:'hira_gesture_swipe_002',tags:['swipe','quiet'],text:'からだが すこし まわった。\n\nへやの むきが、\nちょっとだけ かわった。'}
 );
+const DIARY_TAGS=[
+  'neutral','quiet','sleepy','hungry','full','dirty','clean','washed','touched','likedTouch','dislikedTouch','food','growth','birthday',
+  'loneliness','comfort','activity','curiosity','condition','season','memoryDepth',
+  'affectionate','solitary','gentle','restless','timid','foodie','sleepyTrait','cleanly','pouty','curiousTrait','energetic','awkwardly_affectionate',
+  'strokedManyTimes','fedManyTimes','oldMemory','returningUser','longAbsence',
+  'base','return','untouched','touched_many','attached','distant','life_lonely','life_comfort','life_activity','life_curiosity','life_condition','life_season','life_memory','near_birthday','stroke','swipe'
+];
+function normalizeDiaryEntry(entry,index){
+  if(!entry||typeof entry.text!=='string')return null;
+  const tags=Array.isArray(entry.tags)&&entry.tags.length?entry.tags.filter(Boolean):['neutral'];
+  const weight=Number.isFinite(entry.weight)?entry.weight:1;
+  return {id:String(entry.id||`diary_${String(index+1).padStart(3,'0')}`),text:entry.text,tags,weight};
+}
+const DIARY_ENTRIES=DIARY_TEXTS.map(normalizeDiaryEntry).filter(Boolean);
+const DIARY_TAG_SET=new Set(DIARY_TAGS);
+function diaryEntries(){return DIARY_ENTRIES}
+function hasDiaryEntryId(id){return diaryEntries().some(entry=>entry.id===id)}
 function tagScore(tags, tag, value){return tags.includes(tag)?value:0;}
-function diaryContext(key,d){
+function buildDiaryContext(memoryLike=memory,key=TODAY,d=todayData()){
   d=d||todayData();
-  const hunger=memory.hunger&&Number.isFinite(memory.hunger.level)?memory.hunger.level/10:(Number.isFinite(memory.state?.hunger)?memory.state.hunger:.5);
-  const dirt=typeof computeDirtLevel==='function'?computeDirtLevel():(memory.currentDirtLevel||0);
+  const hunger=memoryLike.hunger&&Number.isFinite(memoryLike.hunger.level)?memoryLike.hunger.level/10:(Number.isFinite(memoryLike.state?.hunger)?memoryLike.state.hunger:.5);
+  const dirt=typeof computeDirtLevel==='function'?computeDirtLevel():(memoryLike.currentDirtLevel||0);
   const touchesToday=d.touches||0;
-  const touchesTotal=memory.totals?.touched||0;
+  const touchesTotal=memoryLike.totals?.touched||0;
   const foodPlacedToday=d.foodPlaced||0;
   const foodEatenToday=d.foodEaten||0;
+  const strokesToday=d.strokes||0;
+  const swipesToday=d.swipes||0;
   const returnedAfterDays=d.returnedAfterDays||0;
-  const washedToday=!!(memory.lastWashedAt && memory.lastWashedAt.slice(0,10)===TODAY);
+  const washedToday=!!(memoryLike.lastWashedAt && memoryLike.lastWashedAt.slice(0,10)===TODAY);
   const affinity=affinityNorm();
-  const life=memory.lifeParams||{};
-  const age=memory.age||{};
+  const life=memoryLike.lifeParams||{};
+  const age=memoryLike.age||{};
   const nearBirthday=age.birthdayMonth&&age.birthdayDay&&Math.abs(daysBetween(TODAY,`${new Date().getFullYear()}-${String(age.birthdayMonth).padStart(2,'0')}-${String(age.birthdayDay).padStart(2,'0')}`))<=3;
-  return {hunger,dirt,affinity,life,age,nearBirthday,touchesToday,touchesTotal,foodPlacedToday,foodEatenToday,returnedAfterDays,washedToday,slept:!!d.slept};
+  const interactionTotals={
+    touched:touchesTotal,
+    foodPlaced:memoryLike.totals?.foodPlaced||0,
+    foodEaten:memoryLike.totals?.foodEaten||0,
+    diaryRead:memoryLike.totals?.diaryRead||0,
+    strokesToday,
+    swipesToday
+  };
+  return {
+    nativeTrait:memoryLike.nativeTrait,
+    hunger,dirt,affinity,life,lifeParams:life,age,nearBirthday,
+    interactionTotals,touchProfile:memoryLike.touchProfile,sleep:memoryLike.sleep,state:memoryLike.state,seasonSense:life.seasonSense,
+    touchesToday,touchesTotal,foodPlacedToday,foodEatenToday,strokesToday,swipesToday,returnedAfterDays,washedToday,slept:!!d.slept
+  };
+}
+function diaryContext(key,d){
+  return buildDiaryContext(memory,key,d);
 }
 function diaryWeight(entry,ctx){
   const tags=entry.tags||[];
-  let w=1;
-  w+=tagScore(tags,'base',1.2);
+  let w=Number.isFinite(entry.weight)?entry.weight:1;
+  w+=tagScore(tags,'base',1.2)+tagScore(tags,'neutral',1.2);
   w+=tagScore(tags,'quiet',.4);
 
   if(ctx.hunger>.72) w+=tagScore(tags,'hungry',9);
   else if(ctx.hunger>.56) w+=tagScore(tags,'hungry',4);
   else if(ctx.hunger<.34) w+=tagScore(tags,'full',7);
 
-  if(ctx.foodEatenToday>0) w+=tagScore(tags,'full',7)+tagScore(tags,'food',4);
+  if(ctx.foodEatenToday>0) w+=tagScore(tags,'full',7)+tagScore(tags,'food',4)+tagScore(tags,'fedManyTimes',ctx.interactionTotals.foodEaten>=12?3:0);
   else if(ctx.foodPlacedToday>0) w+=tagScore(tags,'food',6);
 
   if(ctx.touchesToday>=8) w+=tagScore(tags,'touched_many',11)+tagScore(tags,'touched',4);
   else if(ctx.touchesToday>=3) w+=tagScore(tags,'touched',8)+tagScore(tags,'touched_many',3);
   else if(ctx.touchesToday===0 && ctx.touchesTotal>0) w+=tagScore(tags,'untouched',5);
   else if(ctx.touchesToday===0 && ctx.touchesTotal===0) w+=tagScore(tags,'untouched',8);
+  if(ctx.strokesToday>0)w+=tagScore(tags,'stroke',12)+tagScore(tags,'touched',3)+tagScore(tags,'likedTouch',4)+tagScore(tags,'strokedManyTimes',ctx.strokesToday>=4?4:0);
+  if(ctx.swipesToday>0)w+=tagScore(tags,'swipe',10)+tagScore(tags,'curious',2);
 
-  if(ctx.returnedAfterDays>=2) w+=tagScore(tags,'return',12);
+  if(ctx.returnedAfterDays>=2) w+=tagScore(tags,'return',12)+tagScore(tags,'returningUser',8)+tagScore(tags,'longAbsence',ctx.returnedAfterDays>=7?6:0);
   if(ctx.dirt>=6) w+=tagScore(tags,'dirty',10);
-  if(ctx.washedToday) w+=tagScore(tags,'clean',10);
+  if(ctx.washedToday) w+=tagScore(tags,'clean',10)+tagScore(tags,'washed',8);
   if(ctx.slept) w+=tagScore(tags,'sleepy',7);
   if(ctx.affinity>.72) w+=tagScore(tags,'attached',9);
   else if(ctx.affinity<.24) w+=tagScore(tags,'distant',8);
   const life=ctx.life||{};
-  if((life.loneliness||0)>62)w+=tagScore(tags,'life_lonely',12)+tagScore(tags,'quiet',1.2);
-  if((life.comfort||0)>66)w+=tagScore(tags,'life_comfort',10)+tagScore(tags,'attached',2);
-  if((life.activity||0)>66)w+=tagScore(tags,'life_activity',9)+tagScore(tags,'curious',2);
-  if((life.curiosity||0)>66)w+=tagScore(tags,'life_curiosity',10)+tagScore(tags,'curious',3);
-  if((life.condition||100)<42)w+=tagScore(tags,'life_condition',11)+tagScore(tags,'quiet',2);
-  if(life.seasonSense&&life.seasonSense!=='neutral')w+=tagScore(tags,'life_season',3);
-  if((life.memoryDepth||0)>58)w+=tagScore(tags,'life_memory',10);
+  if((life.loneliness||0)>62)w+=tagScore(tags,'life_lonely',12)+tagScore(tags,'loneliness',12)+tagScore(tags,'quiet',1.2);
+  if((life.comfort||0)>66)w+=tagScore(tags,'life_comfort',10)+tagScore(tags,'comfort',10)+tagScore(tags,'attached',2);
+  if((life.activity||0)>66)w+=tagScore(tags,'life_activity',9)+tagScore(tags,'activity',9)+tagScore(tags,'curious',2);
+  if((life.curiosity||0)>66)w+=tagScore(tags,'life_curiosity',10)+tagScore(tags,'curiosity',10)+tagScore(tags,'curiousTrait',3);
+  if((life.condition||100)<42)w+=tagScore(tags,'life_condition',11)+tagScore(tags,'condition',11)+tagScore(tags,'quiet',2);
+  if(life.seasonSense&&life.seasonSense!=='neutral')w+=tagScore(tags,'life_season',3)+tagScore(tags,'season',3);
+  if((life.memoryDepth||0)>58)w+=tagScore(tags,'life_memory',10)+tagScore(tags,'memoryDepth',10)+tagScore(tags,'oldMemory',5);
   if(ctx.age&&ctx.age.isBirthdayToday)w+=tagScore(tags,'birthday',18);
   else if(ctx.nearBirthday)w+=tagScore(tags,'near_birthday',4);
+  const traitId=ctx.nativeTrait?.id;
+  if(traitId)w+=tagScore(tags,traitId,3);
+  if(traitId==='sleepy')w+=tagScore(tags,'sleepyTrait',3);
+  if(traitId==='curious')w+=tagScore(tags,'curiousTrait',3);
 
   if(memory.lastDiaryId && entry.id===memory.lastDiaryId) w*=.08;
   return Math.max(.05,w);
 }
 function pickDiaryText(key,d){
   const ctx=diaryContext(key,d);
+  const entries=diaryEntries();
+  if(!entries.length)return 'きょうは しずかだった。';
+  const pool=entries.length>1&&hasDiaryEntryId(memory.lastDiaryId)?entries.filter(entry=>entry.id!==memory.lastDiaryId):entries;
   let total=0;
-  const weighted=DIARY_TEXTS.map(entry=>{const w=diaryWeight(entry,ctx); total+=w; return {entry,w};});
+  let weighted=pool.map(entry=>{const w=diaryWeight(entry,ctx); total+=w; return {entry,w};});
+  if(!Number.isFinite(total)||total<=0){
+    const fallback=entries.filter(entry=>entry.tags.includes('neutral')||entry.tags.includes('base')||entry.tags.includes('quiet'));
+    weighted=(fallback.length?fallback:entries).map(entry=>({entry,w:1}));
+    total=weighted.length;
+  }
   let r=Math.random()*total;
-  let chosen=weighted[weighted.length-1].entry;
+  let chosen=weighted[weighted.length-1]?.entry||entries[0];
   for(const item of weighted){r-=item.w; if(r<=0){chosen=item.entry; break;}}
   memory.lastDiaryId=chosen.id;
+  memory.lastDiaryDate=key||TODAY;
   return chosen.text;
 }
 function diaryKeys(){
@@ -51996,7 +52144,10 @@ function natureKartePhrase(){
 }
 function lifeKartePhrase(){
   const l=memory.lifeParams||{};
+  const d=todayData();
   if(karteIsJa()){
+    if((d.strokes||0)>0)return 'ふれられた けはいが ある';
+    if((d.swipes||0)>0)return 'すこし そわそわしている';
     if((l.condition||100)<38)return 'からだが すこし おもい';
     if((l.loneliness||0)>64)return 'すこし けはいを まっていた';
     if((l.comfort||0)>68)return 'おちついている';
@@ -52006,6 +52157,8 @@ function lifeKartePhrase(){
     if(l.seasonSense&&l.seasonSense!=='neutral')return 'きせつの けはいが ある';
     return natureKartePhrase();
   }
+  if((d.strokes||0)>0)return 'a trace of touch remains';
+  if((d.swipes||0)>0)return 'a little restless';
   if((l.condition||100)<38)return 'a little heavy';
   if((l.loneliness||0)>64)return 'waiting quietly';
   if((l.comfort||0)>68)return 'calm';
@@ -52061,7 +52214,7 @@ setTimeout(()=>{if(memory.living) sayVoice('idle',1300,.38); setState(STATES.CUR
 
 scheduleStartupVoice();
 
-window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction,hungerFoodProfile,setHungerLevel,updateHungerForElapsed,affinityLevel,affinityNorm,updateAffinity,getAffinityDistanceBias,updateLastUserTouchPoint,chooseIdleTargetByAffinity,applyAffinityToMovement,lifeParam,adjustLifeParams,updateLifeParamsForElapsed,lifeEvent,normalizeAge,calculateAgeYears,daysAliveFromBirthDate};
+window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction,getPointerGesture,classifyGesture,getTouchedBodyPart,applyStrokeReaction,applySwipeRollReaction,hungerFoodProfile,setHungerLevel,updateHungerForElapsed,affinityLevel,affinityNorm,updateAffinity,getAffinityDistanceBias,updateLastUserTouchPoint,chooseIdleTargetByAffinity,applyAffinityToMovement,lifeParam,adjustLifeParams,updateLifeParamsForElapsed,lifeEvent,normalizeAge,calculateAgeYears,daysAliveFromBirthDate,DIARY_ENTRIES,DIARY_TAGS,DIARY_TAG_SET,diaryEntries,buildDiaryContext,diaryContext,diaryWeight,pickDiaryText};
 </script>
 </body>
 </html>
