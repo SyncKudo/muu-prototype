@@ -50306,32 +50306,51 @@ const fillLight=new THREE.DirectionalLight(0xe6ecef,.18); fillLight.position.set
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.ShadowMaterial({opacity:.085})); floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
 
 const MAT={
-  body:new THREE.MeshLambertMaterial({color:0xd9cfbf}),
-  belly:new THREE.MeshLambertMaterial({color:0xcfc2b2}),
-  inner:new THREE.MeshLambertMaterial({color:0xe6c7bb}),
-  eye:new THREE.MeshLambertMaterial({color:0x2b2927}),
+  body:new THREE.MeshLambertMaterial({color:0xf8f7f3}),
+  belly:new THREE.MeshLambertMaterial({color:0xf8f7f3}),
+  inner:new THREE.MeshLambertMaterial({color:0xeee9df}),
+  eye:new THREE.MeshLambertMaterial({color:0x050505}),
   shine:new THREE.MeshLambertMaterial({color:0xffffff}),
-  nose:new THREE.MeshLambertMaterial({color:0xb28e7d}),
-  tail:new THREE.MeshLambertMaterial({color:0xccc0b2}),
+  nose:new THREE.MeshLambertMaterial({color:0x070707}),
+  tail:new THREE.MeshLambertMaterial({color:0xf8f7f3}),
   bowl:new THREE.MeshLambertMaterial({color:0xd8cabc}),
   kibble:new THREE.MeshLambertMaterial({color:0xb89472})
 };
 const dirtMaterial=new THREE.MeshLambertMaterial({color:0x8b735f,transparent:true,opacity:0});
 
 const muu=new THREE.Group(); scene.add(muu);
-const body=new THREE.Mesh(new THREE.SphereGeometry(.7,24,18),MAT.body); body.scale.set(1,.85,.9); body.position.y=.7; body.castShadow=true; muu.add(body);
-const belly=new THREE.Mesh(new THREE.SphereGeometry(.42,16,12),MAT.belly); belly.scale.set(1,.7,.55); belly.position.set(0,.58,.52); muu.add(belly);
-const head=new THREE.Group(); head.position.set(0,1.22,0); muu.add(head);
-const headMesh=new THREE.Mesh(new THREE.SphereGeometry(.62,24,18),MAT.body); headMesh.scale.set(1,.95,.92); headMesh.castShadow=true; head.add(headMesh);
+function createGroundedBodyGeometry(){
+  const geo=new THREE.SphereGeometry(.78,32,24);
+  const pos=geo.attributes.position;
+  const floorY=-.665, settleY=-.555;
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i), y=pos.getY(i), z=pos.getZ(i);
+    if(y<settleY){
+      const t=Math.max(0,Math.min(1,(settleY-y)/(settleY-floorY)));
+      const flatY=y*(1-t)+floorY*t;
+      pos.setY(i,flatY);
+      pos.setX(i,x*(1+t*.045));
+      pos.setZ(i,z*(1+t*.035));
+    }
+  }
+  pos.needsUpdate=true;
+  geo.computeVertexNormals();
+  geo.computeBoundingSphere();
+  return geo;
+}
+const body=new THREE.Mesh(createGroundedBodyGeometry(),MAT.body); body.scale.set(1.12,1.02,.92); body.position.y=.70; body.castShadow=true; muu.add(body);
+const belly=new THREE.Mesh(new THREE.SphereGeometry(.42,16,12),MAT.belly); belly.scale.set(1,.7,.55); belly.position.set(0,.58,.52); belly.visible=false; muu.add(belly);
+const head=new THREE.Group(); head.position.set(0,1.08,0); muu.add(head);
+const headMesh=new THREE.Mesh(new THREE.SphereGeometry(.62,24,18),MAT.body); headMesh.scale.set(1,.95,.92); headMesh.visible=false; headMesh.castShadow=true; head.add(headMesh);
 const fieldBlobGeo=new THREE.SphereGeometry(1,24,16);
 const earRootFields=[];
 function makeFieldBlob(parent,x,y,z,sx,sy,sz,mat=MAT.body){const blob=new THREE.Mesh(fieldBlobGeo,mat); blob.position.set(x,y,z); blob.scale.set(sx,sy,sz); blob.castShadow=true; blob.receiveShadow=true; parent.add(blob); return blob;}
-const bodyHeadField=makeFieldBlob(muu,0,1.00,-.02,.58,.34,.54,MAT.body);
+const bodyHeadField=makeFieldBlob(muu,0,1.06,-.20,.50,.30,.42,MAT.body);
 bodyHeadField.userData.baseScale=bodyHeadField.scale.clone();
 function createBodyField(){body.userData.baseScale=body.scale.clone(); headMesh.userData.baseScale=headMesh.scale.clone(); belly.userData.baseScale=belly.scale.clone(); return {body,headMesh,belly,bodyHeadField};}
 function makeEarRootField(side){
-  const field=makeFieldBlob(head,side*.37,.40,.035,.22,.16,.18);
-  field.rotation.z=side*-.18;
+  const field=makeFieldBlob(head,side*.50,.12,.10,.22,.12,.13);
+  field.rotation.z=side*.10;
   field.userData.baseScale=field.scale.clone();
   earRootFields.push(field);
   return field;
@@ -50339,29 +50358,33 @@ function makeEarRootField(side){
 function createEarRootFields(){return earRootFields;}
 function makeLeafEarMesh(side){
   const g=new THREE.Group();
-  const outer=new THREE.Mesh(new THREE.SphereGeometry(.18,20,14),MAT.body);
-  outer.scale.set(.72,1.62,.34);
-  outer.position.y=.10;
-  outer.rotation.z=side*-.20;
+  const outer=new THREE.Mesh(new THREE.SphereGeometry(.20,28,16),MAT.body);
+  outer.scale.set(1.72,.64,.13);
+  outer.position.set(side*.10,.02,.02);
+  outer.rotation.z=side*.10;
+  outer.rotation.y=side*.18;
+  outer.rotation.x=-.08;
   g.add(outer);
-  const inner=new THREE.Mesh(new THREE.SphereGeometry(.105,16,10),MAT.inner);
-  inner.scale.set(.48,1.28,.18);
-  inner.position.set(0,.08,.055);
-  inner.rotation.z=side*-.20;
+  const inner=new THREE.Mesh(new THREE.SphereGeometry(.12,20,10),MAT.inner);
+  inner.scale.set(1.34,.25,.035);
+  inner.position.set(side*.10,.015,.060);
+  inner.rotation.z=side*.10;
+  inner.rotation.y=side*.18;
+  inner.rotation.x=-.08;
+  inner.visible=false;
   g.add(inner);
   return g;
 }
-function makeEar(side){const g=new THREE.Group(); makeEarRootField(side); const leaf=makeLeafEarMesh(side); g.add(leaf); g.position.set(side*.42,.45,.05); g.rotation.z=side*.04; head.add(g); return g;}
+function makeEar(side){const g=new THREE.Group(); makeEarRootField(side); const leaf=makeLeafEarMesh(side); g.add(leaf); g.position.set(side*.68,.10,.14); g.rotation.z=side*.055; head.add(g); return g;}
 const earL=makeEar(-1), earR=makeEar(1);
 function createEarMeshes(){return {leftEarMesh:earL,rightEarMesh:earR};}
 const bodyFields=createBodyField();
-function makeEye(side){const g=new THREE.Group(); const eyeMesh=new THREE.Mesh(new THREE.SphereGeometry(.105,14,10),MAT.eye); g.add(eyeMesh); const shine=new THREE.Mesh(new THREE.SphereGeometry(.035,8,6),MAT.shine); shine.position.set(.04,.055,.09); g.add(shine); g.position.set(side*.24,.06,.52); head.add(g); return g;}
+function makeEye(side){const g=new THREE.Group(); const eyeMesh=new THREE.Mesh(new THREE.SphereGeometry(.108,18,12),MAT.eye); eyeMesh.scale.set(1,.96,.28); g.add(eyeMesh); const shine=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),MAT.shine); shine.visible=true; shine.scale.set(1,.78,.36); shine.position.set(.036,.044,.080); g.add(shine); g.position.set(side*.225,.50,.655); body.add(g); return g;}
 const eyeL=makeEye(-1), eyeR=makeEye(1);
 const eyeLMesh=eyeL.children[0], eyeRMesh=eyeR.children[0];
 const eyeLShine=eyeL.children[1], eyeRShine=eyeR.children[1];
-const nose=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),MAT.nose); nose.scale.set(1.15,.7,.8); nose.position.set(0,-.08,.6); head.add(nose);
-const mouthCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-.045,-.155,.615),new THREE.Vector3(0,-.175,.625),new THREE.Vector3(.045,-.155,.615)]);
-const mouthMesh=new THREE.Mesh(new THREE.TubeGeometry(mouthCurve,8,.006,5,false),MAT.nose); mouthMesh.castShadow=false; head.add(mouthMesh);
+const nose=new THREE.Mesh(new THREE.SphereGeometry(.026,10,8),MAT.nose); nose.scale.set(1.1,.82,.45); nose.position.set(0,.36,.665); body.add(nose);
+const mouthMesh=new THREE.Mesh(new THREE.SphereGeometry(.026,10,8),MAT.nose); mouthMesh.scale.set(.76,.42,.18); mouthMesh.position.set(0,.265,.668); mouthMesh.castShadow=false; body.add(mouthMesh);
 
 const dirtPatches=[];
 function makeDirtPatch(parent,x,y,z,sx,sy,rz=0){
@@ -50483,44 +50506,54 @@ function applyDirtVisual(){
     strand.material.opacity=strand.userData.opacity*(.42+localT*.58);
   }
   dustGroup.visible=level>=3;
-  const darken=1-level*.006;
-  MAT.body.color.setRGB(0xd9/255*darken,0xcf/255*darken,0xbf/255*darken);
-  MAT.belly.color.setRGB(0xcf/255*darken,0xc2/255*darken,0xb2/255*darken);
-  MAT.tail.color.setRGB(0xcc/255*darken,0xc0/255*darken,0xb2/255*darken);
+  const darken=1-level*.004;
+  MAT.body.color.setRGB(0xf8/255*darken,0xf7/255*darken,0xf3/255*darken);
+  MAT.belly.color.setRGB(0xf8/255*darken,0xf7/255*darken,0xf3/255*darken);
+  MAT.tail.color.setRGB(0xf8/255*darken,0xf7/255*darken,0xf3/255*darken);
 }
 
 
-const tailRoot=new THREE.Group(); tailRoot.position.set(-.58,.55,-.58); tailRoot.rotation.y=Math.PI*.72; muu.add(tailRoot);
-const tailRootField=makeFieldBlob(tailRoot,.02,.02,.00,.24,.18,.20,MAT.tail);
+const tailRoot=new THREE.Group(); tailRoot.position.set(.66,.43,-.22); tailRoot.rotation.y=0; muu.add(tailRoot);
+const tailRootField=makeFieldBlob(tailRoot,-.03,.00,.00,.24,.12,.14,MAT.tail);
 tailRootField.userData.baseScale=tailRootField.scale.clone();
 const TAIL_COUNT=8; let tailMesh=null; const tailPoints=Array.from({length:TAIL_COUNT},()=>new THREE.Vector3());
 function createTailFields(){return {tailRootField,tailPoints};}
 function createMuuBodyHybrid(){return {bodyField:bodyFields,bodyHeadField,earRootFields:createEarRootFields(),tailFields:createTailFields(),earMeshes:createEarMeshes(),eyeMeshes:{left:eyeL,right:eyeR},noseMesh:nose,mouthMesh};}
 const muuBodyHybrid=createMuuBodyHybrid();
 function cubicPoint(u,p0,p1,p2,p3,out){const a=1-u,a2=a*a,u2=u*u; out.set(a2*a*p0.x+3*a2*u*p1.x+3*a*u2*p2.x+u2*u*p3.x,a2*a*p0.y+3*a2*u*p1.y+3*a*u2*p2.y+u2*u*p3.y,a2*a*p0.z+3*a2*u*p1.z+3*a*u2*p2.z+u2*u*p3.z);}
-function tailRadius(u){const rootBlend=(1-smooth01(Math.max(0,Math.min(1,u/.20))))*.020, bulb=smooth01(Math.max(0,Math.min(1,(u-.58)/.34))), tipRound=Math.max(0,Math.min(1,(u-.92)/.08)); return (.040+rootBlend+u*.020+bulb*.060)*(1-tipRound*.18);}
+function tailRadius(u){const bulb=smooth01(Math.max(0,Math.min(1,(u-.44)/.46))), rootSoft=(1-smooth01(Math.max(0,Math.min(1,u/.22))))*.004; return .032+rootSoft+u*.030+bulb*.078;}
 function makeTailGeometry(points){
   const curve=new THREE.CatmullRomCurve3(points);
   const frames=28, sides=16, vertices=[], normals=[], indices=[];
   const path=curve.getSpacedPoints(frames);
-  for(let i=0;i<=frames;i++){
-    const u=i/frames, p=path[i], tangent=curve.getTangentAt(u).normalize();
+  const ringCenters=path.slice(), ringRadii=[];
+  for(let i=0;i<=frames;i++)ringRadii.push(tailRadius(i/frames));
+  const end=path[frames], endDir=curve.getTangentAt(1).normalize(), endRadius=tailRadius(1);
+  ringCenters.push(end.clone().add(endDir.clone().multiplyScalar(endRadius*.24)));
+  ringRadii.push(endRadius*.84);
+  ringCenters.push(end.clone().add(endDir.clone().multiplyScalar(endRadius*.52)));
+  ringRadii.push(endRadius*.46);
+  ringCenters.push(end.clone().add(endDir.clone().multiplyScalar(endRadius*.72)));
+  ringRadii.push(endRadius*.12);
+  const ringCount=ringCenters.length;
+  for(let i=0;i<ringCount;i++){
+    const u=Math.min(1,i/frames), p=ringCenters[i], tangent=curve.getTangentAt(u).normalize();
     let normal=new THREE.Vector3(0,0,1);
     if(Math.abs(tangent.dot(normal))>.86)normal.set(0,1,0);
     const binormal=new THREE.Vector3().crossVectors(tangent,normal).normalize();
     normal.crossVectors(binormal,tangent).normalize();
-    const radius=tailRadius(u);
+    const radius=ringRadii[i];
     for(let j=0;j<sides;j++){
       const a=j/sides*Math.PI*2, dir=normal.clone().multiplyScalar(Math.cos(a)).add(binormal.clone().multiplyScalar(Math.sin(a)));
       vertices.push(p.x+dir.x*radius,p.y+dir.y*radius,p.z+dir.z*radius);
       normals.push(dir.x,dir.y,dir.z);
     }
   }
-  for(let i=0;i<frames;i++)for(let j=0;j<sides;j++){const a=i*sides+j,b=i*sides+(j+1)%sides,c=(i+1)*sides+j,d=(i+1)*sides+(j+1)%sides; indices.push(a,c,b,b,c,d);}
-  const startCenter=vertices.length/3, start=path[0], endCenter=startCenter+1, end=path[frames];
-  vertices.push(start.x,start.y,start.z,end.x,end.y,end.z);
-  normals.push(0,-1,0,0,1,0);
-  for(let j=0;j<sides;j++){indices.push(startCenter,j,(j+1)%sides); const a=frames*sides+j,b=frames*sides+(j+1)%sides; indices.push(endCenter,b,a);}
+  for(let i=0;i<ringCount-1;i++)for(let j=0;j<sides;j++){const a=i*sides+j,b=i*sides+(j+1)%sides,c=(i+1)*sides+j,d=(i+1)*sides+(j+1)%sides; indices.push(a,c,b,b,c,d);}
+  const startCenter=vertices.length/3, start=path[0], endCenter=startCenter+1, domeTip=ringCenters[ringCount-1].clone().add(endDir.clone().multiplyScalar(endRadius*.10));
+  vertices.push(start.x,start.y,start.z,domeTip.x,domeTip.y,domeTip.z);
+  normals.push(0,-1,0,endDir.x,endDir.y,endDir.z);
+  for(let j=0;j<sides;j++){indices.push(startCenter,j,(j+1)%sides); const a=(ringCount-1)*sides+j,b=(ringCount-1)*sides+(j+1)%sides; indices.push(endCenter,b,a);}
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
   geo.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
@@ -50531,9 +50564,9 @@ function makeTailGeometry(points){
 function updateTailPoints(){
   const sleeping=SM.current===STATES.SLEEP, sw=Math.sin(SM.tailPhase)*SM.tailAmp, lagSw=Math.sin(SM.tailPhase-.58)*SM.tailAmp, sw2=Math.sin(SM.tailPhase*1.35+.5)*SM.tailAmp*.42, lift=SM.tailLift, tipX=SM.tailTipLagX||0, tipY=SM.tailTipLagY||0;
   const p0={x:0,y:0,z:0};
-  const p1=sleeping?{x:.20+sw*.09+tipX*.10,y:-.13+lift*.10+tipY*.10,z:0}:{x:.34+sw*.52+tipX*.12,y:.19+lift+sw2*.35+tipY*.10,z:0};
-  const p2=sleeping?{x:.34+lagSw*.09+tipX*.38,y:-.34+lift*.08+tipY*.42,z:0}:{x:.64+sw*.32+tipX*.42,y:.44+lift+tipY*.42,z:0};
-  const p3=sleeping?{x:.25+lagSw*.07+tipX*.72,y:-.50+Math.sin(SM.breathPhase)*.012+tipY*.86,z:0}:{x:.54+lagSw*.28+tipX,y:.66+lift*1.05+tipY,z:0};
+  const p1=sleeping?{x:.22+sw*.05+tipX*.10,y:-.10+lift*.08+tipY*.10,z:0}:{x:.28+sw*.18+tipX*.12,y:.02+lift*.44+sw2*.10+tipY*.10,z:0};
+  const p2=sleeping?{x:.43+lagSw*.06+tipX*.38,y:-.19+lift*.06+tipY*.42,z:0}:{x:.56+sw*.12+tipX*.42,y:.05+lift*.52+tipY*.42,z:0};
+  const p3=sleeping?{x:.62+lagSw*.05+tipX*.72,y:-.22+Math.sin(SM.breathPhase)*.010+tipY*.74,z:0}:{x:.78+lagSw*.10+tipX*.70,y:.07+lift*.56+tipY*.70,z:0};
   for(let i=0;i<TAIL_COUNT;i++){const u=i/(TAIL_COUNT-1); cubicPoint(u,p0,p1,p2,p3,tailPoints[i]);}
 }
 function updateTail(){updateTailPoints(); if(tailMesh){tailRoot.remove(tailMesh); tailMesh.geometry.dispose();} tailMesh=new THREE.Mesh(makeTailGeometry(tailPoints),MAT.tail); tailMesh.castShadow=true; tailRoot.add(tailMesh);}
@@ -50854,11 +50887,11 @@ function sayVoice(context='idle',dur=1200,chance=.72,opts={}){
 function smallVoice(){return pickVoice('idle');}
 function scheduleStartupVoice(){const delay=800+Math.random()*1000; setTimeout(()=>sayVoice(startupVoiceContext(),1250,1,{force:true,cooldown:3600,noRepeat:true}),delay);}
 
-const cursor=document.getElementById('cursor'); const raycaster=new THREE.Raycaster(); const mouse2=new THREE.Vector2(); const interactables=[headMesh,body,belly];
+const cursor=document.getElementById('cursor'); const raycaster=new THREE.Raycaster(); const mouse2=new THREE.Vector2(); const interactables=[body,bodyHeadField];
 function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#food-btn,#wash-btn,#pet-name,#food-menu,.food-choice,#karte-btn,#karte-panel'));}
 function updatePointer(e){SM.hasPointer=true; SM.pointerType=e.pointerType||'mouse'; SM.mx=e.clientX; SM.my=e.clientY; mouse2.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1); if(SM.pointerType==='touch'){cursor.style.opacity='0'}else{cursor.style.opacity='1'; cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px';}}
 function checkHit(){if(!SM.hasPointer) return false; raycaster.setFromCamera(mouse2,camera); const hits=raycaster.intersectObjects(interactables,false); SM.lastHit=hits[0]||null; SM.nearMuu=hits.length>0; return SM.nearMuu;}
-function bodyPartForHit(object){if(object===headMesh)return 'head'; if(object===body||object===belly)return 'body'; return 'body';}
+function bodyPartForHit(object){if(object===bodyHeadField)return 'head'; if(object===body)return 'body'; return 'body';}
 function getTouchPointOnMuu(e){
   const hit=SM.lastHit, local=hit&&hit.point?muu.worldToLocal(hit.point.clone()):null;
   if(local){
@@ -51137,7 +51170,7 @@ function tickStateMachine(dt){const dirt=memory.currentDirtLevel||computeDirtLev
 }
 
 function tickAnimations(dt){const st=SM.current, dirt=memory.currentDirtLevel||computeDirtLevel(), dirtMotion=dirtMotionFactor(dirt), curl=Math.max(0,Math.min(1,(dirt-7)/3)); if(SM.nextBlink===undefined)SM.nextBlink=(2.8+seededUnit(memory.nativeTrait.seed,31)*3.8)*nativeMotion('blinkGap',1); SM.nextBlink-=dt; if(SM.nextBlink<-.16)SM.nextBlink=(2.8+Math.random()*3.8)*nativeMotion('blinkGap',1)*nativeNoise(37,.22); updateBreathing(dt,st,dirtMotion); SM.floatPhase+=dt*.55*(st===STATES.SLEEP?.28:1)*Math.max(.18,dirtMotion); SM.tailPhase+=dt*TAIL_TARGETS[st].speed*Math.max(.12,dirtMotion)*nativeMotion('tailSpeed',1); SM.earPhase+=dt*.9*Math.max(.18,dirtMotion); SM.legPhase+=dt*((st===STATES.WALK || st===STATES.TO_FOOD)?4.4:.28)*Math.max(.18,dirtMotion);
-  const hopSquash=SM.hopSquash||0, br=Math.sin(SM.breathPhase)+SM.breathNoise*.035, breathDepth=st===STATES.SLEEP?.040:st===STATES.SHY?.010:.017, brScale=1+br*breathDepth*(1-curl*.72); headMesh.scale.set(brScale*(1-curl*.08+hopSquash*.18),brScale*.97*(1-curl*.16-hopSquash*.12),brScale*(1+curl*.04+hopSquash*.1)); body.scale.set(brScale*(1+curl*.18+hopSquash*.24),.85*brScale*(1-curl*.18-hopSquash*.42),.9*brScale*(1+curl*.12+hopSquash*.16));
+  const hopSquash=SM.hopSquash||0, br=Math.sin(SM.breathPhase)+SM.breathNoise*.035, breathDepth=st===STATES.SLEEP?.040:st===STATES.SHY?.010:.017, brScale=1+br*breathDepth*(1-curl*.72), bodyBase=body.userData.baseScale||new THREE.Vector3(1.12,1.02,.92), headBase=headMesh.userData.baseScale||new THREE.Vector3(1,.95,.92); headMesh.scale.set(headBase.x*brScale*(1-curl*.08+hopSquash*.18),headBase.y*brScale*(1-curl*.16-hopSquash*.12),headBase.z*brScale*(1+curl*.04+hopSquash*.1)); body.scale.set(bodyBase.x*brScale*(1+curl*.14+hopSquash*.18),bodyBase.y*brScale*(1-curl*.14-hopSquash*.32),bodyBase.z*brScale*(1+curl*.10+hopSquash*.12));
   if(bodyHeadField&&bodyHeadField.userData.baseScale){const base=bodyHeadField.userData.baseScale; bodyHeadField.scale.set(base.x*brScale*(1+hopSquash*.20+curl*.10),base.y*brScale*(1-hopSquash*.18-curl*.05),base.z*brScale*(1+hopSquash*.12+curl*.08));}
   const gestureRate=Math.min(1.8,dt*60), gestureDamp=Math.pow(.86,gestureRate); SM.gestureRollX*=gestureDamp; SM.gestureRollZ*=gestureDamp; SM.gestureRollY*=Math.pow(.84,gestureRate); SM.gestureOffsetX*=Math.pow(.82,gestureRate); SM.gestureOffsetZ*=Math.pow(.82,gestureRate);
   muu.rotation.x=lerp(muu.rotation.x,SM.gestureRollX,.22);
@@ -51167,8 +51200,10 @@ function tickAnimations(dt){const st=SM.current, dirt=memory.currentDirtLevel||c
   const eyeRound=st===STATES.HAPPY&&nativeTraitDef.id==='affectionate'?1.04:1;
   eyeLMesh.scale.x = lerp(eyeLMesh.scale.x, st===STATES.SLEEP || st===STATES.TIRED ? 1.08 : eyeRound, .08);
   eyeRMesh.scale.x = lerp(eyeRMesh.scale.x, st===STATES.SLEEP || st===STATES.TIRED ? 1.08 : eyeRound, .08);
-  eyeLShine.scale.setScalar(lerp(eyeLShine.scale.x, st===STATES.SLEEP || st===STATES.TIRED ? 0.1 : 1, .12));
-  eyeRShine.scale.setScalar(lerp(eyeRShine.scale.x, st===STATES.SLEEP || st===STATES.TIRED ? 0.1 : 1, .12)); 
+  const shineOpen=clamp((eyeClosed-.18)/.62,0,1), shineScale=lerp(eyeLShine.scale.x, shineOpen, .16);
+  eyeLShine.visible=shineOpen>.18; eyeRShine.visible=shineOpen>.18;
+  eyeLShine.scale.set(shineScale,shineScale*.78*Math.max(.18,shineOpen),shineScale*.36);
+  eyeRShine.scale.set(shineScale,shineScale*.78*Math.max(.18,shineOpen),shineScale*.36);
 }
 
 let last=null; function loop(now){const dt=last?Math.min((now-last)/1000,.05):.016; last=now; tickStateMachine(dt); tickAnimations(dt); applyDirtVisual(); renderer.render(scene,camera); requestAnimationFrame(loop);} setInterval(()=>{memory.currentDirtLevel=computeDirtLevel(); memory.age=normalizeAge(memory.age,memory); updateLifeParamsForElapsed(.008,'idle_tick'); lifeEvent('idle',1); if(memory.growth)memory.growth.maxStage=108; memory.lastSeenAt=new Date().toISOString(); if([STATES.IDLE,STATES.CURIOUS].includes(SM.current))sayVoice('idle',1200,clamp(.08+(lifeParam('activity',50)-50)*.0015-(lifeParam('condition',80)<42?.025:0),.035,.14)); saveMemory();},30000); requestAnimationFrame(loop);
