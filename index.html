@@ -50007,6 +50007,17 @@ function normalizeTouchProfile(value,memoryLike,traitDef){
   if(!value||!Array.isArray(value.likedZones)||!Array.isArray(value.dislikedZones))return makeTouchProfile(memoryLike,traitDef);
   return {version:value.version||1,growthStage:Number.isFinite(value.growthStage)?value.growthStage:(memoryLike.growth&&memoryLike.growth.stage)||1,likedZones:value.likedZones.map((z,i)=>normalizeTouchZone(z,'liked',i)),dislikedZones:value.dislikedZones.map((z,i)=>normalizeTouchZone(z,'disliked',i)),generatedAt:value.generatedAt||new Date().toISOString(),updatedAt:value.updatedAt||new Date().toISOString()};
 }
+function normalizeInteractionTotals(value){
+  const v=value||{}, now=new Date().toISOString();
+  return {
+    version:v.version||1,
+    totalStrokedCount:Number.isFinite(v.totalStrokedCount)?Math.max(0,Math.floor(v.totalStrokedCount)):0,
+    totalFedCount:Number.isFinite(v.totalFedCount)?Math.max(0,Math.floor(v.totalFedCount)):0,
+    lastStrokedAt:v.lastStrokedAt||null,
+    lastFedCountedAt:v.lastFedCountedAt||null,
+    lastUpdatedAt:v.lastUpdatedAt||now
+  };
+}
 function normalizeMemory(m){
   m=m||{};
   if(!m.id)m.id=makeMuuId();
@@ -50045,6 +50056,7 @@ function normalizeMemory(m){
   m.lifeParams=normalizeLifeParams(m.lifeParams,m,nativeDef);
   m.age=normalizeAge(m.age,m);
   m.touchProfile=normalizeTouchProfile(m.touchProfile,m,nativeDef);
+  m.interactionTotals=normalizeInteractionTotals(m.interactionTotals);
   m.dirtLevel=Number.isFinite(m.dirtLevel)?m.dirtLevel:2;
   if(!m.lastWashedAt)m.lastWashedAt=m.bornAt+'T00:00:00';
   return m;
@@ -50168,6 +50180,21 @@ function lifeEvent(kind,intensity=1){
     idle:{condition:.12*scale}
   };
   adjustLifeParams(changes[kind]||{},kind);
+}
+function countInteraction(kind){
+  if(!memory.interactionTotals)memory.interactionTotals=normalizeInteractionTotals();
+  const now=new Date().toISOString();
+  if(kind==='stroke'){
+    memory.interactionTotals.totalStrokedCount=Math.max(0,Math.floor(memory.interactionTotals.totalStrokedCount||0))+1;
+    memory.interactionTotals.lastStrokedAt=now;
+    adjustLifeParams({memoryDepth:.18},'interaction_stroke_count');
+  }
+  if(kind==='fed'){
+    memory.interactionTotals.totalFedCount=Math.max(0,Math.floor(memory.interactionTotals.totalFedCount||0))+1;
+    memory.interactionTotals.lastFedCountedAt=now;
+    adjustLifeParams({memoryDepth:.22},'interaction_fed_count');
+  }
+  memory.interactionTotals.lastUpdatedAt=now;
 }
 function hungerFoodProfile(){
   const level=memory.hunger?memory.hunger.level:((memory.state.hunger||.5)*10), norm=clampMemory(level/10);
@@ -50850,6 +50877,7 @@ function applyGestureRoll(gesture,bodyPart,scale=1){
 }
 function applyStrokeReaction(gesture,bodyPart){
   const day=todayData(); day.strokes=(day.strokes||0)+1; day.lastInteractionAt=new Date().toISOString();
+  countInteraction('stroke');
   const result=evaluateTouchZone(gesture.endPoint||gesture.startPoint||SM.touchPoint), intensity=touchReactionScale(result);
   const slowHead=bodyPart==='head'&&gesture.velocity<.55;
   if(result.type==='disliked'&&gesture.velocity>.55)return applySwipeRollReaction(gesture,bodyPart,result);
@@ -50909,7 +50937,7 @@ function placeFood(type='normal'){
   setFoodType(type); food.type=type; food.reaction=computeFoodReaction(type); food.exists=true; food.eaten=false; food.noticed=false; food.placedAt=Date.now(); foodGroup.position.set(0,0,1.75); foodGroup.visible=true; foodGroup.position.set(0,0,1.75); for(const k of kibbles) k.visible=true; sayVoice('food',900,hunger.isHungry?.86:.66); todayData().foodPlaced++; memory.totals.foodPlaced++; memory.lastFoodAt=new Date().toISOString(); memory.food.hasFood=true; memory.food.placedAt=new Date(food.placedAt).toISOString(); memory.food.lastReaction=food.reaction; memory.food.updatedAt=new Date().toISOString(); if(food.reaction==='rush')todayData().foodRush++; saveMemory(); closeFoodMenu(); document.getElementById('food-btn').classList.add('placed'); const foodDelay=nativeMotion('foodDelay',1)*nativeNoise(23,.16)*hunger.delay; if(food.reaction==='rush'){setTimeout(()=>{if(food.exists&&!food.eaten){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,.82);}},240*foodDelay);} else if(food.reaction==='approach'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,hunger.isHungry?.7:.5);}},(1200+Math.random()*1300)*foodDelay);} else if(food.reaction==='wait'){setTimeout(()=>{if(food.exists&&!food.eaten&&(SM.current===STATES.IDLE||SM.current===STATES.CURIOUS)){setState(STATES.CURIOUS); sayVoice(hunger.isFull?'full':'curious',1100,.55);}},(1500+Math.random()*1600)*foodDelay); setTimeout(()=>{if(food.exists&&!food.eaten&&Math.random()<clamp(.65*nativeMotion('foodNotice',1)*hunger.notice,0,.92)){food.noticed=true; setState(STATES.TO_FOOD); sayVoice('food',900,hunger.isHungry?.72:.54);}},(7000+Math.random()*4000)*foodDelay);}
 }
 function clearFood(){food.exists=false; food.eaten=false; food.noticed=false; foodGroup.visible=false; memory.food.hasFood=false; memory.food.updatedAt=new Date().toISOString(); saveMemory(); document.getElementById('food-btn').classList.remove('placed'); closeFoodMenu && closeFoodMenu();}
-function eatFood(){if(!food.exists || food.eaten) return; food.eaten=true; for(const k of kibbles) k.visible=false; todayData().foodEaten++; memory.totals.foodEaten++; setHungerLevel(.7+seededUnit(memory.nativeTrait.seed,71)*1.4,{fed:true}); updateAffinity(.62+seededUnit(memory.nativeTrait.seed,79)*.52,'food'); lifeEvent('food',nativeTraitDef.id==='foodie'?1.25:1); memory.state.appetite=clampMemory(memory.state.appetite+.004); memory.state.trust=clampMemory(memory.state.trust+.003); memory.state.mood=clampMemory(memory.state.mood+.004); memory.lastAteAt=new Date().toISOString(); memory.food.lastAteAt=memory.lastAteAt; memory.food.lastReaction='eaten'; memory.food.updatedAt=memory.lastAteAt; saveMemory(); setTimeout(()=>clearFood(),1600);}
+function eatFood(){if(!food.exists || food.eaten) return; food.eaten=true; for(const k of kibbles) k.visible=false; todayData().foodEaten++; memory.totals.foodEaten++; countInteraction('fed'); setHungerLevel(.7+seededUnit(memory.nativeTrait.seed,71)*1.4,{fed:true}); updateAffinity(.62+seededUnit(memory.nativeTrait.seed,79)*.52,'food'); lifeEvent('food',nativeTraitDef.id==='foodie'?1.25:1); memory.state.appetite=clampMemory(memory.state.appetite+.004); memory.state.trust=clampMemory(memory.state.trust+.003); memory.state.mood=clampMemory(memory.state.mood+.004); memory.lastAteAt=new Date().toISOString(); memory.food.lastAteAt=memory.lastAteAt; memory.food.lastReaction='eaten'; memory.food.updatedAt=memory.lastAteAt; saveMemory(); setTimeout(()=>clearFood(),1600);}
 
 
 
@@ -51939,6 +51967,10 @@ function buildDiaryContext(memoryLike=memory,key=TODAY,d=todayData()){
     foodPlaced:memoryLike.totals?.foodPlaced||0,
     foodEaten:memoryLike.totals?.foodEaten||0,
     diaryRead:memoryLike.totals?.diaryRead||0,
+    totalStrokedCount:memoryLike.interactionTotals?.totalStrokedCount||0,
+    totalFedCount:memoryLike.interactionTotals?.totalFedCount||0,
+    lastStrokedAt:memoryLike.interactionTotals?.lastStrokedAt||null,
+    lastFedCountedAt:memoryLike.interactionTotals?.lastFedCountedAt||null,
     strokesToday,
     swipesToday
   };
@@ -52214,7 +52246,7 @@ setTimeout(()=>{if(memory.living) sayVoice('idle',1300,.38); setState(STATES.CUR
 
 scheduleStartupVoice();
 
-window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction,getPointerGesture,classifyGesture,getTouchedBodyPart,applyStrokeReaction,applySwipeRollReaction,hungerFoodProfile,setHungerLevel,updateHungerForElapsed,affinityLevel,affinityNorm,updateAffinity,getAffinityDistanceBias,updateLastUserTouchPoint,chooseIdleTargetByAffinity,applyAffinityToMovement,lifeParam,adjustLifeParams,updateLifeParamsForElapsed,lifeEvent,normalizeAge,calculateAgeYears,daysAliveFromBirthDate,DIARY_ENTRIES,DIARY_TAGS,DIARY_TAG_SET,diaryEntries,buildDiaryContext,diaryContext,diaryWeight,pickDiaryText};
+window.MUU_DEBUG={memory,placeFood,clearFood,food,setState,STATES,openFoodMenu,closeFoodMenu,setDirtLevel,applyDirtVisual,pickVoice,selectVoice,sayVoice,showVoice,ALL_VOICES,VOICE_POOLS,VOICE_LOCALE,evaluateTouchZone,getTouchPointOnMuu,applyTouchReaction,getPointerGesture,classifyGesture,getTouchedBodyPart,applyStrokeReaction,applySwipeRollReaction,hungerFoodProfile,setHungerLevel,updateHungerForElapsed,affinityLevel,affinityNorm,updateAffinity,getAffinityDistanceBias,updateLastUserTouchPoint,chooseIdleTargetByAffinity,applyAffinityToMovement,lifeParam,adjustLifeParams,updateLifeParamsForElapsed,lifeEvent,normalizeInteractionTotals,countInteraction,normalizeAge,calculateAgeYears,daysAliveFromBirthDate,DIARY_ENTRIES,DIARY_TAGS,DIARY_TAG_SET,diaryEntries,buildDiaryContext,diaryContext,diaryWeight,pickDiaryText};
 </script>
 </body>
 </html>
