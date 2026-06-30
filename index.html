@@ -50478,33 +50478,37 @@ function updateTailInertia(dt,st,dirt,dirtMotion,hopSquash){
 const speechEl=document.getElementById('speech'); let speechTimer=null, lastVoiceAt=0, lastVoiceText=''; function say(text,dur=1500){speechEl.textContent=text; speechEl.classList.add('show'); clearTimeout(speechTimer); speechTimer=setTimeout(()=>speechEl.classList.remove('show'),dur);}
 const ALL_VOICES=Array.from(new Set(['む','むぅ','むー','む…','むぅ…','む……','……む','…む','む、む','むっ','むぅ？','む？','む〜','むぅ〜','んむ','んむ…','んむぅ','すぅ…','ふむ…','ぽふ','む！','むっ？','むむ','むむ…','むむぅ','むぅむ','むぅ、む','む、むぅ','むん','むん…','むに','むに…','むきゅ','むきゅ…','むきゅ？','むきゅぅ','むぷ','むぷ…','むぷぅ','むぽ','むぽ…','むふ','むふ…','むふぅ','むぁ','むぁ…','むぅぁ','むぅぅ','むぅぅ…','むぅぅ、、、ん','むぅん','むぅん…','むぅ、ん','む……ん','ん……む','……んむ','む、、','むぅ、、','むぅ……','むーー','むーー…','む〜…','むぅ〜…','むぅぅ？','むむ？','むっ…','む、む…','む、む、む','むむむ','むむむ…','むぅむぅ','むぅむぅ…','んむん','んむん…','んむぅ…','むす…','むすぅ…','むしゅ','むしゅ…','むにゅ','むにゅ…','むにゅぅ','むゆ','むゆ…','むゅ','むゅ…','むぴ','むぴ…','むぴ？','むぴぃ','むぽふ','むぽふ…','ぽふ…','すぅ……む','む……すぅ','あ…','……あ']));
 const RARE_VOICES={mupi:'むぴ',almost:'あ…'};
-const COMMON_VOICES=ALL_VOICES.filter(v=>v!==RARE_VOICES.mupi&&v!==RARE_VOICES.almost);
+let lastNonMuRareAt=0;
+function isPrimaryMuuVoice(text){return String(text||'').trim().startsWith('む');}
+function isRareNonMuVoice(text){const v=String(text||'').trim(); return !!v && !isPrimaryMuuVoice(v);}
+const NON_MU_RARE_VOICES=ALL_VOICES.filter(v=>isRareNonMuVoice(v)&&v!==RARE_VOICES.almost);
+const COMMON_VOICES=ALL_VOICES.filter(v=>isPrimaryMuuVoice(v)&&v!==RARE_VOICES.almost);
 const VOICE_POOLS={
-  idle:['む','むぅ','むー','む…','むぅ…','……','んむ','ふむ…','むむ','むん…'],
-  startup:['む','むぅ','む…','むぅ…','……む','…む','んむ','む、む','むぅん…','ふむ…'],
-  touch:['む','むぅ','む？','むっ？','む、む','むに','むに…','むきゅ？','むふ','……む'],
-  liked_touch:['むぅ','む〜','む、む','むぅ〜','んむぅ','むきゅ','むふ','むにゅ','ぽふ','むぴ'],
-  liked_touch_core:['むぅ〜❣️','んむぅ❣️','むきゅ❣️','むぴ❣️'],
-  disliked_touch:['むっ','む……','……','……む','む？','むぅ？','んむ…','むっ…','むす…','む、、'],
-  disliked_touch_core:['むっ………','む………','……む………','んむ………'],
-  sleepy:['むぅ…','すぅ…','……む','むぅぅ…','むぅぅ、、、ん','すぅ……む','む……すぅ','んむぅ…','むゆ…','ふむ…'],
-  sleeping:['すぅ…','すぅ……む','……','……む','むぅ…','むぅぅ…','んむ…','む……すぅ','ふむ…','むぅぅ、、、ん'],
-  weak:['む……','むぅ…','んむ…','む……ん','ん……む','むす…','むすぅ…','むしゅ…','むゅ…','……む'],
-  moody:['むっ','むっ…','むす…','む','……','む？','むむ…','む、、','ふむ…','……む'],
+  idle:['む','むぅ','むー','む…','むぅ…','むむ','むむ…','むん','むん…','むふ…'],
+  startup:['む','むぅ','む…','むぅ…','む、む','むぅん…','むむ','むに…','むふ…','む〜…'],
+  touch:['む','むぅ','む？','むっ？','む、む','むに','むに…','むきゅ？','むふ','むふ…'],
+  liked_touch:['むぅ','む〜','む、む','むぅ〜','むきゅ','むふ','むにゅ','むぴ','むぽふ','むきゅぅ'],
+  liked_touch_core:['むぅ〜❣️','むきゅ❣️','むぴ❣️','むにゅ❣️'],
+  disliked_touch:['むっ','む……','む？','むぅ？','むっ…','むす…','む、、','むむ…','む……ん','むすぅ…'],
+  disliked_touch_core:['むっ………','む………','むぅ？………','む……ん………'],
+  sleepy:['むぅ…','むぅぅ…','むぅぅ、、、ん','む……すぅ','むゆ…','むゅ…','むぅ……','む〜…','むむ…','むふ…'],
+  sleeping:['むぅ…','むぅぅ…','む……すぅ','むぅぅ、、、ん','む……','むぅ……','むゆ…','むゅ…','むす…','むふ…'],
+  weak:['む……','むぅ…','む……ん','むす…','むすぅ…','むしゅ…','むゅ…','むぅ……','むゆ…','む……すぅ'],
+  moody:['むっ','むっ…','むす…','む','む？','むむ…','む、、','む……','む……ん','むぅ？'],
   food:['むっ','むぅ？','む、む','む？','むきゅ？','むぷ','むむ？','むん','むぴ？','む、むぅ'],
-  hungry:['むっ','むぅ？','む、む','んむ','むきゅ','む！','むむ？','むん','むぴ','む、むぅ'],
-  full:['ふむ…','む……','むぅ…','……','んむ…','むぽ…','ぽふ…','むぅん…','むふ…','む〜…'],
-  wash:['む〜','むぅ〜','ぽふ','ぽふ…','むぽふ','むぅ','むふ','むふぅ','むぷぅ','むぅ、む'],
-  dirty:['む……','……む','むぅ…','んむ…','ん……む','む……ん','むす…','むしゅ…','むゅ…','むぅ……'],
-  dust:['……','……む','すぅ…','むぅ……','すぅ……む','ん……む','む……すぅ','……んむ','む……','むぅぅ…'],
-  pouty:['むっ','……','む','むっ…','むす…','む、、','ふむ…','むむ…','……む','む？'],
+  hungry:['むっ','むぅ？','む、む','むきゅ','む！','むむ？','むん','むぴ','む、むぅ','むぷ'],
+  full:['む……','むぅ…','むぽ…','むぅん…','むふ…','む〜…','むゆ…','むむ…','むぅ……','む……ん'],
+  wash:['む〜','むぅ〜','むぽふ','むぅ','むふ','むふぅ','むぷぅ','むぅ、む','むにゅ','むきゅ'],
+  dirty:['む……','むぅ…','む……ん','むす…','むしゅ…','むゅ…','むぅ……','むゆ…','むすぅ…','む……すぅ'],
+  dust:['むぅ……','む……すぅ','む……','むぅぅ…','むぅ…','むゆ…','むゅ…','むす…','むしゅ…','む……ん'],
+  pouty:['むっ','む','むっ…','むす…','む、、','むむ…','む？','む……','むぅ？','むすぅ…'],
   curious:['むぅ？','むっ','む？','むむ？','むきゅ？','むに','むゅ','むぷ','むっ？','むぅむ'],
-  happy:['むぅ','む〜','ぽふ','む！','む、む','むぅ〜','むふ','むぽ','むきゅぅ','むにゅ'],
-  attached:['むぅ','む〜','む、む','んむぅ','むぅ〜','むきゅ','ぽふ…'],
-  distant:['……む','む…','む？','んむ…','……']
+  happy:['むぅ','む〜','む！','む、む','むぅ〜','むふ','むぽ','むきゅぅ','むにゅ','むぽふ'],
+  attached:['むぅ','む〜','む、む','むぅ〜','むきゅ','むぽふ','むにゅ'],
+  distant:['む…','む？','む……','むぅ…','む、、']
 };
 const VOICE_CONTEXT_ALIASES={pouty:'moody',bad:'moody',bad_mood:'moody',tired:'sleepy',asleep:'sleeping'};
-const TRAIT_VOICES={affectionate:['むぅ','む〜','むぅ〜','む、むぅ'],solitary:['……','む','…む','ふむ…'],gentle:['むぅ…','すぅ…','ふむ…'],restless:['む、む','むっ','む、む…'],timid:['……む','むぅ？','む…'],foodie:['むっ','むぅ？','むきゅ？'],sleepy:['すぅ…','むぅ…','むぅぅ、、、ん'],cleanly:['む〜','ぽふ','むぽふ'],pouty:['むっ','……','むす…'],curious:['むぅ？','むっ','むきゅ？'],energetic:['む！','む、む','む、む、む'],awkwardly_affectionate:['……む','むぅ…','む、']};
+const TRAIT_VOICES={affectionate:['むぅ','む〜','むぅ〜','む、むぅ'],solitary:['む…','む','む……','むふ…'],gentle:['むぅ…','む……すぅ','むふ…'],restless:['む、む','むっ','む、む…'],timid:['む…','むぅ？','む……'],foodie:['むっ','むぅ？','むきゅ？'],sleepy:['むぅ…','むぅぅ、、、ん','む……すぅ'],cleanly:['む〜','むぽふ','むふ…'],pouty:['むっ','む……','むす…'],curious:['むぅ？','むっ','むきゅ？'],energetic:['む！','む、む','む、む、む'],awkwardly_affectionate:['む…','むぅ…','む、']};
 const VOICE_LOCALE=((navigator.languages||[navigator.language||'ja']).some(l=>String(l).toLowerCase().startsWith('ja')))?'ja':'romaji';
 function voiceToRomaji(text){return String(text).replace(/むっ/g,'mu!').replace(/きゅ/g,'kyu').replace(/にゅ/g,'nyu').replace(/しゅ/g,'shu').replace(/む/g,'mu').replace(/ぅ/g,'u').replace(/ー/g,'-').replace(/〜/g,'~').replace(/、/g,',').replace(/！/g,'!').replace(/？/g,'?').replace(/ん/g,'n').replace(/す/g,'su').replace(/ふ/g,'fu').replace(/ぽ/g,'po').replace(/ぷ/g,'pu').replace(/に/g,'ni').replace(/ゆ/g,'yu').replace(/ゅ/g,'yu').replace(/ぁ/g,'a').replace(/ぴ/g,'pi').replace(/っ/g,"'");}
 function localizeVoice(text,locale=VOICE_LOCALE){return locale==='ja'?text:voiceToRomaji(text);}
@@ -50543,12 +50547,13 @@ function startupVoiceContext(){
 }
 function selectVoice(context='idle',opts={}){
   const stateContext=resolveVoiceContext(context), quietState=['dust','dirty','weak','sleepy','sleeping','moody','full'].includes(stateContext);
-  if(!quietState&&!opts.noRare&&Math.random()<.001)return RARE_VOICES.almost;
-  if(!quietState&&!opts.noRare&&Math.random()<.01)return RARE_VOICES.mupi;
+  const now=Date.now(), rareReady=now-lastNonMuRareAt>45000;
+  if(!opts.noRare&&rareReady&&Math.random()<.001){lastNonMuRareAt=now; return RARE_VOICES.almost;}
+  if(!opts.noRare&&rareReady&&Math.random()<.01){lastNonMuRareAt=now; return chooseVoiceFromPool(NON_MU_RARE_VOICES,true);}
   const base=(VOICE_POOLS[stateContext]||VOICE_POOLS.idle).slice();
   const trait=TRAIT_VOICES[nativeTraitDef.id]||[];
   const widePool=!quietState&&context!=='startup'&&Math.random()<.07?COMMON_VOICES:[];
-  return chooseVoiceFromPool(base.concat(trait,widePool),!!opts.noRepeat);
+  return chooseVoiceFromPool(base.concat(trait,widePool).filter(isPrimaryMuuVoice),!!opts.noRepeat);
 }
 function showVoice(text,dur=1200){lastVoiceText=text; say(localizeVoice(text),dur);}
 function pickVoice(context='idle'){return selectVoice(context);}
