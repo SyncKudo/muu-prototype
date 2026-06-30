@@ -75,6 +75,22 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 .muu-bubble{position:fixed;width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.82);box-shadow:0 0 0 1px rgba(255,255,255,.72) inset,0 0 12px rgba(226,244,255,.36);pointer-events:none;z-index:20;animation:muuBubbleRise 1.8s ease-out forwards}
 @keyframes muuBubbleRise{0%{opacity:0;transform:translate(-50%,-50%) scale(.55)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-170px) scale(1.25)}}
 
+#karte-btn{position:fixed;right:20px;bottom:20px;z-index:12;width:28px;height:28px;border:0;background:rgba(255,255,255,.38);color:rgba(112,99,89,.42);padding:0;border-radius:50%;cursor:none;font-family:inherit;box-shadow:0 8px 22px rgba(120,90,60,.04);transition:opacity .25s,background .25s,transform .25s;opacity:.72;display:grid;place-items:center}
+#karte-btn:hover{opacity:.9;background:rgba(255,255,255,.58);transform:translateY(-1px)}
+#karte-btn .karte-icon{position:relative;display:block;width:13px;height:16px;border:1.4px solid rgba(112,99,89,.40);border-radius:3px;background:rgba(255,255,255,.22)}
+#karte-btn .karte-icon::before{content:'';position:absolute;left:3px;right:3px;top:4px;height:1.2px;border-radius:999px;background:rgba(112,99,89,.34);box-shadow:0 4px 0 rgba(112,99,89,.28),0 8px 0 rgba(112,99,89,.20)}
+#karte-btn .karte-icon::after{content:'';position:absolute;right:-1.4px;top:-1.4px;width:5px;height:5px;border-left:1.4px solid rgba(112,99,89,.32);border-bottom:1.4px solid rgba(112,99,89,.32);border-radius:0 3px 0 2px;background:rgba(255,255,255,.52)}
+#karte-panel{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(255,255,255,.10);opacity:0;pointer-events:none;transition:opacity .28s;color:rgba(73,64,56,.70);letter-spacing:.03em}
+#karte-panel.open{opacity:1;pointer-events:auto}
+#karte-head,#karte-close{display:none}
+#karte-body{width:min(330px,calc(100vw - 48px));max-height:calc(100vh - 96px);overflow:auto;background:rgba(255,255,255,.78);border:1px solid rgba(150,130,112,.11);border-radius:18px;box-shadow:0 20px 56px rgba(90,70,52,.10);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:28px 26px 30px;text-align:center}
+.karte-date{font-size:16px;line-height:1.7;color:rgba(61,54,48,.72);letter-spacing:.04em}
+.karte-time{margin-top:2px;font-size:11px;line-height:1.7;color:rgba(86,76,68,.48);letter-spacing:.06em}
+.karte-day{margin-top:5px;font-size:13px;line-height:1.8;color:rgba(73,64,56,.58);letter-spacing:.05em}
+.karte-lines{display:grid;gap:12px;margin-top:22px}
+.karte-line{font-size:12px;line-height:1.9;color:rgba(65,57,50,.66);letter-spacing:.04em}
+@media (max-width:600px){#karte-panel{padding:20px}#karte-body{width:min(310px,calc(100vw - 40px));padding:26px 23px 28px}.karte-lines{gap:11px}}
+
 
 #pet-name{
   position:fixed;
@@ -127,6 +143,8 @@ html,body{width:100%;height:100%;background:#fff;overflow:hidden;font-family:'Hi
 </div>
 <div id="food-btn" aria-label="ごはん" title="ごはん"><span class="bowl"></span></div>
 <div id="wash-btn" aria-label="あらう" title="あらう"><span class="bubble-icon"></span></div>
+<button id="karte-btn" type="button" aria-label="かるて" title="かるて"><span class="karte-icon" aria-hidden="true"></span></button>
+<div id="karte-panel" aria-hidden="true"><div id="karte-head"><span id="karte-title">かるて</span><button id="karte-close" type="button">×</button></div><div id="karte-body"></div></div>
 <script>
 /**
  * @license
@@ -50476,39 +50494,51 @@ function updateTailInertia(dt,st,dirt,dirtMotion,hopSquash){
 }
 
 const speechEl=document.getElementById('speech'); let speechTimer=null, lastVoiceAt=0, lastVoiceText=''; function say(text,dur=1500){speechEl.textContent=text; speechEl.classList.add('show'); clearTimeout(speechTimer); speechTimer=setTimeout(()=>speechEl.classList.remove('show'),dur);}
-const ALL_VOICES=Array.from(new Set(['む','むぅ','むー','む…','むぅ…','む……','……む','…む','む、む','むっ','むぅ？','む？','む〜','むぅ〜','んむ','んむ…','んむぅ','すぅ…','ふむ…','ぽふ','む！','むっ？','むむ','むむ…','むむぅ','むぅむ','むぅ、む','む、むぅ','むん','むん…','むに','むに…','むきゅ','むきゅ…','むきゅ？','むきゅぅ','むぷ','むぷ…','むぷぅ','むぽ','むぽ…','むふ','むふ…','むふぅ','むぁ','むぁ…','むぅぁ','むぅぅ','むぅぅ…','むぅぅ、、、ん','むぅん','むぅん…','むぅ、ん','む……ん','ん……む','……んむ','む、、','むぅ、、','むぅ……','むーー','むーー…','む〜…','むぅ〜…','むぅぅ？','むむ？','むっ…','む、む…','む、む、む','むむむ','むむむ…','むぅむぅ','むぅむぅ…','んむん','んむん…','んむぅ…','むす…','むすぅ…','むしゅ','むしゅ…','むにゅ','むにゅ…','むにゅぅ','むゆ','むゆ…','むゅ','むゅ…','むぴ','むぴ…','むぴ？','むぴぃ','むぽふ','むぽふ…','ぽふ…','すぅ……む','む……すぅ','あ…','……あ']));
+const PRIMARY_DEFAULT_VOICE='むぅ。';
+const ALL_VOICES=Array.from(new Set(['む','むぅ。','むぅ','むー','む…','むぅ…','む……','……む','…む','む、む','むっ','むぅ？','む？','む〜','むぅ〜','んむ','んむ…','んむぅ','すぅ…','ふむ…','ぽふ','む！','むっ？','むむ','むむ…','むむぅ','むぅむ','むぅ、む','む、むぅ','むん','むん…','むに','むに…','むきゅ','むきゅ…','むきゅ？','むきゅぅ','むぷ','むぷ…','むぷぅ','むぽ','むぽ…','むふ','むふ…','むふぅ','むぁ','むぁ…','むぅぁ','むぅぅ','むぅぅ…','むぅぅ、、、ん','むぅん','むぅん…','むぅ、ん','む……ん','ん……む','……んむ','む、、','むぅ、、','むぅ……','むーー','むーー…','む〜…','むぅ〜…','むぅぅ？','むむ？','むっ…','む、む…','む、む、む','むむむ','むむむ…','むぅむぅ','むぅむぅ…','んむん','んむん…','んむぅ…','むす…','むすぅ…','むしゅ','むしゅ…','むにゅ','むにゅ…','むにゅぅ','むゆ','むゆ…','むゅ','むゅ…','むぴ','むぴ…','むぴ？','むぴぃ','むぽふ','むぽふ…','ぽふ…','すぅ……む','む……すぅ','あ…','……あ']));
 const RARE_VOICES={mupi:'むぴ',almost:'あ…'};
-const COMMON_VOICES=ALL_VOICES.filter(v=>v!==RARE_VOICES.mupi&&v!==RARE_VOICES.almost);
+let lastNonMuRareAt=0;
+function isPrimaryMuuVoice(text){return String(text||'').trim().startsWith('む');}
+function isRareNonMuVoice(text){const v=String(text||'').trim(); return !!v && !isPrimaryMuuVoice(v);}
+const NON_MU_RARE_VOICES=ALL_VOICES.filter(v=>isRareNonMuVoice(v)&&v!==RARE_VOICES.almost);
+const COMMON_VOICES=ALL_VOICES.filter(v=>isPrimaryMuuVoice(v)&&v!==RARE_VOICES.almost);
 const VOICE_POOLS={
-  idle:['む','むぅ','むー','む…','むぅ…','……','んむ','ふむ…','むむ','むん…'],
-  startup:['む','むぅ','む…','むぅ…','……む','…む','んむ','む、む','むぅん…','ふむ…'],
-  touch:['む','むぅ','む？','むっ？','む、む','むに','むに…','むきゅ？','むふ','……む'],
-  liked_touch:['むぅ','む〜','む、む','むぅ〜','んむぅ','むきゅ','むふ','むにゅ','ぽふ','むぴ'],
-  liked_touch_core:['むぅ〜❣️','んむぅ❣️','むきゅ❣️','むぴ❣️'],
-  disliked_touch:['むっ','む……','……','……む','む？','むぅ？','んむ…','むっ…','むす…','む、、'],
-  disliked_touch_core:['むっ………','む………','……む………','んむ………'],
-  sleepy:['むぅ…','すぅ…','……む','むぅぅ…','むぅぅ、、、ん','すぅ……む','む……すぅ','んむぅ…','むゆ…','ふむ…'],
-  sleeping:['すぅ…','すぅ……む','……','……む','むぅ…','むぅぅ…','んむ…','む……すぅ','ふむ…','むぅぅ、、、ん'],
-  weak:['む……','むぅ…','んむ…','む……ん','ん……む','むす…','むすぅ…','むしゅ…','むゅ…','……む'],
-  moody:['むっ','むっ…','むす…','む','……','む？','むむ…','む、、','ふむ…','……む'],
+  idle:['むぅ。','む','むぅ','むー','む…','むぅ…','むむ','むむ…','むん','むん…','むふ…'],
+  startup:['むぅ。','む','むぅ','む…','むぅ…','む、む','むぅん…','むむ','むに…','むふ…','む〜…'],
+  touch:['むぅ。','む','むぅ','む？','むっ？','む、む','むに','むに…','むきゅ？','むふ','むふ…'],
+  liked_touch:['むぅ','む〜','む、む','むぅ〜','むきゅ','むふ','むにゅ','むぴ','むぽふ','むきゅぅ'],
+  liked_touch_core:['むぅ〜❣️','むきゅ❣️','むぴ❣️','むにゅ❣️'],
+  disliked_touch:['むっ','む……','む？','むぅ？','むっ…','むす…','む、、','むむ…','む……ん','むすぅ…'],
+  disliked_touch_core:['むっ………','む………','むぅ？………','む……ん………'],
+  sleepy:['むぅ。','むぅ…','むぅぅ…','むぅぅ、、、ん','む……すぅ','むゆ…','むゅ…','むぅ……','む〜…','むむ…','むふ…'],
+  sleeping:['むぅ。','むぅ…','むぅぅ…','む……すぅ','むぅぅ、、、ん','む……','むぅ……','むゆ…','むゅ…','むす…','むふ…'],
+  weak:['む……','むぅ…','む……ん','むす…','むすぅ…','むしゅ…','むゅ…','むぅ……','むゆ…','む……すぅ'],
+  moody:['むっ','むっ…','むす…','む','む？','むむ…','む、、','む……','む……ん','むぅ？'],
   food:['むっ','むぅ？','む、む','む？','むきゅ？','むぷ','むむ？','むん','むぴ？','む、むぅ'],
-  hungry:['むっ','むぅ？','む、む','んむ','むきゅ','む！','むむ？','むん','むぴ','む、むぅ'],
-  full:['ふむ…','む……','むぅ…','……','んむ…','むぽ…','ぽふ…','むぅん…','むふ…','む〜…'],
-  wash:['む〜','むぅ〜','ぽふ','ぽふ…','むぽふ','むぅ','むふ','むふぅ','むぷぅ','むぅ、む'],
-  dirty:['む……','……む','むぅ…','んむ…','ん……む','む……ん','むす…','むしゅ…','むゅ…','むぅ……'],
-  dust:['……','……む','すぅ…','むぅ……','すぅ……む','ん……む','む……すぅ','……んむ','む……','むぅぅ…'],
-  pouty:['むっ','……','む','むっ…','むす…','む、、','ふむ…','むむ…','……む','む？'],
+  hungry:['むっ','むぅ？','む、む','むきゅ','む！','むむ？','むん','むぴ','む、むぅ','むぷ'],
+  full:['むぅ。','む……','むぅ…','むぽ…','むぅん…','むふ…','む〜…','むゆ…','むむ…','むぅ……','む……ん'],
+  wash:['むぅ。','む〜','むぅ〜','むぽふ','むぅ','むふ','むふぅ','むぷぅ','むぅ、む','むにゅ','むきゅ'],
+  dirty:['む……','むぅ…','む……ん','むす…','むしゅ…','むゅ…','むぅ……','むゆ…','むすぅ…','む……すぅ'],
+  dust:['むぅ……','む……すぅ','む……','むぅぅ…','むぅ…','むゆ…','むゅ…','むす…','むしゅ…','む……ん'],
+  pouty:['むっ','む','むっ…','むす…','む、、','むむ…','む？','む……','むぅ？','むすぅ…'],
   curious:['むぅ？','むっ','む？','むむ？','むきゅ？','むに','むゅ','むぷ','むっ？','むぅむ'],
-  happy:['むぅ','む〜','ぽふ','む！','む、む','むぅ〜','むふ','むぽ','むきゅぅ','むにゅ'],
-  attached:['むぅ','む〜','む、む','んむぅ','むぅ〜','むきゅ','ぽふ…'],
-  distant:['……む','む…','む？','んむ…','……']
+  happy:['むぅ。','むぅ','む〜','む！','む、む','むぅ〜','むふ','むぽ','むきゅぅ','むにゅ','むぽふ'],
+  attached:['むぅ。','むぅ','む〜','む、む','むぅ〜','むきゅ','むぽふ','むにゅ'],
+  distant:['むぅ。','む…','む？','む……','むぅ…','む、、']
 };
 const VOICE_CONTEXT_ALIASES={pouty:'moody',bad:'moody',bad_mood:'moody',tired:'sleepy',asleep:'sleeping'};
-const TRAIT_VOICES={affectionate:['むぅ','む〜','むぅ〜','む、むぅ'],solitary:['……','む','…む','ふむ…'],gentle:['むぅ…','すぅ…','ふむ…'],restless:['む、む','むっ','む、む…'],timid:['……む','むぅ？','む…'],foodie:['むっ','むぅ？','むきゅ？'],sleepy:['すぅ…','むぅ…','むぅぅ、、、ん'],cleanly:['む〜','ぽふ','むぽふ'],pouty:['むっ','……','むす…'],curious:['むぅ？','むっ','むきゅ？'],energetic:['む！','む、む','む、む、む'],awkwardly_affectionate:['……む','むぅ…','む、']};
+const TRAIT_VOICES={affectionate:['むぅ','む〜','むぅ〜','む、むぅ'],solitary:['む…','む','む……','むふ…'],gentle:['むぅ…','む……すぅ','むふ…'],restless:['む、む','むっ','む、む…'],timid:['む…','むぅ？','む……'],foodie:['むっ','むぅ？','むきゅ？'],sleepy:['むぅ…','むぅぅ、、、ん','む……すぅ'],cleanly:['む〜','むぽふ','むふ…'],pouty:['むっ','む……','むす…'],curious:['むぅ？','むっ','むきゅ？'],energetic:['む！','む、む','む、む、む'],awkwardly_affectionate:['む…','むぅ…','む、']};
 const VOICE_LOCALE=((navigator.languages||[navigator.language||'ja']).some(l=>String(l).toLowerCase().startsWith('ja')))?'ja':'romaji';
 function voiceToRomaji(text){return String(text).replace(/むっ/g,'mu!').replace(/きゅ/g,'kyu').replace(/にゅ/g,'nyu').replace(/しゅ/g,'shu').replace(/む/g,'mu').replace(/ぅ/g,'u').replace(/ー/g,'-').replace(/〜/g,'~').replace(/、/g,',').replace(/！/g,'!').replace(/？/g,'?').replace(/ん/g,'n').replace(/す/g,'su').replace(/ふ/g,'fu').replace(/ぽ/g,'po').replace(/ぷ/g,'pu').replace(/に/g,'ni').replace(/ゆ/g,'yu').replace(/ゅ/g,'yu').replace(/ぁ/g,'a').replace(/ぴ/g,'pi').replace(/っ/g,"'");}
 function localizeVoice(text,locale=VOICE_LOCALE){return locale==='ja'?text:voiceToRomaji(text);}
 function chooseVoiceFromPool(pool,noRepeat=false){const list=Array.from(new Set(pool.filter(Boolean))); const filtered=noRepeat&&list.length>1?list.filter(v=>v!==lastVoiceText):list; return (filtered.length?filtered:list)[Math.floor(Math.random()*(filtered.length?filtered:list).length)]||'む';}
+function primaryDefaultVoiceChance(context,quietState){
+  if(['liked_touch_core','disliked_touch_core','liked_touch','disliked_touch'].includes(context))return 0;
+  if(context==='idle'||context==='startup')return .32;
+  if(['touch','happy','attached','distant','curious'].includes(context))return .24;
+  if(quietState)return .10;
+  return .16;
+}
 function resolveVoiceContext(context='idle'){
   const dirt=memory.currentDirtLevel||computeDirtLevel(), state=memory.state||{}, requested=VOICE_CONTEXT_ALIASES[context]||context;
   if(requested==='wash')return requested;
@@ -50543,12 +50573,15 @@ function startupVoiceContext(){
 }
 function selectVoice(context='idle',opts={}){
   const stateContext=resolveVoiceContext(context), quietState=['dust','dirty','weak','sleepy','sleeping','moody','full'].includes(stateContext);
-  if(!quietState&&!opts.noRare&&Math.random()<.001)return RARE_VOICES.almost;
-  if(!quietState&&!opts.noRare&&Math.random()<.01)return RARE_VOICES.mupi;
+  const now=Date.now(), rareReady=now-lastNonMuRareAt>45000;
+  if(!opts.noRare&&rareReady&&Math.random()<.001){lastNonMuRareAt=now; return RARE_VOICES.almost;}
+  if(!opts.noRare&&rareReady&&Math.random()<.01){lastNonMuRareAt=now; return chooseVoiceFromPool(NON_MU_RARE_VOICES,true);}
+  const primaryChance=primaryDefaultVoiceChance(stateContext,quietState);
+  if(primaryChance&&(!opts.noRepeat||lastVoiceText!==PRIMARY_DEFAULT_VOICE)&&Math.random()<primaryChance)return PRIMARY_DEFAULT_VOICE;
   const base=(VOICE_POOLS[stateContext]||VOICE_POOLS.idle).slice();
   const trait=TRAIT_VOICES[nativeTraitDef.id]||[];
   const widePool=!quietState&&context!=='startup'&&Math.random()<.07?COMMON_VOICES:[];
-  return chooseVoiceFromPool(base.concat(trait,widePool),!!opts.noRepeat);
+  return chooseVoiceFromPool(base.concat(trait,widePool).filter(isPrimaryMuuVoice),!!opts.noRepeat);
 }
 function showVoice(text,dur=1200){lastVoiceText=text; say(localizeVoice(text),dur);}
 function pickVoice(context='idle'){return selectVoice(context);}
@@ -50563,7 +50596,7 @@ function smallVoice(){return pickVoice('idle');}
 function scheduleStartupVoice(){const delay=800+Math.random()*1000; setTimeout(()=>sayVoice(startupVoiceContext(),1250,1,{force:true,cooldown:3600,noRepeat:true}),delay);}
 
 const cursor=document.getElementById('cursor'); const raycaster=new THREE.Raycaster(); const mouse2=new THREE.Vector2(); const interactables=[headMesh,body,belly];
-function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#food-btn,#wash-btn,#pet-name,#food-menu,.food-choice'));}
+function isUiTarget(e){return !!(e.target&&e.target.closest&&e.target.closest('#diary,#diary-dot,#food-btn,#wash-btn,#pet-name,#food-menu,.food-choice,#karte-btn,#karte-panel'));}
 function updatePointer(e){SM.hasPointer=true; SM.pointerType=e.pointerType||'mouse'; SM.mx=e.clientX; SM.my=e.clientY; mouse2.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1); if(SM.pointerType==='touch'){cursor.style.opacity='0'}else{cursor.style.opacity='1'; cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px';}}
 function checkHit(){if(!SM.hasPointer) return false; raycaster.setFromCamera(mouse2,camera); const hits=raycaster.intersectObjects(interactables,false); SM.lastHit=hits[0]||null; SM.nearMuu=hits.length>0; return SM.nearMuu;}
 function bodyPartForHit(object){if(object===headMesh)return 'head'; if(object===body||object===belly)return 'body'; return 'body';}
@@ -51689,7 +51722,147 @@ document.getElementById('diary-dot').addEventListener('click',(event)=>{
   saveMemory();
 });
 diary.addEventListener('click',()=>diary.classList.remove('open'));
-const dayCount=document.getElementById('day-count'); function updateDayCount(){const born=memory.bornAt||TODAY; dayCount.textContent=`${Math.max(1,daysBetween(born,TODAY)+1)}にちめ`;} updateDayCount();
+function muuDayNumber(){const born=memory.bornAt||memory.livingSince||TODAY; return Math.max(1,daysBetween(born,TODAY)+1);}
+const dayCount=document.getElementById('day-count'); function updateDayCount(){dayCount.textContent=`${muuDayNumber()}にちめ`;} updateDayCount();
+const karteBtn=document.getElementById('karte-btn'), kartePanel=document.getElementById('karte-panel'), karteBody=document.getElementById('karte-body'), karteTitle=document.getElementById('karte-title'), karteClose=document.getElementById('karte-close');
+function karteIsJa(){return VOICE_LOCALE==='ja'}
+function karteDayLabel(){return karteIsJa()?`${muuDayNumber()}にちめ`:`day ${muuDayNumber()}`}
+function karteDateParts(now=new Date()){
+  const h=now.getHours(), m=String(now.getMinutes()).padStart(2,'0');
+  if(karteIsJa())return {date:`${now.getMonth()+1}がつ${now.getDate()}にち`,time:`${h}:${m}`};
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return {date:`${months[now.getMonth()]} ${now.getDate()}`,time:`${h}:${m}`};
+}
+function phraseFromList(list,index){return list[Math.max(0,Math.min(list.length-1,index))]}
+function growthKartePhrase(){
+  const stage=memory.growth&&Number.isFinite(memory.growth.stage)?memory.growth.stage:1;
+  if(karteIsJa()){
+    if(stage<=8)return 'まだ ちいさい';
+    if(stage<=36)return 'すこし からだが なじんできた';
+    if(stage<=76)return 'ねむっているあいだに すこし かわっている';
+    return 'かたちの おくが うごいている';
+  }
+  if(stage<=8)return 'still small';
+  if(stage<=36)return 'the body is settling in';
+  if(stage<=76)return 'slowly changing in sleep';
+  return 'something inside the shape is moving';
+}
+function stateKartePhrase(){
+  const dirt=memory.currentDirtLevel||computeDirtLevel();
+  if(karteIsJa()){
+    if(dirt>=10)return 'ほこりを かぶって まるまっている';
+    if(dirt>=7)return 'ほこりを かぶっている';
+    if(SM.current===STATES.SLEEP)return 'まるまって ねむっている';
+    if(SM.current===STATES.TIRED||memory.state.sleepiness>.62)return 'ねむそう';
+    if(SM.current===STATES.WALK||SM.current===STATES.CURIOUS)return 'すこし そわそわしている';
+    if(SM.current===STATES.TO_FOOD||SM.current===STATES.EAT)return 'ごはんの けはいを みている';
+    return 'しずかに いる';
+  }
+  if(dirt>=10)return 'curled under dust';
+  if(dirt>=7)return 'covered in dust';
+  if(SM.current===STATES.SLEEP)return 'curled and sleeping';
+  if(SM.current===STATES.TIRED||memory.state.sleepiness>.62)return 'a little sleepy';
+  if(SM.current===STATES.WALK||SM.current===STATES.CURIOUS)return 'a little restless';
+  if(SM.current===STATES.TO_FOOD||SM.current===STATES.EAT)return 'noticing food';
+  return 'quiet';
+}
+function moodKartePhrase(){
+  const mood=memory.state&&Number.isFinite(memory.state.mood)?memory.state.mood:.5;
+  if(karteIsJa()){
+    if(SM.current===STATES.SHY||nativeTraitDef.id==='pouty')return 'すこし むっとしている';
+    if(nativeTraitDef.id==='awkwardly_affectionate'&&affinityNorm()>.45)return 'うまく よろこべない';
+    if(mood>.62||SM.current===STATES.HAPPY)return 'ほどけている';
+    if(affinityNorm()<.24)return 'まだ きょりを はかっている';
+    return 'おだやか';
+  }
+  if(SM.current===STATES.SHY||nativeTraitDef.id==='pouty')return 'a little grumpy';
+  if(nativeTraitDef.id==='awkwardly_affectionate'&&affinityNorm()>.45)return 'not good at showing joy';
+  if(mood>.62||SM.current===STATES.HAPPY)return 'softening';
+  if(affinityNorm()<.24)return 'measuring the distance';
+  return 'calm';
+}
+function hungerKartePhrase(){
+  const h=memory.hunger&&Number.isFinite(memory.hunger.level)?memory.hunger.level:((memory.state.hunger||.5)*10);
+  const justAte=memory.hunger&&memory.hunger.lastFedAt&&(Date.now()-new Date(memory.hunger.lastFedAt).getTime()<90*60000);
+  if(karteIsJa()){
+    if(justAte)return 'たべたあとで すこし ねむい';
+    if(h>=7)return 'ごはんに きづきやすい';
+    if(h>=4)return 'すこし ごはんの けはいを まっている';
+    return 'おなかは おちついている';
+  }
+  if(justAte)return 'just ate and a little sleepy';
+  if(h>=7)return 'notices food easily';
+  if(h>=4)return 'waiting for a hint of food';
+  return 'settled';
+}
+function dirtKartePhrase(){
+  const dirt=memory.currentDirtLevel||computeDirtLevel();
+  const justWashed=memory.lastWashedAt&&(Date.now()-new Date(memory.lastWashedAt).getTime()<90*60000);
+  if(karteIsJa()){
+    if(justWashed&&dirt<=2)return 'あらわれて すこし かるい';
+    if(dirt<=2)return 'きれい';
+    if(dirt<=4)return 'すこし よごれている';
+    if(dirt<=6)return 'ほこりが のっている';
+    if(dirt<=9)return 'からだが すこし おもい';
+    return 'ほこりに まるまっている';
+  }
+  if(justWashed&&dirt<=2)return 'lighter after washing';
+  if(dirt<=2)return 'clean';
+  if(dirt<=4)return 'a little dusty';
+  if(dirt<=6)return 'covered in dust';
+  if(dirt<=9)return 'body feels heavy';
+  return 'curled in dust';
+}
+function natureKartePhrase(){
+  const ja={
+    affectionate:'ちかくに きやすい',solitary:'ひとりの じかんも すき',gentle:'ゆっくり うごく',restless:'すこし そわそわしやすい',timid:'すこし こわがり',foodie:'ごはんに よく きづく',sleepy:'ねむりに ひっぱられやすい',cleanly:'きれいに なると ほっとする',pouty:'むっとしながら そばにいる',curious:'しらないものを みている',energetic:'からだが かるい',awkwardly_affectionate:'すなおに よろこぶのが へた'
+  };
+  const en={
+    affectionate:'comes closer easily',solitary:'likes time alone too',gentle:'moves slowly',restless:'gets a little restless',timid:'a little timid',foodie:'notices food easily',sleepy:'pulled toward sleep',cleanly:'relaxes after being cleaned',pouty:'stays close while grumpy',curious:'watches unknown things',energetic:'light in the body',awkwardly_affectionate:'not good at showing affection'
+  };
+  return (karteIsJa()?ja:en)[nativeTraitDef.id]||(karteIsJa()?'しずかに いる':'quiet');
+}
+function bondKartePhrase(){
+  const n=affinityNorm();
+  if(karteIsJa()){
+    if(n<.18)return 'まだ すこし はなれている';
+    if(n<.36)return 'きょりを はかっている';
+    if(n<.58)return 'すこし ちかくに いる';
+    if(n<.76)return 'そばに いるのが ふつうに なってきた';
+    if(n<.9)return 'ふれられると ほどけやすい';
+    return 'ちかくで ねむりたがる';
+  }
+  if(n<.18)return 'still distant';
+  if(n<.36)return 'measuring the distance';
+  if(n<.58)return 'getting closer';
+  if(n<.76)return 'being nearby feels normal';
+  if(n<.9)return 'relaxes when touched';
+  return 'wants to sleep nearby';
+}
+function karteLines(){
+  return [
+    growthKartePhrase(),stateKartePhrase(),moodKartePhrase(),hungerKartePhrase(),dirtKartePhrase(),natureKartePhrase(),bondKartePhrase()
+  ];
+}
+function renderKarte(){
+  karteTitle.textContent=karteIsJa()?'かるて':'karte';
+  const karteLabel=karteIsJa()?'かるて':'karte';
+  karteBtn.setAttribute('aria-label',karteLabel);
+  karteBtn.setAttribute('title',karteLabel);
+  const parts=karteDateParts();
+  const lines=karteLines().map(line=>`<div class="karte-line">${line}</div>`).join('');
+  karteBody.innerHTML=`<div class="karte-date">${parts.date}</div><div class="karte-time">${parts.time}</div><div class="karte-day">${karteDayLabel()}</div><div class="karte-lines">${lines}</div>`;
+}
+function setKarteOpen(open){
+  renderKarte();
+  kartePanel.classList.toggle('open',open);
+  kartePanel.setAttribute('aria-hidden',open?'false':'true');
+}
+renderKarte();
+karteBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setKarteOpen(!kartePanel.classList.contains('open'));});
+if(karteClose)karteClose.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setKarteOpen(false);});
+kartePanel.addEventListener('click',()=>setKarteOpen(false));
+addEventListener('pointerdown',e=>{if(kartePanel.classList.contains('open')&&!e.target.closest('#karte-panel,#karte-btn'))setKarteOpen(false);});
 setTimeout(()=>{if(memory.living) sayVoice('idle',1300,.38); setState(STATES.CURIOUS);},2400);
 
 scheduleStartupVoice();
